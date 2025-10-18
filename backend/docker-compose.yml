@@ -1,0 +1,127 @@
+# OfferI Unified Docker Compose
+# Uses single "offeri" image for all services
+
+services:
+  # Redis - Job Queue (separate container)
+  redis:
+    image: redis:7-alpine
+    container_name: offeri-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # FastAPI Server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.unified
+    image: offeri:latest
+    container_name: offeri-api
+    command: ["api"]
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DEBUG=false
+      - NON_INTERACTIVE_MODE=true  # Claude Code Router headless mode
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    env_file:
+      - .env
+    volumes:
+      - ./mcp:/app/mcp:ro  # MCP config and database (read-only)
+      - ./outputs:/app/outputs  # PDF output directory
+      - ./logs:/app/logs  # Logs directory
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Worker Pool (3 workers from same image)
+  worker-1:
+    image: offeri:latest
+    container_name: offeri-worker-1
+    command: ["worker", "1"]
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - NON_INTERACTIVE_MODE=true  # Claude Code Router headless mode
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    env_file:
+      - .env
+    volumes:
+      - ./mcp:/app/mcp:ro
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker-2:
+    image: offeri:latest
+    container_name: offeri-worker-2
+    command: ["worker", "2"]
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - NON_INTERACTIVE_MODE=true  # Claude Code Router headless mode
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    env_file:
+      - .env
+    volumes:
+      - ./mcp:/app/mcp:ro
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker-3:
+    image: offeri:latest
+    container_name: offeri-worker-3
+    command: ["worker", "3"]
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - NON_INTERACTIVE_MODE=true  # Claude Code Router headless mode
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    env_file:
+      - .env
+    volumes:
+      - ./mcp:/app/mcp:ro
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: offeri-network

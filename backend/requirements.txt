@@ -1,0 +1,35 @@
+# FastAPI and Server
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+python-multipart>=0.0.6
+
+# Redis for job queue
+redis>=5.0.1
+hiredis>=2.2.3
+
+# Report Generation - Direct Markdown to PDF
+md2pdf>=1.0.1
+
+# MCP Integration (fastmcp has strict dependencies)
+fastmcp>=0.2.0
+
+# Anthropic API (for Phase 2 migration)
+# anthropic  # Commented out to avoid conflicts - install when needed
+
+# Database
+aiosqlite>=0.19.0
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.9
+
+# Payment
+stripe>=7.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+
+# Monitoring and Logging
+loguru>=0.7.2
+
+# HTTP client (will be installed by dependencies)
+# httpx  # Let fastmcp manage this dependency

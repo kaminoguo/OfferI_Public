@@ -1,37 +1,50 @@
-# Database files (download separately)
+# Environment variables
+.env
+.env.local
+.env*.local
+*.env
+
+# Database files
 *.db
 *.sqlite
 *.sqlite3
+programs.db
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
 venv/
 env/
-ENV/
 *.egg-info/
 dist/
 build/
+
+# Node.js
+node_modules/
+npm-debug.log*
+.next/
+out/
+package-lock.json
 
 # IDE
 .vscode/
 .idea/
 *.swp
-*.swo
 .DS_Store
 
 # Logs
-*.log
 logs/
+*.log
 
-# Environment
-.env
-.env.local
+# Outputs
+outputs/
+cache/
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
+# Sensitive
+crawler/
+workers/
+*.key
+*.pem
+secrets/

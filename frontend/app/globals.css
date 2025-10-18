@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ChatGPT-style White Theme */
+  :root {
+    --background: 255 255 255; /* Pure white */
+    --foreground: 45 45 45; /* Dark gray, not black */
+    --card: 255 255 255;
+    --card-foreground: 45 45 45;
+    --border: 229 229 229; /* Very light gray */
+    --input: 229 229 229;
+    --primary: 16 163 127; /* ChatGPT green */
+    --primary-foreground: 255 255 255;
+    --secondary: 247 247 248; /* Slightly off-white */
+    --secondary-foreground: 45 45 45;
+    --muted: 247 247 248;
+    --muted-foreground: 110 110 128; /* Medium gray for secondary text */
+    --accent: 247 247 248;
+    --accent-foreground: 45 45 45;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Minimal hover effect (ChatGPT style) */
+  .hover-minimal {
+    @apply transition-colors duration-100 hover:bg-secondary;
+  }
+}
+
+/* Simple loading animation */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.loading-dots span {
+  animation: pulse-subtle 1.4s infinite;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
