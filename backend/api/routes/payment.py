@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from loguru import logger
 
-from ...database import get_db, Payment, PaymentStatus
+from database import get_db, Payment, PaymentStatus
 
 # Stripe configuration
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")

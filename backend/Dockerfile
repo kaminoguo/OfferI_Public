@@ -29,7 +29,8 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code INCLUDING database.py
+COPY database.py .
 COPY api/ ./api/
 COPY workers/ ./workers/
 COPY utils/ ./utils/
@@ -40,6 +41,9 @@ RUN mkdir -p /app/outputs /app/logs /app/mcp
 
 # Expose FastAPI port
 EXPOSE 8000
+
+# Set PYTHONPATH for absolute imports
+ENV PYTHONPATH=/app
 
 # Default command (run FastAPI server)
 CMD ["python", "-m", "api.server"]

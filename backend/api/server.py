@@ -23,7 +23,7 @@ from .models import (
     ErrorResponse
 )
 from .routes.payment import router as payment_router
-from ..database import get_db, Payment, PaymentStatus, init_db
+from database import get_db, Payment, PaymentStatus, init_db
 
 # Configuration
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
@@ -458,7 +458,7 @@ async def delete_job(job_id: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "server:app",
+        "api.server:app",
         host="0.0.0.0",
         port=8000,
         reload=True,
