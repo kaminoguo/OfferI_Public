@@ -81,8 +81,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",  # Next.js dev
         "http://localhost:3001",
-        "https://offeri.com",     # Production web
-        "https://www.offeri.com"
+        "https://offeri.org",     # Production web
+        "https://www.offeri.org"
     ],
     allow_credentials=True,
     allow_methods=["*"],
