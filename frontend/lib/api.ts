@@ -23,7 +23,7 @@ export interface JobSubmitResponse {
 export interface JobStatusResponse {
   job_id: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
-  progress: string;
+  progress: number;
   created_at: string;
   updated_at: string;
   error?: string;

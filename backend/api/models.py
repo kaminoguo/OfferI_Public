@@ -44,7 +44,7 @@ class JobStatusResponse(BaseModel):
     """Response when checking job status"""
     job_id: str
     status: str = Field(..., description="Job status: pending, processing, completed, failed")
-    progress: Optional[str] = Field(None, description="Progress message (Chinese)")
+    progress: Optional[int] = Field(None, description="Progress percentage (0-100)", ge=0, le=100)
     created_at: Optional[str] = Field(None, description="Job creation time")
     updated_at: Optional[str] = Field(None, description="Last update time")
 

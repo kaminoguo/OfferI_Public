@@ -204,7 +204,7 @@ async def submit_background(
         # Store job in Redis
         job_data = {
             "status": "pending",
-            "progress": "排队中...",
+            "progress": "10",  # 10% queued
             "user_background": json.dumps(user_background.dict(), ensure_ascii=False),
             "user_id": user_id,
             "payment_id": payment_id,
@@ -259,10 +259,14 @@ async def get_job_status(job_id: str):
         # Get job data
         job_data = redis_client.hgetall(f"job:{job_id}")
 
+        # Convert progress to int (Redis stores as string)
+        progress_str = job_data.get("progress")
+        progress_int = int(progress_str) if progress_str and progress_str.isdigit() else None
+
         return JobStatusResponse(
             job_id=job_id,
             status=job_data.get("status", "unknown"),
-            progress=job_data.get("progress"),
+            progress=progress_int,
             created_at=job_data.get("created_at"),
             updated_at=job_data.get("updated_at")
         )

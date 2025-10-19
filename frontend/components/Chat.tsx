@@ -6,6 +6,7 @@ import { useUser } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
 import FormModal from './FormModal';
 import PaymentModal from './PaymentModal';
+import ProgressBar from './ProgressBar';
 import { submitJob, getJobStatus, downloadPDF, UserBackground } from '@/lib/api';
 
 interface ChatProps {
@@ -23,6 +24,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
   const [jobId, setJobId] = useState<string | null>(null);
   const [reportReady, setReportReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number>(0);
 
   // Check for payment_id in URL (returned from Stripe)
   useEffect(() => {
@@ -43,7 +45,13 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
       try {
         const status = await getJobStatus(jobId);
 
+        // Update progress if available
+        if (status.progress !== undefined && status.progress !== null) {
+          setProgress(status.progress);
+        }
+
         if (status.status === 'completed') {
+          setProgress(100);
           setIsLoading(false);
           setReportReady(true);
         } else if (status.status === 'failed') {
@@ -55,7 +63,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
       }
     };
 
-    const interval = setInterval(pollStatus, 5000); // Poll every 5 seconds
+    const interval = setInterval(pollStatus, 3000); // Poll every 3 seconds
     pollStatus(); // Initial poll
 
     return () => clearInterval(interval);
@@ -141,6 +149,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
     setReportReady(false);
     setError(null);
     setIsLoading(false);
+    setProgress(0);
   };
 
   return (
@@ -180,13 +189,10 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
         )}
 
         {isLoading && (
-          /* Loading State - Simple spinner */
-          <div className="text-center">
-            <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-            <p className="text-lg font-medium text-foreground">
-              Generating your report...
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
+          /* Loading State - ChatGPT-style progress bar */
+          <div className="text-center max-w-md px-8 w-full">
+            <ProgressBar progress={progress} />
+            <p className="text-sm text-muted-foreground mt-4">
               This may take 10-15 minutes
             </p>
           </div>
