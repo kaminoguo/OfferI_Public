@@ -27,7 +27,8 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment/create-session`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/payment/create-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
