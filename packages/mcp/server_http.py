@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-OfferI MCP Server - Simplified Version
+OfferI MCP Server - HTTP/SSE Version (Public)
+
+Synced from backend/mcp/server.py with flexible transport modes
 
 Philosophy: Be DUMB, return RAW data, let LLM be SMART.
 
@@ -21,9 +23,14 @@ mcp = FastMCP(
     name="OfferI Study Abroad",
     instructions="""
     Study abroad program database with 93,716 programs worldwide.
+    Current date: October 2025
 
     DATABASE ROLE: Search index for finding programs. Use web searches for conclusions.
-    TOKEN BUDGET: Allocate 20% to DB queries, 80% to web searches.
+    TOKEN BUDGET: Allocate 15% to DB queries, 85% to web searches.
+
+    LANGUAGE POLICY: Output language MUST match user's input language.
+    - If user writes in English → respond in English
+    - If user writes in Chinese → respond in Chinese
 
     ═══════════════════════════════════════════════════════════════
     MANDATORY WORKFLOW
@@ -31,43 +38,67 @@ mcp = FastMCP(
 
     Step 1: list_universities(country) - Get all universities
 
-    Step 2: WEB SEARCH admission cases (CRITICAL - DO NOT SKIP!)
-            Search: "GPA [X.X] [background] [country] [field] 录取案例 2024"
-            Example: "GPA 3.3 双非 USA CS 录取案例 2024"
-            Filter schools based on REAL admission outcomes
+    Step 2: WEB SEARCH admission cases (CRITICAL - DO 3-5 SEARCHES!)
+            Multiple searches with different keywords to find REAL outcomes:
+            - "GPA [X.X] [internship] [field] graduate admission 2024 2025"
+            - "low GPA strong experience graduate school acceptance [country]"
+            - "[Background] [field] masters admission outcomes 2024"
+            Filter schools based on real admission outcomes, NOT guesses
 
-    Step 3: WEB SEARCH latest rankings (QS, Times, US News 2024-2025)
-            Select 10-15 universities matching student profile
+    Step 3: WEB SEARCH latest rankings (DO 2-3 SEARCHES)
+            Search for 2024-2025 rankings:
+            - "QS World University Rankings 2025 [field]"
+            - "US News Best Graduate [field] Programs 2025"
+            - "Times Higher Education 2024 2025 [field] rankings"
+            Select 15-20 universities matching student profile
 
     Step 4: search_programs(university_name="X") for each selected school
             Returns plain text TSV - YOU filter by program names
 
-    Step 5: get_program_details_optimized([id1, id2, ...]) for 50-200 programs
-            Quick TSV format for initial screening
+    Step 5: get_program_details_optimized([id1, id2, ...]) for 100-200 programs
+            Quick TSV format for initial screening (minimal fields)
 
     Step 6: Filter to 30-50 programs, then get_program_details_batch([ids])
-            Get complete details for scoring
+            Get essential details for scoring (NO tuition data - unreliable)
 
-    Step 7: Calculate scores for ALL programs:
+    Step 7: Calculate transparent scores for ALL programs:
             Score = Prestige(1-100) × Fit(1-100)
-            Output TOP 30 programs ranked by score
+            Show breakdown:
+            - Prestige: ranking(40%) + reputation(30%) + outcomes(30%)
+            - Fit: career_alignment(40%) + technical_depth(20%) + location(20%) + other(20%)
 
-    Step 8: WEB SEARCH TOP 10 programs (5-10 queries per program)
-            Search for: location, workload, career outcomes, features, deadlines
-            Query: "[University] [Program] 2025 admission career outcomes"
+    Step 8: WEB SEARCH TOP 10 programs (DO 6-10 QUERIES PER PROGRAM!)
+            For EACH of top 10 programs, search multiple angles:
+            - "[University] [Program] career outcomes salary 2024 2025"
+            - "[University] [Program] admission requirements deadline 2025 2026"
+            - "[University] [Program] student review reddit experience"
+            - "[University] [Program] alumni LinkedIn placement companies"
+            - "[University] [Program] vs [competitor] comparison"
+            - "[University] [Program] location housing cost living"
+            - "[University] [Program] workload difficulty pressure"
+            - "[University] [Program] tuition fees cost 2025 2026"
+            THIS IS CRITICAL - Expect 60-100 total web searches for top 10!
 
     Step 9: Generate comprehensive report with TOP 30 programs
-            Include: Score, Prestige, Fit, 5 enhanced categories (地理/前景/压力/特色/时间线)
+            Output in user's language. Include for each program:
+            - Location & Environment
+            - Career Prospects & Real Outcomes
+            - Program Intensity & Workload
+            - Unique Features & Differentiation
+            - Application Timeline & Requirements
+            - Tuition (from web search, NOT database)
 
     ═══════════════════════════════════════════════════════════════
     TOOLS
     ═══════════════════════════════════════════════════════════════
 
-    • list_universities(country) → Plain text: "Stanford\nMIT\n..."
-    • search_programs(university_name) → TSV: "id\tname\n123\tCS M.Sc.\n..."
-    • get_program_details_optimized([ids]) → 7-field TSV for bulk filtering
-    • get_program_details_batch([ids]) → Full JSON details for final analysis
+    • list_universities(country) → Plain text list
+    • search_programs(university_name) → TSV: "id\tname"
+    • get_program_details_optimized([ids]) → Minimal TSV for filtering
+    • get_program_details_batch([ids]) → Essential fields ONLY (no tuition/description/structure)
     • get_statistics() → Database overview
+
+    CRITICAL: Database tuition data is UNRELIABLE. Always get tuition from web search.
     """
 )
 
@@ -220,31 +251,31 @@ async def search_programs(
 @mcp.tool
 async def get_program_details(program_id: int) -> dict:
     """
-    Get COMPLETE details for ONE program. Returns all database fields.
+    Get ESSENTIAL details for ONE program.
 
-    Use this after filtering programs from search results to get full information for analysis.
+    OPTIMIZED: Returns only essential fields to save tokens.
+    Use get_program_details_batch() for multiple programs (more efficient).
 
     Args:
         program_id: The program ID from search_programs() results
 
     Returns:
-        Full program details including:
-        - Basic info (program_name, university_name, country_standardized, city, degree_type)
-        - Financial (tuition_min, tuition_max, currency)
-        - Duration (duration_months, study_mode)
-        - Content (description, program_structure)
+        Essential program details (NO tuition/description/structure)
 
-    WORKFLOW:
-        1. After filtering programs from search results
-        2. Call this for each shortlisted program (typically 10-30 programs)
-        3. Analyze complete details
-        4. Generate final recommendations with scores
+    Fields returned:
+        - program_id, program_name, university_name
+        - country_standardized, city, degree_type
+        - duration_months, is_part_time (if applicable)
+
+    NOTE: Database tuition data is UNRELIABLE - get from web search.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT *
+        SELECT program_id, program_name, university_name,
+               country_standardized, city, degree_type,
+               duration_months, study_mode
         FROM programs
         WHERE program_id = ?
     """, (program_id,))
@@ -255,7 +286,7 @@ async def get_program_details(program_id: int) -> dict:
     if not row:
         return {"error": f"Program {program_id} not found"}
 
-    # Build dict with all fields
+    # Build dict with essential fields only
     program = {
         "program_id": row["program_id"],
         "program_name": row["program_name"],
@@ -263,14 +294,13 @@ async def get_program_details(program_id: int) -> dict:
         "country_standardized": row["country_standardized"],
         "city": row["city"],
         "degree_type": row["degree_type"],
-        "study_mode": row["study_mode"],
-        "duration_months": row["duration_months"],
-        "tuition_min": row["tuition_min"],
-        "tuition_max": row["tuition_max"],
-        "currency": row["currency"],
-        "description": row["description"],
-        "program_structure": row["program_structure"]
+        "duration_months": row["duration_months"]
     }
+
+    # Convert study_mode to boolean (saves tokens)
+    study_mode = row["study_mode"]
+    if study_mode and "part" in study_mode.lower():
+        program["is_part_time"] = True
 
     # Remove null/empty fields to save tokens
     return clean_null_values(program)
@@ -279,30 +309,30 @@ async def get_program_details(program_id: int) -> dict:
 @mcp.tool
 async def get_program_details_batch(program_ids: List[int]) -> List[dict]:
     """
-    Get COMPLETE details for MULTIPLE programs in ONE call.
+    Get ESSENTIAL details for MULTIPLE programs in ONE call.
 
-    More efficient than calling get_program_details() 20+ times individually.
-    Reduces token usage and API calls significantly.
+    OPTIMIZED: Returns only essential fields to save tokens.
+    Database tuition data is UNRELIABLE - get from web search instead.
 
     Args:
         program_ids: List of program IDs from search_programs() results
 
     Returns:
-        List of full program details dictionaries (same format as get_program_details)
+        List of essential program details (NO tuition/description/structure)
+
+    Fields returned:
+        - program_id, program_name, university_name
+        - country_standardized, city, degree_type
+        - duration_months, is_part_time
 
     WORKFLOW:
-        1. After filtering programs from search results
-        2. Call this ONCE with list of all shortlisted program IDs (typically 10-30)
-        3. Analyze complete details for all programs
-        4. Generate final recommendations with scores
+        1. After filtering from optimized search (100-200 programs)
+        2. Call this ONCE with shortlisted IDs (30-50 programs)
+        3. Analyze and score all programs
+        4. Do extensive web searches for top 10
 
     Example:
-        # Old way: 20 individual calls
-        # for pid in [123, 456, 789, ...]:
-        #     details = get_program_details(pid)  # 20 calls!
-
-        # New way: 1 batch call
-        details = get_program_details_batch([123, 456, 789, ...])  # 1 call!
+        details = get_program_details_batch([123, 456, 789, ...])
     """
     if not program_ids:
         return []
@@ -310,53 +340,12 @@ async def get_program_details_batch(program_ids: List[int]) -> List[dict]:
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Use SQL IN clause for batch query
-    placeholders = ','.join('?' * len(program_ids))
-    query = f"SELECT * FROM programs WHERE program_id IN ({placeholders})"
-
-    cursor.execute(query, program_ids)
-    results = cursor.fetchall()
-    conn.close()
-
-    # Build list of full details and clean nulls to save tokens
-    programs = [{
-        "program_id": row["program_id"],
-        "program_name": row["program_name"],
-        "university_name": row["university_name"],
-        "country_standardized": row["country_standardized"],
-        "city": row["city"],
-        "degree_type": row["degree_type"],
-        "study_mode": row["study_mode"],
-        "duration_months": row["duration_months"],
-        "tuition_min": row["tuition_min"],
-        "tuition_max": row["tuition_max"],
-        "currency": row["currency"],
-        "description": row["description"],
-        "program_structure": row["program_structure"]
-    } for row in results]
-
-    # Remove null/empty fields to save tokens
-    return [clean_null_values(p) for p in programs]
-
-
-@mcp.tool
-async def get_program_details_optimized(program_ids: List[int]) -> str:
-    """Get 7 key fields for bulk filtering (50-200 programs).
-    Returns TSV: "id\tname\tuniversity\tcountry\tcost\tmonths\tdegree"
-    Header on first line only.
-
-    Use this for initial screening of many programs.
-    Then call get_program_details_batch() for TOP 30 programs."""
-    if not program_ids:
-        return "id\tname\tuniversity\tcountry\tcost\tmonths\tdegree"
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
+    # Use SQL IN clause for batch query - select only essential fields
     placeholders = ','.join('?' * len(program_ids))
     query = f"""
-        SELECT program_id, program_name, university_name, country_standardized,
-               tuition_max, duration_months, degree_type
+        SELECT program_id, program_name, university_name,
+               country_standardized, city, degree_type,
+               duration_months, study_mode
         FROM programs
         WHERE program_id IN ({placeholders})
     """
@@ -365,15 +354,66 @@ async def get_program_details_optimized(program_ids: List[int]) -> str:
     results = cursor.fetchall()
     conn.close()
 
-    # TSV format with header-once
-    lines = ["id\tname\tuniversity\tcountry\tcost\tmonths\tdegree"]
+    # Build list with essential fields only and convert study_mode to boolean
+    programs = []
+    for row in results:
+        program = {
+            "program_id": row["program_id"],
+            "program_name": row["program_name"],
+            "university_name": row["university_name"],
+            "country_standardized": row["country_standardized"],
+            "city": row["city"],
+            "degree_type": row["degree_type"],
+            "duration_months": row["duration_months"]
+        }
+
+        # Convert study_mode to boolean (saves tokens)
+        study_mode = row["study_mode"]
+        if study_mode and "part" in study_mode.lower():
+            program["is_part_time"] = True
+
+        programs.append(program)
+
+    # Remove null/empty fields to save tokens
+    return [clean_null_values(p) for p in programs]
+
+
+@mcp.tool
+async def get_program_details_optimized(program_ids: List[int]) -> str:
+    """Get 6 essential fields for bulk filtering (100-200 programs).
+    Returns TSV: "id\tname\tuniversity\tcountry\tmonths\tdegree"
+    Header on first line only.
+
+    NO tuition (database data unreliable - get from web search).
+
+    Use this for initial screening of many programs.
+    Then call get_program_details_batch() for TOP 30-50 programs."""
+    if not program_ids:
+        return "id\tname\tuniversity\tcountry\tmonths\tdegree"
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    placeholders = ','.join('?' * len(program_ids))
+    query = f"""
+        SELECT program_id, program_name, university_name, country_standardized,
+               duration_months, degree_type
+        FROM programs
+        WHERE program_id IN ({placeholders})
+    """
+
+    cursor.execute(query, program_ids)
+    results = cursor.fetchall()
+    conn.close()
+
+    # TSV format with header-once (no tuition field)
+    lines = ["id\tname\tuniversity\tcountry\tmonths\tdegree"]
     for row in results:
         lines.append(
             f"{row['program_id']}\t"
             f"{row['program_name']}\t"
             f"{row['university_name']}\t"
             f"{row['country_standardized'] or 'N/A'}\t"
-            f"{row['tuition_max'] or 'N/A'}\t"
             f"{row['duration_months'] or 'N/A'}\t"
             f"{row['degree_type'] or 'N/A'}"
         )
@@ -456,6 +496,7 @@ async def get_statistics() -> dict:
 
 
 if __name__ == "__main__":
+    # Flexible transport mode (HTTP/SSE for public, STDIO for local)
     import argparse
 
     parser = argparse.ArgumentParser(description="OfferI MCP Server")
