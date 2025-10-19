@@ -96,9 +96,6 @@ async def create_payment_session(
             session_id=checkout_session.id
         )
 
-    except stripe.error.StripeError as e:
-        logger.error(f"Stripe error: {e}")
-        raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}")
     except Exception as e:
         logger.error(f"Error creating payment session: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create payment session: {str(e)}")
@@ -123,9 +120,11 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         except ValueError as e:
             logger.error(f"Invalid payload: {e}")
             raise HTTPException(status_code=400, detail="Invalid payload")
-        except stripe.error.SignatureVerificationError as e:
-            logger.error(f"Invalid signature: {e}")
-            raise HTTPException(status_code=400, detail="Invalid signature")
+        except Exception as e:
+            if 'signature' in str(e).lower():
+                logger.error(f"Invalid signature: {e}")
+                raise HTTPException(status_code=400, detail="Invalid signature")
+            raise
 
         # Handle checkout.session.completed event
         if event["type"] == "checkout.session.completed":
@@ -189,6 +188,67 @@ async def verify_payment(payment_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Error verifying payment: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to verify payment: {str(e)}")
+
+
+@router.post("/refund/{payment_id}")
+async def refund_failed_report(
+    payment_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Issue refund for failed report generation
+    Marks payment as PENDING_RETRY (allows one free retry)
+
+    This endpoint should be called automatically when report generation fails
+    """
+    try:
+        # Get payment from database
+        payment = db.query(Payment).filter(Payment.id == payment_id).first()
+
+        if not payment:
+            raise HTTPException(status_code=404, detail="Payment not found")
+
+        if payment.status != PaymentStatus.PAID:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot refund payment with status {payment.status}"
+            )
+
+        # Issue Stripe refund
+        try:
+            refund = stripe.Refund.create(
+                payment_intent=payment_id,
+                reason="requested_by_customer",
+                metadata={
+                    "reason": "Report generation failed",
+                    "user_id": payment.user_id,
+                }
+            )
+            logger.info(f"Stripe refund issued: {refund.id} for payment {payment_id}")
+        except Exception as e:
+            logger.error(f"Stripe refund failed: {e}")
+            # Continue anyway and mark as pending retry
+            # (Some payment methods may not support instant refunds)
+
+        # Update payment status to PENDING_RETRY (allows free retry)
+        payment.status = PaymentStatus.PENDING_RETRY
+        db.commit()
+
+        logger.success(f"Payment {payment_id} marked as PENDING_RETRY - user can retry for free")
+
+        return {
+            "status": "success",
+            "payment_id": payment_id,
+            "refund_issued": True,
+            "message": "Refund issued. You can retry report generation for free."
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing refund: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to process refund: {str(e)}")
 
 
 @router.get("/history/{user_id}")

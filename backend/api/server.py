@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from redis import Redis
 from sqlalchemy.orm import Session
 from loguru import logger
@@ -401,18 +401,24 @@ async def get_markdown(job_id: str):
 
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
-    return ErrorResponse(
-        error="Not Found",
-        detail=str(exc.detail) if hasattr(exc, 'detail') else "Resource not found"
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Not Found",
+            "detail": str(exc.detail) if hasattr(exc, 'detail') else "Resource not found"
+        }
     )
 
 
 @app.exception_handler(500)
 async def internal_error_handler(request, exc):
     logger.error(f"Internal server error: {exc}")
-    return ErrorResponse(
-        error="Internal Server Error",
-        detail="An unexpected error occurred. Please try again later."
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal Server Error",
+            "detail": "An unexpected error occurred. Please try again later."
+        }
     )
 
 
