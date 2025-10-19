@@ -56,13 +56,8 @@ async def create_payment_session(
         # alipay and wechat_pay pending approval - will add after Stripe approves (5-7 days)
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=[
-                "card",           # Cards (+ Apple Pay, Google Pay, Samsung Pay)
-                "link",           # Link (enabled)
-                "kakao_pay",      # Kakao Pay (enabled)
-                "naver_pay",      # Naver Pay (enabled)
-                "payco",          # PAYCO (enabled)
-                "bancontact",     # Bancontact (enabled)
-                "eps",            # EPS (enabled)
+                "card",           # Credit/Debit Cards + Apple Pay, Google Pay, Samsung Pay (auto-enabled)
+                "link",           # Stripe Link (one-click payment)
             ],
             line_items=[
                 {
