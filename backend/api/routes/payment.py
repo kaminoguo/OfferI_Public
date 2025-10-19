@@ -52,19 +52,15 @@ async def create_payment_session(
     """
     try:
         # Create Stripe checkout session
-        # Explicitly list all enabled payment methods (10 enabled + 2 pending approval)
+        # Only enabled payment methods (apple_pay/google_pay/samsung_pay auto-included with card)
+        # alipay and wechat_pay pending approval - will add after Stripe approves (5-7 days)
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=[
-                "card",           # Cards (enabled)
-                "alipay",         # Alipay (pending - will work after approval)
-                "wechat_pay",     # WeChat Pay (pending - will work after approval)
-                "apple_pay",      # Apple Pay (enabled via card)
-                "google_pay",     # Google Pay (enabled via card)
+                "card",           # Cards (+ Apple Pay, Google Pay, Samsung Pay)
                 "link",           # Link (enabled)
                 "kakao_pay",      # Kakao Pay (enabled)
                 "naver_pay",      # Naver Pay (enabled)
                 "payco",          # PAYCO (enabled)
-                "samsung_pay",    # Samsung Pay (enabled via card)
                 "bancontact",     # Bancontact (enabled)
                 "eps",            # EPS (enabled)
             ],

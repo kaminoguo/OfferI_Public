@@ -9,13 +9,13 @@
 
 ## 📖 Overview
 
-**OfferI** is a comprehensive AI-powered platform that helps students find their perfect study abroad program. It combines a modern web application with MCP (Model Context Protocol) integration to provide personalized recommendations from a database of 89,986+ Master's programs worldwide.
+**OfferI** is a comprehensive AI-powered platform that helps students find their perfect study abroad program. It combines a modern web application with MCP (Model Context Protocol) integration to provide personalized recommendations from a database of 93,716+ Master's programs worldwide.
 
 ### 🌟 Key Features
 
 - **💳 Simple Pricing**: Pay-per-use model ($6 per consultation)
 - **🤖 AI-Powered**: Leverages Claude/GPT for intelligent matching
-- **📊 Comprehensive Database**: 89,986 Master's programs globally
+- **📊 Comprehensive Database**: 93,716 Master's programs globally
 - **🔒 Secure Payments**: Stripe integration with webhook verification
 - **🎯 Personalized Reports**: Custom PDF reports based on student profile
 - **🌐 Modern Stack**: Next.js 15 + FastAPI + PostgreSQL + Redis
@@ -210,7 +210,7 @@ The MCP server provides:
 - `search_programs()` - Filter by country/university/budget
 - `get_program_details()` - Full program information
 - `get_statistics()` - Database overview
-- 89,986 programs across 150+ countries
+- 93,716 programs across 150+ countries
 
 ## 🔐 Security
 
@@ -238,7 +238,7 @@ CREATE TABLE payments (
 ```
 
 ### Programs Database (SQLite)
-- 89,986 Master's programs
+- 93,716 Master's programs
 - 13 structured fields per program
 - Optimized for MCP queries
 
