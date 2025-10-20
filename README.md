@@ -186,19 +186,35 @@ subprocess.run([
 
 Our MCP server is available for developers building AI applications with study abroad data.
 
-### Installation
+### Quick Setup
+
+**Step 1: Get API Key**
+- Visit https://offeri.org/settings
+- Create a free account and generate an API key
+- Free tier: 5 MCP queries per month
+
+**Step 2: Add to Claude Code CLI**
 
 ```bash
-# Install from our MCP package
-npm install @kaminoguo/offeri-mcp
+claude mcp add offeri https://api.offeri.org/mcp/sse \
+  --transport sse \
+  -e SSE_API_KEY=sk_live_YOUR_API_KEY_HERE
+```
 
-# Or use with Claude Desktop
-# Add to claude_desktop_config.json:
+**Step 3: Add to Claude Desktop**
+
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
 {
   "mcpServers": {
     "offeri": {
       "command": "npx",
-      "args": ["-y", "@kaminoguo/offeri-mcp"]
+      "args": ["-y", "@modelcontextprotocol/client-sse"],
+      "env": {
+        "SSE_URL": "https://api.offeri.org/mcp/sse",
+        "SSE_API_KEY": "sk_live_YOUR_API_KEY_HERE"
+      }
     }
   }
 }
@@ -206,28 +222,35 @@ npm install @kaminoguo/offeri-mcp
 
 ### Usage Example
 
-```python
-# In your Claude Code CLI or any MCP-compatible application
-# The MCP server provides tools for querying 100K+ programs
+```
+You: Find computer science master's programs in Singapore
+     for a student with 3.5 GPA and $50K budget
 
-# Example query
-"Find computer science master's programs in Singapore
-for a student with 3.5 GPA and $50K budget"
-
-# MCP automatically:
-# 1. Queries structured database
-# 2. Filters by country, field, budget
-# 3. Returns accurate results (no vector similarity guessing)
+Claude: [Uses OfferI MCP to query 93,716 programs...]
+        Found 12 matching programs in Singapore:
+        1. NUS MSc Computer Science - $45K, 1.5 years
+        2. NTU MSc AI - $42K, 1 year
+        ...
 ```
 
-### Available via MCP
+### Available MCP Tools
 
-- University search by country
-- Program search by university/field
-- Detailed program information
-- Database statistics
+- `list_universities(country)` - Get all universities in a country
+- `search_programs(university)` - Search programs by university
+- `get_program_details_batch([ids])` - Get detailed info for multiple programs
+- `get_statistics()` - Database statistics
 
-**Documentation**: See [github.com/kaminoguo/OfferI_MCP](https://github.com/kaminoguo/OfferI_MCP)
+### Architecture
+
+```
+Your Claude Desktop/Code
+    ↓ (MCP SSE Protocol)
+api.offeri.org/mcp/sse
+    ↓ (SQLite Database)
+93,716 Master Programs
+```
+
+**No installation required** - Database hosted on our servers, always up-to-date
 
 ---
 
