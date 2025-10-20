@@ -118,6 +118,24 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # MCP SSE Server - For external Claude Desktop/Code users
+  mcp-sse:
+    image: offeri:latest
+    container_name: offeri-mcp-sse
+    command: ["python", "/app/mcp/server.py", "--sse"]
+    ports:
+      - "8080:8080"
+    environment:
+      - MCP_TRANSPORT=sse
+    volumes:
+      - ./mcp:/app/mcp:ro  # MCP database (read-only)
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/sse"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   redis_data:
     driver: local

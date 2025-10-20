@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
-OfferI MCP Server - Backend Production Version (STDIO-only)
-
-Synced from packages/mcp/server_http.py
+OfferI MCP Server - Unified Version (STDIO + SSE)
 
 Philosophy: Be DUMB, return RAW data, let LLM be SMART.
 
 No complicated matching logic. No "intelligent" filtering.
 Just query the database and return results. The LLM will decide what's relevant.
+
+Transport Modes:
+- STDIO: For internal workers (default)
+- SSE: For external Claude Desktop/Code users (use --sse flag)
 """
 import os
+import sys
 import sqlite3
 from pathlib import Path
 from typing import Optional, List, Any, Dict, Union
@@ -556,5 +559,20 @@ async def get_statistics() -> dict:
 
 
 if __name__ == "__main__":
-    # Backend runs in STDIO mode only (for production)
-    mcp.run()
+    # Dual transport support: STDIO (workers) + SSE (external users)
+
+    # Check transport mode
+    transport_mode = os.getenv("MCP_TRANSPORT", "stdio")
+    use_sse = "--sse" in sys.argv or transport_mode == "sse"
+
+    if use_sse:
+        # SSE mode for external Claude Desktop/Code users
+        print("Starting OfferI MCP Server in SSE mode on port 8080...", file=sys.stderr)
+        print("SSE endpoint: http://0.0.0.0:8080/sse", file=sys.stderr)
+
+        # Note: Authentication is handled by nginx reverse proxy
+        # which validates Authorization header before forwarding to this service
+        mcp.run(transport="sse", port=8080, host="0.0.0.0")
+    else:
+        # STDIO mode for internal workers (default)
+        mcp.run(transport="stdio")
