@@ -42,7 +42,10 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       <div className="p-4 border-t border-border">
         {isLoaded && user ? (
           <>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-md hover-minimal cursor-pointer mb-2">
+            <Link
+              href="/settings"
+              className="flex items-center gap-3 px-3 py-2 rounded-md hover-minimal cursor-pointer mb-2"
+            >
               {user.imageUrl ? (
                 <img
                   src={user.imageUrl}
@@ -59,10 +62,10 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   {user.fullName || user.emailAddresses[0]?.emailAddress || 'User'}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  $6 per consultation
+                  MCP API • Web $6
                 </p>
               </div>
-            </div>
+            </Link>
             <button
               onClick={() => signOut()}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md transition-colors"

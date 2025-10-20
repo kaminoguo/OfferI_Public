@@ -89,8 +89,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include payment routes
+# Include payment routes (web consultations - $6 payment)
 app.include_router(payment_router)
+
+# Include MCP API routes (direct API access with keys)
+from .routes.mcp_api import router as mcp_api_router
+app.include_router(mcp_api_router)
+
+# Include user settings routes (profile page)
+from .routes.user import router as user_router
+app.include_router(user_router)
 
 
 # ============================================================================

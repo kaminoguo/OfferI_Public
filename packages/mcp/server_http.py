@@ -43,17 +43,35 @@ mcp = FastMCP(
             - "GPA [X.X] [internship] [field] graduate admission 2024 2025"
             - "low GPA strong experience graduate school acceptance [country]"
             - "[Background] [field] masters admission outcomes 2024"
-            Filter schools based on real admission outcomes, NOT guesses
+            This helps you understand admission patterns
 
-    Step 3: WEB SEARCH latest rankings (DO 2-3 SEARCHES)
-            Search for 2024-2025 rankings:
-            - "QS World University Rankings 2025 [field]"
-            - "US News Best Graduate [field] Programs 2025"
-            - "Times Higher Education 2024 2025 [field] rankings"
-            Select 15-20 universities matching student profile
+    Step 3: REVIEW EVERY UNIVERSITY NAME from list_universities(country)
+            READ each university name, ANALYZE if it MATCHES student's background:
+            - School tier: Appropriate for student's GPA/credentials?
+            - Work experience value: Does this school value the internships?
+            - Career network: Can support the career goal?
+            - Admission philosophy: GPA-focused vs experience-focused?
 
-    Step 4: search_programs(university_name="X") for each selected school
-            Returns plain text TSV - YOU filter by program names
+            DO NOT just pick "top 20 famous schools" from rankings
+            THINK: Would THIS specific student be competitive? Would they thrive there?
+            Example: "Rochester Institute of Technology" might be perfect match
+            even if not in general Top 20 rankings
+
+            Select universities based on BACKGROUND MATCH, not just fame
+
+    Step 4: search_programs(university_name="X") for EACH selected university
+            Returns TSV with ALL programs for that university
+
+            REVIEW EVERY PROGRAM NAME - DO NOT filter by keywords!
+            READ each name, THINK about whether it fits student profile
+
+            Examples of what you MUST NOT miss:
+            ✓ "Symbolic Systems" at Stanford = highly relevant for AI+Product
+            ✓ "Media, Culture and Creative Cities" at HKU = relevant for CPO path
+            ✓ "Technology and Society" = relevant even without "product" keyword
+
+            ❌ WRONG: grep for "product|management|AI" and skip others
+            ✅ RIGHT: Read EVERY name, use your intelligence to judge relevance
 
     Step 5: get_program_details_optimized([id1, id2, ...]) for 100-200 programs
             Quick TSV format for initial screening (minimal fields)
@@ -61,8 +79,12 @@ mcp = FastMCP(
     Step 6: Filter to 30-50 programs, then get_program_details_batch([ids])
             Get essential details for scoring (NO tuition data - unreliable)
 
-    Step 7: Calculate transparent scores for ALL programs:
-            Score = Prestige(1-100) × Fit(1-100)
+    Step 7: Calculate transparent scores for ALL programs from ALL countries
+            CRITICAL: Rank programs TOGETHER in a SINGLE GLOBAL LIST
+            DO NOT create separate rankings by country (USA #1, Hong Kong #1, etc.)
+            ALL countries MIXED TOGETHER (e.g., CMU MSPM vs HKUST TLE vs Stanford MSx)
+
+            Score = Prestige(1-100) × Fit(1-100) / 100
             Show breakdown:
             - Prestige: ranking(40%) + reputation(30%) + outcomes(30%)
             - Fit: career_alignment(40%) + technical_depth(20%) + location(20%) + other(20%)
@@ -79,14 +101,52 @@ mcp = FastMCP(
             - "[University] [Program] tuition fees cost 2025 2026"
             THIS IS CRITICAL - Expect 60-100 total web searches for top 10!
 
-    Step 9: Generate comprehensive report with TOP 30 programs
-            Output in user's language. Include for each program:
-            - Location & Environment
-            - Career Prospects & Real Outcomes
-            - Program Intensity & Workload
-            - Unique Features & Differentiation
-            - Application Timeline & Requirements
-            - Tuition (from web search, NOT database)
+    Step 9: Generate TWO-TIER comprehensive report with TOP 30 programs
+            Output in user's language (Chinese if user wrote in Chinese)
+
+            ═══ TIER 1: TOP 10 DETAILED PROFILES ═══
+            For EACH of top 10 programs, ALL 6 dimensions are MANDATORY:
+
+            1. Location & Environment
+               - City name, cost of living (具体金额 $X/month)
+               - Climate, campus environment, cultural fit
+
+            2. Career Prospects & Real Outcomes
+               - Average starting salary (具体金额 $X)
+               - Employment rate within 3 months (X%)
+               - Top 3-5 employer companies (具体公司名)
+
+            3. Program Intensity & Workload
+               - Course load (X courses per semester)
+               - Difficulty rating, time commitment (X hrs/week)
+               - Project/thesis requirements
+
+            4. Unique Features & Differentiation
+               - What makes this program different from competitors?
+               - Unique strengths, special resources
+
+            5. Application Timeline & Requirements
+               - Round 1: MM/DD, Round 2: MM/DD, Final deadline: MM/DD
+               - GPA requirement, test scores, work experience
+               - Essays, recommendation letters
+
+            6. Total Cost Breakdown
+               - Tuition: $X (from web search, NOT database)
+               - Living expenses: $X for full program duration
+               - Total cost: $X
+               - Financial aid/scholarships if available
+
+            CRITICAL: If web search did not find complete info:
+            ❌ DO NOT leave dimension blank
+            ❌ DO NOT write "information unavailable"
+            ✅ Search again with different keywords
+            ✅ If truly unavailable, explain WHY and how to get the info
+
+            ═══ TIER 2: PROGRAMS 11-30 SUMMARY TABLE ═══
+            Tabular format:
+            | Rank | Program Name | University | Country | Duration | Score | Key Strength |
+
+            For programs 11-30, provide 1-2 sentence summary of why it's in top 30
 
     ═══════════════════════════════════════════════════════════════
     TOOLS
