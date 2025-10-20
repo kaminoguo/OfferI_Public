@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "offeri": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "/app/mcp/server.py"
+      ],
+      "env": {
+        "DB_PATH": "/app/mcp/programs.db"
+      }
+    }
+  }
+}

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-OfferI MCP Server - HTTP/SSE Version (Public)
+OfferI MCP Server - Backend Production Version (STDIO-only)
 
-Synced from backend/mcp/server.py with flexible transport modes
+Synced from packages/mcp/server_http.py
 
 Philosophy: Be DUMB, return RAW data, let LLM be SMART.
 
@@ -556,24 +556,5 @@ async def get_statistics() -> dict:
 
 
 if __name__ == "__main__":
-    # Flexible transport mode (HTTP/SSE for public, STDIO for local)
-    import argparse
-
-    parser = argparse.ArgumentParser(description="OfferI MCP Server")
-    parser.add_argument("--transport", choices=["stdio", "sse"], default="sse",
-                       help="Transport mode: stdio (for local) or sse (for HTTP)")
-    parser.add_argument("--host", default="0.0.0.0",
-                       help="Host to bind to (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=8081,
-                       help="Port to listen on (default: 8081)")
-    args = parser.parse_args()
-
-    if args.transport == "sse":
-        print(f"🚀 Starting OfferI MCP Server (HTTP/SSE mode)")
-        print(f"📡 Server URL: http://{args.host}:{args.port}")
-        print(f"💾 Database: {DB_PATH}")
-        print(f"✨ Ready to serve!")
-        mcp.run(transport="sse", host=args.host, port=args.port)
-    else:
-        # STDIO mode for local use
-        mcp.run()
+    # Backend runs in STDIO mode only (for production)
+    mcp.run()
