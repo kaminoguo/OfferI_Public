@@ -55,4 +55,17 @@ export const downloadPDF = async (jobId: string): Promise<Blob> => {
   return response.data;
 };
 
+export interface PaymentVerifyResponse {
+  valid: boolean;
+  payment_id?: string;
+  user_id?: string;
+  status?: string;
+  reason?: string;
+}
+
+export const verifyPayment = async (paymentId: string): Promise<PaymentVerifyResponse> => {
+  const response = await api.get<PaymentVerifyResponse>(`/api/payment/verify/${paymentId}`);
+  return response.data;
+};
+
 export default api;

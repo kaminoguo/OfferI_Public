@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import FormModal from './FormModal';
 import PaymentModal from './PaymentModal';
 import ProgressBar from './ProgressBar';
-import { submitJob, getJobStatus, downloadPDF, UserBackground } from '@/lib/api';
+import { submitJob, getJobStatus, downloadPDF, verifyPayment, UserBackground } from '@/lib/api';
 
 interface ChatProps {
   isSidebarOpen: boolean;
@@ -25,6 +25,8 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
   const [reportReady, setReportReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
+  const [canRetry, setCanRetry] = useState(false);
+  const [lastBackground, setLastBackground] = useState<UserBackground | null>(null);
 
   // Check for payment_id in URL (returned from Stripe)
   useEffect(() => {
@@ -57,6 +59,11 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
         } else if (status.status === 'failed') {
           setIsLoading(false);
           setError(status.error || '生成报告失败，请重试');
+
+          // Check if payment allows retry
+          if (paymentId) {
+            checkRetryEligibility(paymentId);
+          }
         }
       } catch (err) {
         console.error('Error polling status:', err);
@@ -68,6 +75,22 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
 
     return () => clearInterval(interval);
   }, [jobId, reportReady, error]);
+
+  const checkRetryEligibility = async (paymentIdToCheck: string) => {
+    try {
+      const paymentStatus = await verifyPayment(paymentIdToCheck);
+
+      // If payment is PENDING_RETRY, user can retry for free
+      if (paymentStatus.valid && paymentStatus.status === 'pending_retry') {
+        setCanRetry(true);
+      } else {
+        setCanRetry(false);
+      }
+    } catch (err) {
+      console.error('Error checking retry eligibility:', err);
+      setCanRetry(false);
+    }
+  };
 
   const handleStartConsultation = () => {
     if (!user) {
@@ -97,6 +120,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
 
     try {
       setError(null);
+      setCanRetry(false);
       setIsFormModalOpen(false);
       setIsLoading(true);
 
@@ -105,6 +129,9 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
         ...data,
         user_id: user.id,
       };
+
+      // Save background for potential retry
+      setLastBackground(dataWithUser);
 
       const response = await submitJob(dataWithUser, paymentId);
       setJobId(response.job_id);
@@ -143,6 +170,43 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
     }
   };
 
+  const handleRetry = async () => {
+    if (!lastBackground || !paymentId) {
+      setError('No previous submission found');
+      return;
+    }
+
+    try {
+      setError(null);
+      setCanRetry(false);
+      setIsLoading(true);
+      setProgress(0);
+
+      // Resubmit with saved background data
+      const response = await submitJob(lastBackground, paymentId);
+      setJobId(response.job_id);
+    } catch (error: any) {
+      setIsLoading(false);
+
+      // Handle payment errors
+      if (error.status === 402) {
+        setError('Payment not found or already used. Please make a new payment.');
+        setCanRetry(false);
+        setIsPaymentModalOpen(true);
+      } else if (error.status === 403) {
+        setError('Payment verification failed. Please try again.');
+        setCanRetry(false);
+        setIsPaymentModalOpen(true);
+      } else {
+        setError(error.message || '提交失败，请稍后重试');
+        // Re-check retry eligibility after error
+        if (paymentId) {
+          checkRetryEligibility(paymentId);
+        }
+      }
+    }
+  };
+
   const handleReset = () => {
     setJobId(null);
     setPaymentId(null);
@@ -150,6 +214,8 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
     setError(null);
     setIsLoading(false);
     setProgress(0);
+    setCanRetry(false);
+    setLastBackground(null);
   };
 
   return (
@@ -231,8 +297,8 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
         {error && (
           /* Error State */
           <div className="text-center max-w-md px-8">
-            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-red-500 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -242,12 +308,37 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
             <p className="text-muted-foreground mb-6">
               {error}
             </p>
-            <button
-              onClick={handleReset}
-              className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
-            >
-              Try Again
-            </button>
+
+            {canRetry ? (
+              /* User can retry for free */
+              <div className="flex flex-col gap-3">
+                <div className="px-4 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg mb-2">
+                  <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+                    ✓ You can retry for free (no additional charge)
+                  </p>
+                </div>
+                <button
+                  onClick={handleRetry}
+                  className="w-full px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                >
+                  Retry for Free
+                </button>
+                <button
+                  onClick={handleReset}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Start a new consultation
+                </button>
+              </div>
+            ) : (
+              /* Normal reset button */
+              <button
+                onClick={handleReset}
+                className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              >
+                Try Again
+              </button>
+            )}
           </div>
         )}
       </div>

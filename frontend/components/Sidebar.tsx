@@ -1,6 +1,7 @@
 'use client';
 
-import { X, User, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, User, LogOut, FileText, Download, Clock } from 'lucide-react';
 import { useUser, useClerk } from '@clerk/nextjs';
 import Link from 'next/link';
 
@@ -9,9 +10,43 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
+interface Consultation {
+  payment_id: string;
+  amount: number;
+  status: string;
+  job_id: string;
+  created_at: string;
+}
+
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch consultation history when user is loaded
+  useEffect(() => {
+    if (isLoaded && user) {
+      fetchConsultations();
+    } else if (isLoaded && !user) {
+      setLoading(false);
+    }
+  }, [isLoaded, user]);
+
+  const fetchConsultations = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payment/history/${user!.id}`);
+      if (!response.ok) throw new Error('Failed to fetch consultations');
+      const data = await response.json();
+      setConsultations(data.consultations || []);
+    } catch (error) {
+      console.error('Error fetching consultations:', error);
+      setConsultations([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -29,13 +64,83 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         </button>
       </div>
 
-      {/* Main Content - Placeholder for future features */}
-      <div className="flex-1 p-4">
-        <div className="text-center py-8">
-          <p className="text-sm text-muted-foreground">
-            Your consultation history will appear here
-          </p>
-        </div>
+      {/* Consultation History */}
+      <div className="flex-1 p-4 overflow-y-auto">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-3">
+          Consultation History
+        </h3>
+
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
+            <p className="text-xs text-muted-foreground mt-2">Loading...</p>
+          </div>
+        ) : !user ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground">
+              Sign in to view your consultation history
+            </p>
+          </div>
+        ) : consultations.length === 0 ? (
+          <div className="text-center py-8">
+            <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+            <p className="text-sm text-muted-foreground">
+              No consultations yet
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Your generated PDFs will appear here
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {consultations.map((consultation) => (
+              <div
+                key={consultation.job_id}
+                className="group p-3 border border-border rounded-md hover:bg-secondary transition-colors"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileText className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span className="text-sm font-medium text-foreground truncate">
+                        Consultation
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">
+                        {new Date(consultation.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                    <div className="mt-1">
+                      <span className={`inline-block px-2 py-0.5 text-xs rounded-full ${
+                        consultation.status === 'PAID'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                          : consultation.status === 'PENDING_RETRY'
+                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          : 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
+                      }`}>
+                        {consultation.status}
+                      </span>
+                    </div>
+                  </div>
+                  <a
+                    href={`${process.env.NEXT_PUBLIC_API_URL}/api/results/${consultation.job_id}/download`}
+                    download
+                    className="p-2 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
+                    title="Download PDF"
+                  >
+                    <Download className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* User Profile */}
