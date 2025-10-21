@@ -1,213 +1,342 @@
 # OfferI Frontend
 
-ChatGPT-style AI study abroad advisor frontend built with Next.js 14 and TailwindCSS.
-
-## Features
-
-- ✅ ChatGPT-like dark theme UI
-- ✅ Responsive design
-- ✅ Real-time job status polling
-- ✅ Form modal for background submission
-- ✅ PDF report download
-- ✅ Markdown rendering for reports
-- ✅ Typing indicators and smooth animations
+AI study abroad advisor frontend. Next.js 15 + React 19 + Clerk + Stripe.
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
-- **Styling**: TailwindCSS
-- **Language**: TypeScript
-- **Icons**: Lucide React
-- **HTTP Client**: Axios
-- **Markdown**: react-markdown
+Framework & UI:
+- Next.js 15.5.6 (App Router)
+- React 19.2.0
+- TypeScript 5
+- TailwindCSS 3.4.17
 
-## Getting Started
+Authentication & Payment:
+- Clerk 6.33.7 (user authentication)
+- Stripe 8.1.0 (payment processing, $6/consultation)
 
-### Prerequisites
+Libraries:
+- axios 1.7.9 (HTTP client)
+- framer-motion 11.15.0 (animations)
+- lucide-react 0.460.0 (icons)
+- react-markdown 9.0.1 (markdown rendering)
+- react-syntax-highlighter 15.6.1 (code highlighting)
 
-- Node.js 18+
-- npm or yarn or pnpm
-- Backend API running on `http://localhost:8000`
+## Features
 
-### Installation
+User Flow:
+1. Sign in/up (Clerk authentication)
+2. Pay $6 (Stripe checkout)
+3. Fill background form (school, GPA, major, projects, internships, career goals)
+4. Wait 10-15 minutes (ChatGPT-style progress bar)
+5. Download PDF report
 
-```bash
-# Install dependencies
-npm install
-
-# Create environment file
-cp .env.local.example .env.local
-
-# Edit .env.local if needed
-# NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-### Development
-
-```bash
-# Run development server
-npm run dev
-
-# Open http://localhost:3000
-```
-
-### Build
-
-```bash
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
+Components:
+- Chat interface (message bubbles, markdown rendering)
+- Payment modal (Stripe checkout integration)
+- Background form modal (unstructured input)
+- Progress bar (10%-100% ChatGPT style)
+- Sidebar (consultation history, new chat)
+- Settings page (API key management)
 
 ## Project Structure
 
 ```
 frontend/
 ├── app/
-│   ├── layout.tsx        # Root layout with dark mode
-│   ├── page.tsx          # Main chat page
-│   └── globals.css       # Global styles + Tailwind
+│   ├── layout.tsx          # Root layout with Clerk provider
+│   ├── page.tsx            # Main chat page
+│   ├── globals.css         # Global styles + Tailwind
+│   ├── settings/
+│   │   └── page.tsx        # API key management
+│   ├── sign-in/
+│   │   └── [[...sign-in]]/page.tsx  # Clerk sign-in
+│   └── sign-up/
+│       └── [[...sign-up]]/page.tsx  # Clerk sign-up
+│
 ├── components/
-│   ├── Chat.tsx          # Main chat interface
-│   ├── Sidebar.tsx       # Left sidebar (history, new chat)
-│   ├── MessageList.tsx   # Message display with markdown
-│   └── FormModal.tsx     # Background info form
+│   ├── Chat.tsx            # Main chat interface
+│   ├── PaymentModal.tsx    # Stripe payment modal
+│   ├── FormModal.tsx       # Background form modal
+│   ├── ProgressBar.tsx     # Progress indicator
+│   └── Sidebar.tsx         # History sidebar
+│
 ├── lib/
-│   └── api.ts            # Backend API client
-├── public/               # Static assets
-├── tailwind.config.ts    # Tailwind configuration
-├── tsconfig.json         # TypeScript configuration
-├── next.config.js        # Next.js configuration
-└── package.json          # Dependencies
+│   └── api.ts              # Backend API client
+│
+├── middleware.ts           # Clerk authentication middleware
+├── .env.local.example      # Environment variables template
+├── package.json            # Dependencies
+├── tailwind.config.ts      # Tailwind configuration
+├── tsconfig.json           # TypeScript configuration
+└── next.config.js          # Next.js configuration
 ```
+
+## Quick Start
+
+Prerequisites:
+- Node.js 18+
+- Backend API running (http://localhost:8000)
+- Clerk account (https://clerk.com/)
+- Stripe account (https://stripe.com/)
+
+Installation:
+
+1. Install Dependencies
+```bash
+cd frontend
+npm install
+```
+
+2. Configure Environment
+```bash
+cp .env.local.example .env.local
+nano .env.local
+```
+
+Required environment variables:
+```bash
+# Backend API
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx
+CLERK_SECRET_KEY=sk_test_xxxxx
+
+# Stripe Payment
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
+```
+
+3. Start Development Server
+```bash
+npm run dev
+# Open http://localhost:3000
+```
+
+4. Build for Production
+```bash
+npm run build
+npm start
+```
+
+## User Journey
+
+1. Landing Page (/)
+- User sees welcome screen
+- Click "Start Consultation" button
+- Redirected to sign-in if not authenticated
+
+2. Sign In/Up (/sign-in, /sign-up)
+- Clerk authentication
+- Google/Email login options
+- Redirected back to chat after auth
+
+3. Payment Modal
+- Displays $6 consultation fee
+- "Proceed to Payment" button
+- Opens Stripe checkout
+- Returns to chat after successful payment
+
+4. Background Form Modal
+- Opens after payment verification
+- Fields: school, GPA, major, projects, internships, career goal, target countries, budget
+- Unstructured text input (flexible format)
+- Submit → job_id created
+
+5. Progress Display
+- ChatGPT-style progress bar (10%-100%)
+- Status updates every 5 seconds
+- "Generating report... (40%)"
+- Takes 10-15 minutes
+
+6. Results
+- "Download PDF" button appears
+- Report filename: OfferI_留学规划报告_HKUST_abc12345.pdf
+- Consultation saved to history
+
+7. Settings Page (/settings)
+- View API keys
+- Create new API key (for MCP access)
+- Revoke keys
+- Shows usage: X/5 consultations this month
 
 ## API Integration
 
-The frontend connects to the backend API with the following endpoints:
+Frontend communicates with backend API:
 
 ```typescript
-// Submit background
+// Payment
+POST /api/payment/create-session
+Response: { checkout_url }
+
+GET /api/payment/verify/:payment_id
+Response: { status: "paid" | "pending" }
+
+// Consultation
 POST /api/submit
-{
-  school, gpa, major, projects, internships,
-  career_goal, target_countries, ...
-}
+Body: { school, gpa, major, projects, internships, career_goal, target_countries, budget }
+Response: { job_id, status, estimated_time }
 
-// Get job status
-GET /api/status/:jobId
+GET /api/status/:job_id
+Response: { status: "queued" | "processing" | "completed" | "failed", progress }
 
-// Get HTML preview
-GET /api/results/:jobId/preview
+GET /api/results/:job_id/download
+Response: PDF file
 
-// Download PDF
-GET /api/results/:jobId/download
+// Settings (API Keys)
+GET /api/settings/keys
+Header: Authorization: Bearer clerk_token
+Response: [{ key, name, is_super_key, created_at, last_used_at }]
+
+POST /api/settings/keys
+Body: { name }
+Response: { key, name, is_super_key }
+
+DELETE /api/settings/keys/:key
 ```
 
-## UI Components
+## Components
 
-### Chat Interface
+### Chat.tsx
+Main chat interface with message bubbles, input area, and state management.
 
-- **Header**: App title + sidebar toggle
-- **Messages**: User/assistant message bubbles with markdown
-- **Input**: Text input area (shown after form submission)
-- **Empty State**: Welcome screen with "开始咨询" button
+State:
+- messages: Array of user/assistant messages
+- jobId: Current consultation job ID
+- status: Job status (queued/processing/completed/failed)
+- showPayment: Payment modal visibility
+- showForm: Background form modal visibility
 
-### Sidebar
+### PaymentModal.tsx
+Stripe checkout integration.
 
-- **New Chat**: Button to start new consultation
-- **History**: List of past chats (today)
-- **Profile**: User profile section
+Flow:
+1. User clicks "Proceed to Payment"
+2. Call POST /api/payment/create-session
+3. Redirect to Stripe checkout (checkout_url)
+4. Stripe redirects back with payment_id
+5. Verify payment: GET /api/payment/verify/:payment_id
+6. If paid, show background form modal
 
-### Form Modal
+### FormModal.tsx
+Background information form.
 
-Full-screen modal with fields:
-- Basic: School, GPA, Major
-- Experience: Projects, Internships, Papers
-- Goals: Career goal, Target countries, Budget
+Fields (all text input, unstructured):
+- school: "HKUST" or "香港科技大学 (QS44)"
+- gpa: "3.5" or "3.5/4.0"
+- major: "CS + AI" or "计算机科学与人工智能"
+- projects: "推荐系统项目，深度学习"
+- internships: "Google 实习 3 个月"
+- career_goal: "产品经理"
+- target_countries: "美国、香港"
+- budget: "无上限" or "50万人民币"
 
-### Message Display
+Submit → POST /api/submit → job_id
 
-- User messages: Green avatar, right-aligned feel
-- AI messages: Purple avatar, markdown rendering
-- Typing indicator: Three animated dots
+### ProgressBar.tsx
+ChatGPT-style progress indicator.
+
+States:
+- 10%: "Analyzing your background..."
+- 30%: "Searching 93,716 programs..."
+- 50%: "Generating recommendations..."
+- 70%: "Validating rankings..."
+- 90%: "Finalizing report..."
+- 100%: "Report ready!"
+
+### Sidebar.tsx
+Consultation history and navigation.
+
+Features:
+- "New Consultation" button
+- List of past consultations (by date)
+- User profile section
+- Sign out button
 
 ## Styling
 
-### Colors (ChatGPT-like)
+TailwindCSS configuration with custom colors:
 
 ```css
---gpt-dark: #343541        /* Main background */
---gpt-darker: #202123      /* Sidebar background */
---gpt-light: #ECECF1       /* Light mode text */
---gpt-border: #565869      /* Borders */
---gpt-hover: #2A2B32       /* Hover states */
---gpt-green: #10A37F       /* Primary actions */
+/* Dark theme */
+background: #1a1a1a
+foreground: #ffffff
+border: #2a2a2a
+
+/* Primary actions */
+primary: #10A37F (green, like ChatGPT)
+hover: #0d8d6b
+
+/* Cards and surfaces */
+card: #242424
 ```
 
-### Dark Mode
+## Development
 
-- Default theme: Dark (like ChatGPT)
-- Configured in `app/layout.tsx` with `className="dark"`
-- All components styled for dark mode
-
-## Development Workflow
-
-### Adding New Features
-
-1. Create component in `components/`
-2. Add API calls to `lib/api.ts`
-3. Update types in TypeScript files
-4. Style with Tailwind classes
-
-### Common Tasks
-
+Run Development Server:
 ```bash
-# Format code
-npm run lint
+npm run dev
+```
 
-# Type check
+Type Checking:
+```bash
 npx tsc --noEmit
+```
 
-# Clear cache
-rm -rf .next
+Linting:
+```bash
+npm run lint
+```
+
+Format Code:
+```bash
+npx prettier --write .
 ```
 
 ## Environment Variables
 
+Production:
 ```bash
-# Required
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=https://api.offeri.org
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_xxxxx
+CLERK_SECRET_KEY=sk_live_xxxxx
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxx
+```
 
-# Optional (for production)
-NEXT_PUBLIC_API_URL=https://api.offeri.com
+Development:
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx
+CLERK_SECRET_KEY=sk_test_xxxxx
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
 ```
 
 ## Deployment
 
-### Vercel (Recommended)
-
+Vercel (Recommended):
 ```bash
 # Install Vercel CLI
 npm i -g vercel
 
 # Deploy
 vercel
+
+# Configure environment variables in Vercel dashboard
 ```
 
-### Docker
-
+Docker:
 ```bash
 # Build
 docker build -t offeri-frontend .
 
 # Run
-docker run -p 3000:3000 offeri-frontend
+docker run -p 3000:3000 \
+  -e NEXT_PUBLIC_API_URL=https://api.offeri.org \
+  -e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_xxxxx \
+  -e NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxx \
+  offeri-frontend
 ```
 
-### Self-Hosted
-
+Self-Hosted:
 ```bash
 # Build
 npm run build
@@ -215,38 +344,40 @@ npm run build
 # Start with PM2
 pm2 start npm --name "offeri-frontend" -- start
 
-# Or with node
+# Or with Node.js
 node .next/standalone/server.js
 ```
 
-## Performance
-
-- **Lighthouse Score**: 95+ (all categories)
-- **First Load**: < 200KB (gzipped)
-- **Time to Interactive**: < 2s
-- **API Calls**: Polling every 5s during job processing
-
-## Browser Support
-
-- Chrome/Edge: Latest 2 versions
-- Firefox: Latest 2 versions
-- Safari: Latest 2 versions
-- Mobile: iOS Safari, Chrome Android
-
 ## Troubleshooting
 
-### API Connection Issues
-
+Backend Connection Failed:
 ```bash
 # Check backend is running
 curl http://localhost:8000/health
 
-# Check CORS is configured in backend
-# backend/api/server.py should have CORS middleware
+# Check CORS configuration in backend
+# backend/api/server.py should include http://localhost:3000
 ```
 
-### Build Errors
+Clerk Authentication Error:
+```bash
+# Verify Clerk keys
+echo $NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
+# Check Clerk dashboard for correct keys
+# Development: pk_test_*, Production: pk_live_*
+```
+
+Stripe Payment Failed:
+```bash
+# Verify Stripe keys
+echo $NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+
+# Test mode: pk_test_*, Live mode: pk_live_*
+# Ensure webhook is configured in Stripe dashboard
+```
+
+Build Errors:
 ```bash
 # Clear cache
 rm -rf .next node_modules
@@ -254,27 +385,39 @@ npm install
 npm run build
 ```
 
-### Type Errors
-
+Type Errors:
 ```bash
 # Regenerate Next.js types
 rm -rf .next
-npm run dev
+npm run dev  # Types regenerate on dev server start
 ```
 
-## Contributing
+## Performance
 
-1. Create feature branch
-2. Make changes
-3. Test thoroughly
-4. Submit PR
+Metrics:
+- First Load JS: ~200KB (gzipped)
+- Time to Interactive: <2s
+- Lighthouse Score: 95+ (all categories)
+
+Optimizations:
+- Server-side rendering (SSR) for initial load
+- Automatic code splitting
+- Image optimization (Next.js Image component)
+- API polling optimization (5s interval, stops when complete)
+
+## Browser Support
+
+- Chrome/Edge: Latest 2 versions
+- Firefox: Latest 2 versions
+- Safari: Latest 2 versions
+- Mobile: iOS Safari 14+, Chrome Android latest
 
 ## License
 
-MIT
+Proprietary - OfferI
 
----
+## Support
 
-**Created**: 2025-10-14
-**Version**: 1.0.0
-**Framework**: Next.js 14
+- GitHub Issues: https://github.com/kaminoguo/OfferI/issues
+- Email: contact@offeri.org
+- Documentation: See backend README for API details

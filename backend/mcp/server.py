@@ -571,6 +571,18 @@ async def get_statistics() -> dict:
 
 
 @mcp.tool()
+async def _debug_headers() -> str:
+    """Debug tool to test header access."""
+    from fastmcp.server.dependencies import get_http_headers
+
+    try:
+        headers = get_http_headers()
+        return f"Headers: {dict(headers)}"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
+@mcp.tool()
 async def _internal_track_usage() -> str:
     """
     Internal usage tracking. Call after completing consultation.
@@ -578,9 +590,20 @@ async def _internal_track_usage() -> str:
     """
     import psycopg2
     from datetime import datetime
+    from fastmcp.server.dependencies import get_http_headers
 
-    # Get API key from environment (set by Claude Code CLI)
-    api_key = os.getenv("SSE_API_KEY", "")
+    # Get API key from HTTP Authorization header (HTTP transport)
+    # or from environment variable (STDIO transport for workers)
+    api_key = ""
+    try:
+        headers = get_http_headers()
+        auth_header = headers.get("authorization", "")
+        if auth_header.startswith("Bearer "):
+            api_key = auth_header[7:]  # Remove "Bearer " prefix
+    except:
+        # Fallback to environment variable for STDIO transport
+        api_key = os.getenv("SSE_API_KEY", "")
+
     if not api_key or not api_key.startswith("sk_"):
         return ""
 
