@@ -26,7 +26,6 @@ interface UserProfile {
     remaining: number;
     is_unlimited: boolean;
   };
-  payment_count: number;
 }
 
 export default function SettingsPage() {
@@ -332,16 +331,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Web Consultations */}
-        <div className="bg-white border border-border rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-foreground mb-4">Web Consultations</h2>
-          <p className="text-muted-foreground mb-2">
-            Total consultations via web: <strong>{profile.payment_count}</strong>
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Each web consultation costs $6 and generates a complete study abroad report.
-          </p>
-        </div>
       </div>
     </div>
   );
