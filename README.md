@@ -10,7 +10,7 @@
 [![License](https://img.shields.io/badge/License-Elastic_2.0-blue.svg?style=flat-square)](LICENSE)
 [![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-764ba2?style=flat-square)](https://modelcontextprotocol.io)
 
-[Live Demo](https://offeri.org) · [Documentation](./docs) · [Issues](https://github.com/kaminoguo/OfferI_Public/issues)
+[🌐 Website](https://offeri.org) · [📺 Bilibili](#) · [🎬 YouTube](#) · [Issues](https://github.com/kaminoguo/OfferI_Public/issues)
 
 </div>
 
@@ -30,6 +30,22 @@ After validating product-market fit, we plan to expand to:
 - Bachelor's programs
 - PhD programs (including professor recommendations)
 - Non-English taught programs
+
+---
+
+## Demo Videos
+
+### Web Service Demo
+> 📺 **Video coming soon** - Full consultation flow demonstration
+
+<!-- Placeholder for web service demo video -->
+*Watch how users get personalized program recommendations in 10-15 minutes*
+
+### MCP Service Demo
+> 🎬 **Video coming soon** - Using OfferI MCP in Claude Desktop/Code
+
+<!-- Placeholder for MCP service demo video -->
+*See how developers can integrate OfferI database into their AI applications*
 
 ---
 
@@ -135,22 +151,6 @@ Claude: [Uses OfferI MCP to query 93,716 programs...]
         ...
 ```
 
-## Roadmap
-
-**Current (v1.0)**
-- Master's programs worldwide
-- AI recommendation engine
-- Web application (Next.js + FastAPI)
-- Payment integration
-- PDF report generation
-
-**Planned Expansion** (after validating product-market fit)
-- Bachelor's programs
-- PhD programs with professor recommendations
-- Non-English taught programs (French, German, Spanish, etc.)
-- Mobile application
-- API access for developers
-
 ## License
 
 **Elastic License 2.0** - Same license used by Elasticsearch and Kibana
@@ -176,16 +176,6 @@ Claude: [Uses OfferI MCP to query 93,716 programs...]
 We chose this license to protect our commercial service while keeping code accessible for learning. It's the same approach used by companies like Elastic, ensuring our 6+ months of development work isn't immediately copied by competitors.
 
 See [LICENSE](./LICENSE) for full legal text.
-
----
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [Architecture](./docs/ARCHITECTURE.md) | System design deep-dive |
-| [MCP Guide](./docs/MCP.md) | Model Context Protocol usage |
-| [Deployment](./docs/DEPLOYMENT.md) | Production deployment guide |
 
 ---
 
