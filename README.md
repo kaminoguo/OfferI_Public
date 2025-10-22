@@ -174,6 +174,86 @@ claude mcp list
 </details>
 
 <details>
+<summary><b>Codex CLI (OpenAI)</b></summary>
+
+```bash
+# Add MCP server using command line
+codex mcp add offeri --env OFFERI_API_KEY=sk_live_YOUR_API_KEY_HERE \
+  -- npx -y @modelcontextprotocol/http-client \
+  --url https://api.offeri.org/mcp \
+  --header "Authorization: Bearer ${OFFERI_API_KEY}"
+
+# Verify configuration
+codex mcp list
+```
+
+Or edit `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.offeri]
+command = "npx"
+args = [
+  "-y", "@modelcontextprotocol/http-client",
+  "--url", "https://api.offeri.org/mcp",
+  "--header", "Authorization: Bearer sk_live_YOUR_API_KEY_HERE"
+]
+```
+</details>
+
+<details>
+<summary><b>Gemini CLI (Google)</b></summary>
+
+```bash
+# Add MCP server using command line
+gemini mcp add offeri \
+  --url https://api.offeri.org/mcp \
+  --transport http \
+  --auth-header "Authorization: Bearer sk_live_YOUR_API_KEY_HERE"
+
+# Verify configuration
+gemini mcp list
+```
+
+Or edit `~/.gemini/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "offeri": {
+      "url": "https://api.offeri.org/mcp",
+      "transport": "http",
+      "headers": {
+        "Authorization": "Bearer sk_live_YOUR_API_KEY_HERE"
+      }
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary><b>Qwen Code</b></summary>
+
+Edit `~/.qwen/settings.json` or `.qwen/settings.json` in your project:
+
+```json
+{
+  "mcpServers": {
+    "offeri": {
+      "url": "https://api.offeri.org/mcp",
+      "transport": "http",
+      "headers": {
+        "Authorization": "Bearer sk_live_YOUR_API_KEY_HERE"
+      }
+    }
+  }
+}
+```
+
+Qwen Code will automatically fetch tool definitions from the server.
+</details>
+
+<details>
 <summary><b>Cursor / Windsurf / Other MCP Clients</b></summary>
 
 Add to your client's MCP configuration:
