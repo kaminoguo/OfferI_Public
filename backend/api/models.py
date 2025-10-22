@@ -16,12 +16,17 @@ class UserBackground(BaseModel):
 
     Example:
     {
-      "background": "我是香港科技大学ELEC+AI专业，绩点3.0，有3个月谷歌TPM实习..."
+      "background": "我是香港科技大学ELEC+AI专业，绩点3.0，有3个月谷歌TPM实习...",
+      "user_id": "user_xyz123"  // Added by frontend with Clerk authentication
     }
     """
     background: str = Field(
         ...,
         description="Complete user background as free-form text (中英文均可)"
+    )
+    user_id: Optional[str] = Field(
+        None,
+        description="User ID from Clerk authentication (added by frontend)"
     )
 
     class Config:
