@@ -170,7 +170,7 @@ export default function SettingsPage() {
             <h2 className="text-xl font-semibold text-foreground">MCP API Usage</h2>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">This Month</p>
               <p className="text-2xl font-bold text-foreground">{profile.mcp_usage.used}</p>
@@ -179,12 +179,6 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">Limit</p>
               <p className="text-2xl font-bold text-foreground">
                 {profile.mcp_usage.is_unlimited ? '∞' : profile.mcp_usage.limit}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Remaining</p>
-              <p className="text-2xl font-bold text-foreground">
-                {profile.mcp_usage.is_unlimited ? '∞' : profile.mcp_usage.remaining}
               </p>
             </div>
             <div>

@@ -54,8 +54,14 @@ async def create_payment_session(
         # Create Stripe checkout session
         # Using globally supported payment methods (works in all regions)
         # Alipay will show based on Stripe Dashboard settings + customer location/preferences
+        # Prefer automatic payment methods so Stripe decides the best set (card, wallets, Link, Alipay, etc.)
+        # Make sure the methods you want are enabled in Stripe Dashboard → Payments → Payment methods → Checkout
         checkout_session = stripe.checkout.Session.create(
-            payment_method_types=["card", "link", "alipay"],
+            automatic_payment_methods={
+                "enabled": True,
+                # Allow redirect-based methods like Alipay when available for the customer
+                "allow_redirects": "always",
+            },
             line_items=[
                 {
                     "price_data": {
