@@ -7,7 +7,7 @@
 *Personalized master's program recommendations using Claude Code and MCP*
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-offeri.org-5B5BD6?style=flat-square)](https://offeri.org)
-[![License](https://img.shields.io/badge/License-Source_Available-green.svg?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-Elastic_2.0-blue.svg?style=flat-square)](LICENSE)
 [![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-764ba2?style=flat-square)](https://modelcontextprotocol.io)
 
 [Live Demo](https://offeri.org) · [Documentation](./docs) · [Issues](https://github.com/kaminoguo/OfferI_Public/issues)
@@ -37,7 +37,7 @@ After validating product-market fit, we plan to expand to:
 
 **This project is NOT fully open-source.** It follows an **open core** model:
 
-### What is Available (MIT License)
+### What is Available (Elastic License 2.0)
 
 - Frontend code (Next.js 15, React 19, TypeScript)
 - Backend API structure (FastAPI, Python 3.11)
@@ -45,13 +45,20 @@ After validating product-market fit, we plan to expand to:
 - Docker deployment configuration
 - Documentation and setup guides
 
+**Key License Restrictions:**
+- ❌ **Cannot offer as SaaS**: You cannot provide this software as a hosted/managed service to third parties
+- ✅ **Can use internally**: Free to use, modify, and deploy for your own projects
+- ✅ **Can learn from code**: Study and learn from the implementation
+
 ### What is Proprietary
 
 - Database (100,000+ programs - 6 months of crawling work)
 - Crawler implementation code
 - Internal data processing tools
 
-**License**: MIT License for open-source components (NOT GPL/AGPL which restrict commercial use)
+**License**: Elastic License 2.0 (same as Elasticsearch, Kibana)
+
+**Why this license?** Prevents competitors from copying our code to build competing SaaS products, while allowing developers to learn and use it for non-commercial purposes.
 
 **Commercial Service**: Hosted version at [offeri.org](https://offeri.org) is $6 per consultation
 
@@ -59,97 +66,25 @@ After validating product-market fit, we plan to expand to:
 
 ## Technical Architecture
 
-### Why NO Vector Matching (RAG) and NO LangChain?
+### Core Technical Advantages
 
-**We deliberately chose a different approach:**
+**1. MCP Direct Database Access → Lower Hallucination Rate**
 
-**What We DON'T Use:**
-- ❌ **Vector Matching/RAG** - Semantic similarity search with embeddings
-- ❌ **LangChain** - Framework abstraction layers
+Unlike RAG (Retrieval-Augmented Generation) which uses vector similarity matching, we use **MCP (Model Context Protocol) for direct SQL queries**:
 
-**What We DO Use:**
-- ✅ **MCP with Workflow** - Direct structured database queries
-- ✅ **Claude Code's Built-in Tool Chains** - Native tool calling without frameworks
+- **RAG Approach**: Text → Embeddings → Vector Search → ~85% semantic accuracy (hallucination risk)
+- **Our Approach**: MCP → Direct SQL Query → 100% deterministic results (zero hallucination)
 
-### Why This Approach?
+For structured data like university programs (name, tuition, duration), SQL is inherently more reliable than semantic similarity.
 
-| Aspect | Our Approach (MCP + Claude Code) | RAG + LangChain |
-|--------|----------------------------------|-----------------|
-| **Data Access** | Direct SQL queries via MCP | Vector similarity search + framework layers |
-| **Accuracy** | 100% (deterministic queries) | ~85% (semantic matching) |
-| **Latency** | Low (single database query) | High (embedding generation + vector search + framework) |
-| **Maintenance** | MCP standard protocol | Custom embedding pipeline + framework updates |
-| **Cost** | Database only | Database + Vector DB + Embeddings API + Framework |
+**2. Using Official CLI → Product Improves Automatically**
 
-**Study abroad data is structured** (university, program, country, tuition). SQL queries are faster and more accurate than vector similarity.
+We use **Claude Code CLI** (official tool from Anthropic):
 
-### Architecture Diagram
+- **Our Advantage**: When Anthropic updates Claude Code, our product gets better automatically
+- **LangChain/LangGraph Risk**: Framework abstractions can break with LLM updates, requiring constant maintenance
 
-```mermaid
-graph TB
-    subgraph "Frontend"
-        A[Next.js 15 + React 19]
-        A1[Clerk Authentication]
-        A2[Stripe Payments]
-    end
-
-    subgraph "Backend"
-        B[FastAPI Server]
-        B1[Redis Queue]
-        B2[Worker Pool]
-        B3[PostgreSQL]
-    end
-
-    subgraph "AI Layer"
-        C[Claude Code CLI]
-        C1[Built-in Tool Chains]
-        C2[Two-Stage Pipeline]
-    end
-
-    subgraph "Data Layer"
-        D[MCP Protocol]
-        D1[SQLite Database<br/>100K+ Programs]
-    end
-
-    A --> A1 & A2
-    A1 & A2 --> B
-    B --> B1
-    B1 --> B2
-    B2 --> C
-    C --> C1
-    C1 --> C2
-    C2 --> D
-    D --> D1
-
-    style C fill:#667eea,color:#fff
-    style D fill:#764ba2,color:#fff
-```
-
-### Code Comparison
-
-**LangChain Approach (What We DON'T Do):**
-```python
-from langchain.llms import OpenAI
-from langchain.agents import create_sql_agent
-from langchain.sql_database import SQLDatabase
-
-# Multiple abstraction layers
-db = SQLDatabase.from_uri("sqlite:///programs.db")
-agent = create_sql_agent(llm=OpenAI(), db=db, verbose=True)
-result = agent.run("Find CS programs in Singapore")
-# LangChain → SQL Agent → OpenAI → Result parsing
-```
-
-**Our Approach (Claude Code + MCP):**
-```python
-# Direct tool calling, no framework
-subprocess.run([
-    "claude",
-    "-p", "Find CS programs in Singapore",
-    "--mcp-config", "mcp/config.json"
-])
-# Claude Code directly calls MCP tools → SQL queries → Results
-```
+Using vendor-official tools means we benefit from their improvements without additional engineering work.
 
 ---
 
@@ -231,13 +166,6 @@ Claude: [Uses OfferI MCP to query 93,716 programs...]
         ...
 ```
 
-### Available MCP Tools
-
-- `list_universities(country)` - Get all universities in a country
-- `search_programs(university)` - Search programs by university
-- `get_program_details_batch([ids])` - Get detailed info for multiple programs
-- `get_statistics()` - Database statistics
-
 ### Architecture
 
 ```
@@ -249,26 +177,6 @@ api.offeri.org/mcp
 ```
 
 **No installation required** - Database hosted on our servers, always up-to-date
-
----
-
-## Product Features
-
-### For Students
-
-- **Comprehensive Analysis**: AI evaluates your background against 100,000+ programs
-- **Two-Stage AI Pipeline**: Primary analysis + Expert review for quality assurance
-- **Personalized Recommendations**: 30 tailored program suggestions
-- **Professional PDF Reports**: 15-20 pages with detailed analysis
-- **Fast Delivery**: 10-15 minutes from submission to download
-- **Privacy-Focused**: Your data is never sold to universities
-
-### For Developers
-
-- **Production-Ready Architecture**: Battle-tested Next.js + FastAPI stack
-- **MCP Integration**: Access our program database via Model Context Protocol
-- **Modern Tech Stack**: Latest Next.js 15, React 19, Python 3.11
-- **Comprehensive Documentation**: Setup guides, API docs, deployment instructions
 
 ---
 
@@ -328,22 +236,29 @@ Traditional consultants charge $2,000-5,000 for similar analysis.
 
 ## License
 
-**Open-Source Components (MIT License):**
-- Frontend code
-- Backend API
-- MCP integration
-- Docker configuration
-- Documentation
+**Elastic License 2.0** - Same license used by Elasticsearch and Kibana
 
-**Proprietary Components:**
+**What You CAN Do:**
+- ✅ Use the code for learning and education
+- ✅ Modify and deploy for your own internal projects
+- ✅ Study the implementation and architecture
+- ✅ Contribute improvements via pull requests
+
+**What You CANNOT Do:**
+- ❌ Offer this software as a hosted/managed SaaS service to third parties
+- ❌ Build a competing study abroad consultation platform using our code
+- ❌ Sell access to the software's features or functionality
+
+**Proprietary Components (Not in This Repository):**
 - Database (100,000+ programs)
-- Crawler code
+- Crawler implementation
 - Data processing tools
 
-**Commercial Service:**
-- Hosted version at offeri.org
+**Why Elastic License 2.0?**
 
-See [LICENSE](./LICENSE) for full MIT License text.
+We chose this license to protect our commercial service while keeping code accessible for learning. It's the same approach used by companies like Elastic, ensuring our 6+ months of development work isn't immediately copied by competitors.
+
+See [LICENSE](./LICENSE) for full legal text.
 
 ---
 
