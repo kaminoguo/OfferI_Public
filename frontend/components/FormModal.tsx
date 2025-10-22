@@ -73,7 +73,7 @@ export default function FormModal({ isOpen, onClose, onSubmit }: FormModalProps)
               disabled={!background.trim()}
               className="flex-1 px-6 py-3 bg-primary text-white rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Submit and Get Recommendations
+              Continue to Payment
             </button>
           </div>
         </form>

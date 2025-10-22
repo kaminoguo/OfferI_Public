@@ -196,9 +196,8 @@ Our MCP server is available for developers building AI applications with study a
 **Step 2: Add to Claude Code CLI**
 
 ```bash
-claude mcp add offeri https://api.offeri.org/mcp/sse \
-  --transport sse \
-  -e SSE_API_KEY=sk_live_YOUR_API_KEY_HERE
+claude mcp add offeri --transport http https://api.offeri.org/mcp \
+  -H "Authorization: Bearer sk_live_YOUR_API_KEY_HERE"
 ```
 
 **Step 3: Add to Claude Desktop**
@@ -209,11 +208,10 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "offeri": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/client-sse"],
-      "env": {
-        "SSE_URL": "https://api.offeri.org/mcp/sse",
-        "SSE_API_KEY": "sk_live_YOUR_API_KEY_HERE"
+      "url": "https://api.offeri.org/mcp",
+      "transport": "http",
+      "headers": {
+        "Authorization": "Bearer sk_live_YOUR_API_KEY_HERE"
       }
     }
   }
@@ -244,8 +242,8 @@ Claude: [Uses OfferI MCP to query 93,716 programs...]
 
 ```
 Your Claude Desktop/Code
-    ↓ (MCP SSE Protocol)
-api.offeri.org/mcp/sse
+    ↓ (MCP HTTP Protocol)
+api.offeri.org/mcp
     ↓ (SQLite Database)
 93,716 Master Programs
 ```

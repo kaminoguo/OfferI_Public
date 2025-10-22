@@ -97,48 +97,30 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
       setError('Please sign in to use this service');
       return;
     }
-    setIsPaymentModalOpen(true);
+    // NEW FLOW: Open form first (not payment)
+    setIsFormModalOpen(true);
   };
 
   const handlePaymentComplete = (paymentIdFromStripe: string) => {
     setPaymentId(paymentIdFromStripe);
     setIsPaymentModalOpen(false);
-    setIsFormModalOpen(true);
+    // After payment, auto-submit the saved background
+    if (lastBackground) {
+      submitJobWithPayment(lastBackground, paymentIdFromStripe);
+    }
   };
 
-  const handleSubmit = async (data: UserBackground) => {
-    if (!user) {
-      setError('Please sign in to use this service');
-      return;
-    }
-
-    if (!paymentId) {
-      setError('Payment required. Please complete payment first.');
-      setIsPaymentModalOpen(true);
-      return;
-    }
-
+  const submitJobWithPayment = async (data: UserBackground, pId: string) => {
     try {
       setError(null);
       setCanRetry(false);
-      setIsFormModalOpen(false);
       setIsLoading(true);
 
-      // Add user_id to the background data
-      const dataWithUser = {
-        ...data,
-        user_id: user.id,
-      };
-
-      // Save background for potential retry
-      setLastBackground(dataWithUser);
-
-      const response = await submitJob(dataWithUser, paymentId);
+      const response = await submitJob(data, pId);
       setJobId(response.job_id);
     } catch (error: any) {
       setIsLoading(false);
 
-      // Handle payment errors
       if (error.status === 402) {
         setError('Payment not found or already used. Please make a new payment.');
         setIsPaymentModalOpen(true);
@@ -149,6 +131,22 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
         setError(error.message || '提交失败，请稍后重试');
       }
     }
+  };
+
+  const handleSubmit = async (data: UserBackground) => {
+    if (!user) {
+      setError('Please sign in to use this service');
+      return;
+    }
+
+    // NEW FLOW: Save background first, then request payment
+    const dataWithUser = {
+      ...data,
+      user_id: user.id,
+    };
+    setLastBackground(dataWithUser);
+    setIsFormModalOpen(false);
+    setIsPaymentModalOpen(true);
   };
 
   const handleDownload = async () => {
@@ -251,6 +249,9 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
             >
               Start Consultation ($6)
             </button>
+            <p className="text-sm text-muted-foreground mt-4">
+              Fill in your background → Pay $6 → Get your personalized report
+            </p>
           </div>
         )}
 
