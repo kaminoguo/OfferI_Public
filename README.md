@@ -7,7 +7,7 @@
 *Personalized master's program recommendations using Claude Code and MCP*
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-offeri.org-5B5BD6?style=flat-square)](https://offeri.org)
-[![License](https://img.shields.io/badge/License-Source_Available-green.svg?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-Elastic_2.0-blue.svg?style=flat-square)](LICENSE)
 [![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-764ba2?style=flat-square)](https://modelcontextprotocol.io)
 
 [Live Demo](https://offeri.org) · [Documentation](./docs) · [Issues](https://github.com/kaminoguo/OfferI_Public/issues)
@@ -37,7 +37,7 @@ After validating product-market fit, we plan to expand to:
 
 **This project is NOT fully open-source.** It follows an **open core** model:
 
-### What is Available (MIT License)
+### What is Available (Elastic License 2.0)
 
 - Frontend code (Next.js 15, React 19, TypeScript)
 - Backend API structure (FastAPI, Python 3.11)
@@ -45,13 +45,20 @@ After validating product-market fit, we plan to expand to:
 - Docker deployment configuration
 - Documentation and setup guides
 
+**Key License Restrictions:**
+- ❌ **Cannot offer as SaaS**: You cannot provide this software as a hosted/managed service to third parties
+- ✅ **Can use internally**: Free to use, modify, and deploy for your own projects
+- ✅ **Can learn from code**: Study and learn from the implementation
+
 ### What is Proprietary
 
 - Database (100,000+ programs - 6 months of crawling work)
 - Crawler implementation code
 - Internal data processing tools
 
-**License**: MIT License for open-source components (NOT GPL/AGPL which restrict commercial use)
+**License**: Elastic License 2.0 (same as Elasticsearch, Kibana)
+
+**Why this license?** Prevents competitors from copying our code to build competing SaaS products, while allowing developers to learn and use it for non-commercial purposes.
 
 **Commercial Service**: Hosted version at [offeri.org](https://offeri.org) is $6 per consultation
 
@@ -229,22 +236,29 @@ Traditional consultants charge $2,000-5,000 for similar analysis.
 
 ## License
 
-**Open-Source Components (MIT License):**
-- Frontend code
-- Backend API
-- MCP integration
-- Docker configuration
-- Documentation
+**Elastic License 2.0** - Same license used by Elasticsearch and Kibana
 
-**Proprietary Components:**
+**What You CAN Do:**
+- ✅ Use the code for learning and education
+- ✅ Modify and deploy for your own internal projects
+- ✅ Study the implementation and architecture
+- ✅ Contribute improvements via pull requests
+
+**What You CANNOT Do:**
+- ❌ Offer this software as a hosted/managed SaaS service to third parties
+- ❌ Build a competing study abroad consultation platform using our code
+- ❌ Sell access to the software's features or functionality
+
+**Proprietary Components (Not in This Repository):**
 - Database (100,000+ programs)
-- Crawler code
+- Crawler implementation
 - Data processing tools
 
-**Commercial Service:**
-- Hosted version at offeri.org
+**Why Elastic License 2.0?**
 
-See [LICENSE](./LICENSE) for full MIT License text.
+We chose this license to protect our commercial service while keeping code accessible for learning. It's the same approach used by companies like Elastic, ensuring our 6+ months of development work isn't immediately copied by competitors.
+
+See [LICENSE](./LICENSE) for full legal text.
 
 ---
 
