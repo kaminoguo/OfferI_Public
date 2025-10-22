@@ -6,10 +6,6 @@
 
 *Personalized master's program recommendations using Claude Code and MCP*
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-offeri.org-5B5BD6?style=flat-square)](https://offeri.org)
-[![License](https://img.shields.io/badge/License-Elastic_2.0-blue.svg?style=flat-square)](LICENSE)
-[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-764ba2?style=flat-square)](https://modelcontextprotocol.io)
-
 [🌐 Website](https://offeri.org) · [📺 Bilibili](#) · [🎬 YouTube](#) · [Issues](https://github.com/kaminoguo/OfferI_Public/issues)
 
 </div>
@@ -333,10 +329,6 @@ Information provided by OfferI is for reference purposes only and does not const
 ---
 
 <div align="center">
-
-**Star this repository if you find it useful**
-
-[![GitHub stars](https://img.shields.io/github/stars/kaminoguo/OfferI_Public?style=social)](https://github.com/kaminoguo/OfferI_Public)
 
 Built for international students worldwide
 
