@@ -166,42 +166,6 @@ Claude: [Uses OfferI MCP to query 93,716 programs...]
         ...
 ```
 
-### Architecture
-
-```
-Your Claude Desktop/Code
-    ↓ (MCP HTTP Protocol)
-api.offeri.org/mcp
-    ↓ (SQLite Database)
-93,716 Master Programs
-```
-
-**No installation required** - Database hosted on our servers, always up-to-date
-
----
-
-## Quick Start
-
-### For Users (Hosted Service)
-
-Visit [offeri.org](https://offeri.org):
-1. Sign in (Google/Email via Clerk)
-2. Pay $6 (Stripe - all major cards accepted)
-3. Fill your background (flexible format)
-4. Download PDF report in 10-15 minutes
-
-### For Developers (Using MCP)
-
-```bash
-# Use our MCP server in your AI application
-# See https://github.com/kaminoguo/OfferI_MCP
-
-# Free tier: 100 queries/month
-# Paid tier: Contact for API access
-```
-
----
-
 ## Roadmap
 
 **Current (v1.0)**
@@ -217,22 +181,6 @@ Visit [offeri.org](https://offeri.org):
 - Non-English taught programs (French, German, Spanish, etc.)
 - Mobile application
 - API access for developers
-
----
-
-## Pricing
-
-| Plan | Price | Description |
-|------|-------|-------------|
-| **Free Tier** | $0 | MCP API access (100 queries/month) |
-| **Pay-Per-Use** | $6 | Single consultation with PDF report |
-| **API Access** | Contact | Programmatic access for developers |
-
-**Cost Breakdown**: AI tokens (~$1.50) + Infrastructure (~$0.50) = $6.00
-
-Traditional consultants charge $2,000-5,000 for similar analysis.
-
----
 
 ## License
 
@@ -279,27 +227,6 @@ See [LICENSE](./LICENSE) for full legal text.
 **GitHub Issues**: [Report bugs or request features](https://github.com/kaminoguo/OfferI_Public/issues)
 
 **Website**: [offeri.org](https://offeri.org)
-
----
-
-## Acknowledgments
-
-**Open-Source Projects:**
-- [Anthropic MCP](https://modelcontextprotocol.io) - Model Context Protocol
-- [Next.js](https://nextjs.org) - React framework
-- [FastAPI](https://fastapi.tiangolo.com) - Python web framework
-- [Clerk](https://clerk.dev) - Authentication
-- [Stripe](https://stripe.com) - Payment processing
-- [WeasyPrint](https://weasyprint.org) - PDF generation
-
-**Data Sources:**
-- StudyPortals - Public education data
-- University official websites
-
-**Thanks to:**
-- Anthropic for Claude and MCP protocol
-- OpenAI for GPT models
-- All early adopters and supporters
 
 ---
 
