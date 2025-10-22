@@ -648,13 +648,9 @@ async def _internal_track_usage() -> str:
 
         new_usage_count = cursor.fetchone()[0]
 
-        # If reached 5 consultations, disable API key
-        if new_usage_count >= 5:
-            cursor.execute("""
-                UPDATE api_keys
-                SET is_active = false
-                WHERE user_id = %s AND is_super_key = false
-            """, (user_id,))
+        # Monthly quota is enforced by checking usage_count in mcp_api.py
+        # DO NOT disable API key here - it would be permanent and prevent next month's usage
+        # The key remains active, but requests are rejected when monthly limit is reached
 
         conn.commit()
         conn.close()
