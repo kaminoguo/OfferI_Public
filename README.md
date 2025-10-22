@@ -33,37 +33,6 @@ After validating product-market fit, we plan to expand to:
 
 ---
 
-## Licensing Model
-
-**This project is NOT fully open-source.** It follows an **open core** model:
-
-### What is Available (Elastic License 2.0)
-
-- Frontend code (Next.js 15, React 19, TypeScript)
-- Backend API structure (FastAPI, Python 3.11)
-- MCP integration code
-- Docker deployment configuration
-- Documentation and setup guides
-
-**Key License Restrictions:**
-- ❌ **Cannot offer as SaaS**: You cannot provide this software as a hosted/managed service to third parties
-- ✅ **Can use internally**: Free to use, modify, and deploy for your own projects
-- ✅ **Can learn from code**: Study and learn from the implementation
-
-### What is Proprietary
-
-- Database (100,000+ programs - 6 months of crawling work)
-- Crawler implementation code
-- Internal data processing tools
-
-**License**: Elastic License 2.0 (same as Elasticsearch, Kibana)
-
-**Why this license?** Prevents competitors from copying our code to build competing SaaS products, while allowing developers to learn and use it for non-commercial purposes.
-
-**Commercial Service**: Hosted version at [offeri.org](https://offeri.org) is $6 per consultation
-
----
-
 ## Technical Architecture
 
 ### Core Technical Advantages
