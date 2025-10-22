@@ -111,18 +111,18 @@ Our MCP server is available for developers building AI applications with study a
 **Step 1: Get API Key**
 - Visit https://offeri.org/settings
 - Create a free account and generate an API key
-- Free tier: 5 MCP queries per month
+- Free tier: 5 consultations per month (one consultation = multiple API calls)
 
-**Step 2: Add to Claude Code CLI**
+**Step 2: Configure Your MCP Client**
 
-```bash
-claude mcp add offeri --transport http https://api.offeri.org/mcp \
-  -H "Authorization: Bearer sk_live_YOUR_API_KEY_HERE"
-```
+Our MCP server works with any MCP-compatible client:
 
-**Step 3: Add to Claude Desktop**
+<details>
+<summary><b>Claude Desktop</b></summary>
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Edit your config file:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
@@ -137,6 +137,63 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
   }
 }
 ```
+
+Restart Claude Desktop after saving.
+</details>
+
+<details>
+<summary><b>Claude Code CLI</b></summary>
+
+```bash
+claude mcp add offeri --transport http https://api.offeri.org/mcp \
+  -H "Authorization: Bearer sk_live_YOUR_API_KEY_HERE"
+
+# Verify connection
+claude mcp list
+```
+</details>
+
+<details>
+<summary><b>Cline (VS Code Extension)</b></summary>
+
+1. Open Cline settings in VS Code
+2. Go to **MCP Servers** → **Add Server**
+3. Add configuration:
+
+```json
+{
+  "offeri": {
+    "type": "http",
+    "url": "https://api.offeri.org/mcp",
+    "headers": {
+      "Authorization": "Bearer sk_live_YOUR_API_KEY_HERE"
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary><b>Cursor / Windsurf / Other MCP Clients</b></summary>
+
+Add to your client's MCP configuration:
+
+```json
+{
+  "servers": {
+    "offeri": {
+      "type": "http",
+      "url": "https://api.offeri.org/mcp",
+      "headers": {
+        "Authorization": "Bearer sk_live_YOUR_API_KEY_HERE"
+      }
+    }
+  }
+}
+```
+
+Refer to your client's documentation for exact config file location.
+</details>
 
 ### Usage Example
 
