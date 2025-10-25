@@ -64,39 +64,57 @@ mcp = FastMCP(
             This helps you understand admission patterns for THIS specific profile
 
     Step 3: REVIEW EVERY UNIVERSITY NAME from list_universities(country)
-            READ each university name, ANALYZE if it MATCHES student's background:
-            - School tier: Appropriate for student's GPA/credentials?
-            - Work experience value: Does this school value the internships?
-            - Career network: Can support the career goal?
-            - Admission philosophy: GPA-focused vs experience-focused?
+            Analyze if each university matches student's background:
+            - School tier appropriate for student's credentials?
+            - Does this school value student's strengths?
+            - Can support student's career goal?
 
-            DO NOT just pick "top 20 famous schools" from rankings
-            THINK: Would THIS specific student be competitive? Would they thrive there?
-            Example: "Rochester Institute of Technology" might be perfect match
-            even if not in general Top 20 rankings
+            Select appropriate universities based on student profile match
 
-            Select universities based on BACKGROUND MATCH, not just fame
+    Step 4: FOR EACH UNIVERSITY - Wide-net screening + ONE Exa validation
 
-    Step 4: search_programs(university_name="X") for EACH selected university
-            Returns TSV with ALL programs for that university
+            For EACH selected university:
 
-            REVIEW EVERY PROGRAM NAME - DO NOT filter by keywords!
-            READ each name, THINK about whether it fits student profile
+            4a. Get ALL programs from database:
+                programs = search_programs(university_name="[University]")
 
-            Examples of what you MUST NOT miss:
-            ✓ "Symbolic Systems" at Stanford = highly relevant for AI+Product
-            ✓ "Media, Culture and Creative Cities" at HKU = relevant for CPO path
-            ✓ "Technology and Society" = relevant even without "product" keyword
+            4b. Screen with WIDE INCLUSIVE criteria (宁多不少 - better more than less):
+                Read EVERY program name carefully
+                Use your intelligence to judge which programs might be relevant
+                Don't rely solely on obvious keyword matching
+                Include programs with non-obvious names that might fit student goals
+                Cast a WIDE net to avoid missing relevant programs
 
-            ❌ WRONG: grep for "product|management|AI" and skip others
-            ✅ RIGHT: Read EVERY name, use your intelligence to judge relevance
+            4c. ONE EXA QUERY to understand ALL candidates for this university:
+                CRITICAL: Use mcp__exa__web_search_exa with numResults=25 (maximum)
 
-    Step 5: get_program_details_optimized([id1, id2, ...]) for 50-100 programs
-            Quick TSV format for initial screening (minimal fields)
+                Query template:
+                "[University Name] graduate programs descriptions:
+                [Program 1 name]
+                [Program 2 name]
+                ...
+                [Program N name]
 
-    Step 6: Filter to MAX 15 programs, then get_program_details_batch([ids])
-            Get essential details for scoring (NO tuition data - unreliable)
-            CRITICAL: Select only 15 BEST-FIT programs based on student profile
+                What does each program teach? What is the curriculum focus?
+                Career-oriented or research-oriented? What are students trained for?"
+
+                Exa parameters:
+                - numResults: 25 (Exa's maximum per query)
+
+                Use ALL 25 results to understand program nature and content
+
+            4d. Filter based on Exa results:
+                Keep programs that align with student background and career goals
+                Remove research-oriented programs (unless student wants PhD)
+                Remove programs with incompatible focus areas
+
+            REPEAT 4a-4d for EVERY selected university
+
+    Step 5: Aggregate validated programs from all universities
+            Use get_program_details_optimized([ids]) for quick overview
+
+    Step 6: Narrow to best-fit programs for detailed analysis
+            Use get_program_details_batch([ids]) for essential details
 
     Step 7: Calculate transparent scores for ALL programs from ALL countries
             CRITICAL: Rank programs TOGETHER in a SINGLE GLOBAL LIST
