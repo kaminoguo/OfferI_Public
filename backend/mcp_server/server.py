@@ -36,7 +36,7 @@ mcp = FastMCP(
 
     WORKFLOW ENFORCEMENT:
     This server uses token-based workflow orchestration. You must call tools in sequence:
-    1. start_consultation() - Validate 10 Exa admission searches
+    1. start_consultation() - Validate 7 Exa admission searches
     2. explore_universities() - Get all universities in country
     3. get_university_programs() - Get ALL programs for EACH selected university
     4. shortlist_programs_by_name() - Filter programs by name analysis
@@ -207,34 +207,34 @@ async def start_consultation(
 ) -> dict:
     """
     Step 1: Start consultation session
-    
-    YOU MUST complete 10 Exa admission case searches BEFORE calling this tool.
-    
+
+    YOU MUST complete 7 Exa admission case searches BEFORE calling this tool.
+
     Args:
         background: Student background (GPA, university, internships, projects, etc.)
-        exa_admission_searches: List of 10 Exa search results
+        exa_admission_searches: List of 7 Exa search results
             Each: {"query": "...", "num_results": 5-8, "key_findings": "..."}
-    
+
     Returns:
         consultation_token + next_step instructions
     """
-    if not exa_admission_searches or len(exa_admission_searches) != 10:
-        raise ValueError(f"You must provide EXACTLY 10 Exa admission searches. You provided {len(exa_admission_searches) if exa_admission_searches else 0}.")
-    
+    if not exa_admission_searches or len(exa_admission_searches) != 7:
+        raise ValueError(f"You must provide EXACTLY 7 Exa admission searches. You provided {len(exa_admission_searches) if exa_admission_searches else 0}.")
+
     for i, search in enumerate(exa_admission_searches):
         if not isinstance(search, dict) or "query" not in search or "num_results" not in search:
             raise ValueError(f"Search #{i+1} must be a dict with 'query' and 'num_results' fields")
         if search["num_results"] < 5:
             raise ValueError(f"Search #{i+1} must have at least 5 results (you provided {search['num_results']})")
-    
+
     token = generate_token("consultation", {
         "background": background,
         "exa_searches_completed": len(exa_admission_searches)
     })
-    
+
     return {
         "consultation_token": token,
-        "parsed_background": {"raw": background, "exa_searches_completed": 10},
+        "parsed_background": {"raw": background, "exa_searches_completed": 7},
         "next_step": "Call explore_universities(country, consultation_token)"
     }
 
