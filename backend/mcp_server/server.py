@@ -40,7 +40,7 @@ mcp = FastMCP(
     2. explore_universities() - Get all universities in country
     3. get_university_programs() - Get ALL programs for EACH selected university
     4. shortlist_programs_by_name() - Filter programs by name analysis
-    5. validate_programs_with_exa() - Validate with ONE Exa search per university (25 results)
+    5. validate_programs_with_exa() - Validate with ONE Exa search per university (10 results)
     6. score_and_rank_programs() - Score and rank all programs
     7. generate_final_report() - Generate comprehensive report with detailed research
 
@@ -378,15 +378,21 @@ async def shortlist_programs_by_name(
         "total_shortlisted": total_shortlisted
     })
     
+    university_names = list(shortlisted_by_university.keys())
+
     return {
         "shortlist_token": token,
         "shortlisted_by_university": shortlisted_by_university,
         "total_shortlisted": total_shortlisted,
         "universities_count": len(shortlisted_by_university),
+        "university_names_for_validation": university_names,
         "instructions": f"""
 You have shortlisted {total_shortlisted} programs across {len(shortlisted_by_university)} universities.
 
-CRITICAL NEXT STEP: For EACH university, do ONE Exa search with 25 results.
+CRITICAL NEXT STEP: For EACH university, do ONE Exa search with 10 results.
+
+⚠️ IMPORTANT: You MUST use these EXACT university names as keys in exa_validations dict:
+{chr(10).join([f'  - "{name}"' for name in university_names])}
 
 Query template per university:
 "[University Name] graduate programs descriptions:
@@ -396,6 +402,16 @@ Query template per university:
 What does each program teach? Curriculum focus? Career-oriented or research-oriented?"
 
 Call validate_programs_with_exa(exa_validations, shortlist_token)
+
+Example structure:
+{{
+  "{university_names[0] if university_names else 'University Name'}": {{
+    "query": "...",
+    "num_results": 10,
+    "findings": "...",
+    "final_program_ids": [123, 456]
+  }}
+}}
         """,
         "next_step": "Call validate_programs_with_exa(exa_validations, shortlist_token)"
     }
@@ -407,20 +423,21 @@ async def validate_programs_with_exa(
     shortlist_token: str
 ) -> dict:
     """
-    Step 5: Validate programs with Exa searches (ONE per university, 25 results each)
+    Step 5: Validate programs with Exa searches (ONE per university, 10 results each)
     
     Args:
         exa_validations: Dict mapping university name to Exa search result
+            IMPORTANT: Keys must EXACTLY match university names from shortlist_programs_by_name
             Example: {
                 "CMU": {
                     "query": "CMU graduate programs descriptions: MISM, MSAI, ...",
-                    "num_results": 25,
+                    "num_results": 10,
                     "findings": "MISM is career-oriented, MSAI is research-heavy, ...",
                     "final_program_ids": [123, 456]  # After filtering based on Exa
                 },
                 "Stanford": {
                     "query": "...",
-                    "num_results": 25,
+                    "num_results": 10,
                     "findings": "...",
                     "final_program_ids": [234]
                 },
@@ -441,7 +458,14 @@ async def validate_programs_with_exa(
     # Check that all universities have validation
     missing_unis = [uni for uni in expected_unis if uni not in exa_validations]
     if missing_unis:
-        raise ValueError(f"Missing Exa validation for universities: {missing_unis}")
+        provided_keys = list(exa_validations.keys())
+        raise ValueError(
+            f"Missing Exa validation for universities: {missing_unis}\n\n"
+            f"You provided keys: {provided_keys}\n\n"
+            f"⚠️ You must use EXACT university names from shortlist_programs_by_name response.\n"
+            f"Expected keys: {expected_unis}\n\n"
+            f"Tip: Copy the exact names from 'university_names_for_validation' field in previous response."
+        )
     
     # Validate each Exa search
     all_final_ids = []
@@ -452,8 +476,8 @@ async def validate_programs_with_exa(
         if "num_results" not in validation:
             raise ValueError(f"{uni}: validation must have 'num_results' field")
         
-        if validation["num_results"] != 25:
-            raise ValueError(f"{uni}: Exa search must have EXACTLY 25 results. You provided {validation['num_results']}")
+        if validation["num_results"] != 10:
+            raise ValueError(f"{uni}: Exa search must have EXACTLY 10 results. You provided {validation['num_results']}")
         
         if "final_program_ids" not in validation:
             raise ValueError(f"{uni}: validation must have 'final_program_ids' field")
@@ -480,7 +504,7 @@ async def validate_programs_with_exa(
         "total_exa_searches": len(exa_validations),
         "final_programs_count": len(all_final_ids),
         "final_program_ids": all_final_ids,
-        "message": f"✅ Validated {len(exa_validations)} universities with {len(exa_validations)} Exa searches (25 results each)",
+        "message": f"✅ Validated {len(exa_validations)} universities with {len(exa_validations)} Exa searches (10 results each)",
         "next_step": "Call score_and_rank_programs(validation_token)"
     }
 

@@ -12,8 +12,8 @@
         }
 
         :root {
-            --bg: #000000;
-            --fg: #ffffff;
+            --bg: #ffffff;
+            --fg: #000000;
             --accent: #666666;
             --pixel-size: 2px;
         }
@@ -23,7 +23,75 @@
             background: var(--bg);
             color: var(--fg);
             overflow-x: hidden;
-            cursor: crosshair;
+            cursor: none;
+        }
+
+        /* Custom Cursor with Glow */
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--fg);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transition: transform 0.15s ease;
+            mix-blend-mode: difference;
+        }
+
+        .cursor-glow {
+            position: fixed;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(0,0,0,0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+        }
+
+        /* Animated Grid Background */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
+        }
+
+        /* Scanline Effect */
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(0,0,0,0.01) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 1;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100%); }
         }
 
         .container {
@@ -31,6 +99,15 @@
             scroll-snap-type: y mandatory;
             overflow-y: scroll;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+            z-index: 2;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            .container {
+                scroll-snap-type: y mandatory;
+            }
         }
 
         .slide {
@@ -43,32 +120,15 @@
             padding: 4rem;
             position: relative;
             opacity: 0;
-            transform: perspective(1000px) rotateX(45deg);
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: perspective(1000px) rotateX(45deg) scale(0.95);
+            transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
         }
 
         .slide.active {
             opacity: 1;
-            transform: perspective(1000px) rotateX(0deg);
-        }
-
-        .slide::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background:
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 2px,
-                    rgba(255,255,255,0.02) 2px,
-                    rgba(255,255,255,0.02) 4px
-                );
-            pointer-events: none;
-            z-index: 1;
+            transform: perspective(1000px) rotateX(0deg) scale(1);
         }
 
         .slide-content {
@@ -77,11 +137,18 @@
             z-index: 2;
         }
 
-        /* Pixel-style elements */
+        /* Enhanced Pixel-style elements with shadow */
         .pixel-border {
             border: var(--pixel-size) solid var(--fg);
             padding: 2rem;
             position: relative;
+            box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .pixel-border:hover {
+            box-shadow: 12px 12px 0 rgba(0,0,0,0.15);
+            transform: translate(-2px, -2px);
         }
 
         .pixel-border::before,
@@ -103,13 +170,14 @@
             right: calc(var(--pixel-size) * -1);
         }
 
-        /* Typography */
+        /* Typography with better hierarchy */
         h1 {
             font-size: clamp(3rem, 8vw, 6rem);
             letter-spacing: -0.05em;
             margin-bottom: 1rem;
             font-weight: 700;
             text-transform: uppercase;
+            text-shadow: 4px 4px 0 rgba(0,0,0,0.05);
         }
 
         h2 {
@@ -117,6 +185,18 @@
             letter-spacing: -0.03em;
             margin-bottom: 2rem;
             font-weight: 700;
+            position: relative;
+            display: inline-block;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--fg);
         }
 
         h3 {
@@ -126,6 +206,7 @@
             font-weight: 400;
         }
 
+        /* Enhanced Keywords with glow */
         .keywords {
             display: flex;
             flex-wrap: wrap;
@@ -136,15 +217,32 @@
         .keyword {
             font-size: clamp(1.2rem, 2.5vw, 2rem);
             padding: 0.5rem 1.5rem;
-            border: 1px solid var(--fg);
+            border: 2px solid var(--fg);
             position: relative;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
         }
 
         .keyword:hover {
             background: var(--fg);
             color: var(--bg);
             transform: translateY(-4px);
+            box-shadow: 8px 8px 0 rgba(0,0,0,0.2);
+        }
+
+        .keyword.animate-in {
+            animation: slideInUp 0.6s ease-out forwards;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .grid-2 {
@@ -161,24 +259,53 @@
             margin: 2rem 0;
         }
 
+        /* Enhanced Boxes with depth */
         .box {
-            border: 1px solid var(--fg);
+            border: 2px solid var(--fg);
             padding: 2rem;
             min-height: 200px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+            background: var(--bg);
+        }
+
+        .box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--fg);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: -1;
+        }
+
+        .box:hover::before {
+            transform: scaleY(1);
+            transform-origin: top;
         }
 
         .box:hover {
-            background: var(--fg);
+            color: var(--bg);
+            transform: translateY(-4px);
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.15);
+        }
+
+        .box:hover h3 {
             color: var(--bg);
         }
 
         .box h3 {
             margin-bottom: 1rem;
             color: inherit;
+            transition: color 0.4s ease;
         }
 
         .box p {
@@ -186,7 +313,7 @@
             line-height: 1.6;
         }
 
-        /* Stage boxes */
+        /* Enhanced Stage boxes */
         .stages {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -195,11 +322,45 @@
         }
 
         .stage {
-            border: 1px solid var(--fg);
+            border: 2px solid var(--fg);
             padding: 1.5rem;
-            min-height: 250px;
-            font-size: 0.9rem;
-            line-height: 1.5;
+            min-height: 300px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            position: relative;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+            background: var(--bg);
+        }
+
+        .stage::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--fg);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: -1;
+        }
+
+        .stage:hover::before {
+            transform: scaleY(1);
+            transform-origin: top;
+        }
+
+        .stage:hover {
+            color: var(--bg);
+            transform: translateY(-4px);
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.15);
+        }
+
+        .stage:hover h3 {
+            color: var(--bg);
         }
 
         .stage-num {
@@ -208,7 +369,18 @@
             margin-bottom: 0.5rem;
         }
 
-        /* Progress indicator */
+        .stage h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--fg);
+            transition: color 0.4s ease;
+        }
+
+        .stage p {
+            font-weight: 600;
+        }
+
+        /* Enhanced Progress indicator */
         .progress {
             position: fixed;
             top: 2rem;
@@ -216,10 +388,13 @@
             z-index: 1000;
             font-size: 1.5rem;
             font-weight: 700;
-            mix-blend-mode: difference;
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--fg);
+            background: var(--bg);
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
         }
 
-        /* Navigation dots */
+        /* Navigation dots with animation */
         .nav-dots {
             position: fixed;
             right: 2rem;
@@ -237,12 +412,28 @@
             border: 2px solid var(--fg);
             background: transparent;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
         }
 
-        .dot.active {
+        .dot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 6px;
+            height: 6px;
             background: var(--fg);
-            transform: scale(1.5);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dot.active::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .dot:hover {
+            transform: scale(1.3);
         }
 
         /* Slide-specific styles */
@@ -252,29 +443,80 @@
 
         #slide-1 h1 {
             font-size: clamp(4rem, 12vw, 10rem);
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 4px 4px 0 rgba(0,0,0,0.05); }
+            50% { text-shadow: 8px 8px 0 rgba(0,0,0,0.1); }
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .description {
+            font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+            max-width: 800px;
+            margin: 2rem auto;
+            line-height: 1.6;
         }
 
         .team {
             margin-top: 3rem;
             font-size: 0.9rem;
             color: var(--accent);
+            line-height: 1.8;
         }
 
-        /* Animations */
+        .list-items {
+            list-style: none;
+            padding: 0;
+        }
+
+        .list-items li {
+            margin-bottom: 0.8rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-weight: 700;
+            color: var(--fg);
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .list-items li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            font-weight: 700;
+        }
+
+        /* Counting Numbers Animation */
+        .count-up {
+            display: inline-block;
+        }
+
+        /* Staggered Animation for children */
+        .stagger-in > * {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .stagger-in > *:nth-child(1) { animation-delay: 0.1s; }
+        .stagger-in > *:nth-child(2) { animation-delay: 0.2s; }
+        .stagger-in > *:nth-child(3) { animation-delay: 0.3s; }
+        .stagger-in > *:nth-child(4) { animation-delay: 0.4s; }
+        .stagger-in > *:nth-child(5) { animation-delay: 0.5s; }
+
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
-        }
-
-        .animate-in {
-            animation: fadeInUp 0.6s ease-out forwards;
         }
 
         /* Responsive */
@@ -290,23 +532,38 @@
             h1 {
                 font-size: 3rem;
             }
+
+            .stage {
+                min-height: auto;
+            }
         }
 
         /* Scrollbar */
         ::-webkit-scrollbar {
-            width: 4px;
+            width: 6px;
         }
 
         ::-webkit-scrollbar-track {
             background: var(--bg);
+            border-left: 1px solid rgba(0,0,0,0.1);
         }
 
         ::-webkit-scrollbar-thumb {
             background: var(--fg);
+            transition: background 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
         }
     </style>
 </head>
 <body>
+    <div class="cursor"></div>
+    <div class="cursor-glow"></div>
+    <div class="grid-bg"></div>
+    <div class="scanline"></div>
+
     <div class="progress" id="progress">01/10</div>
     <div class="nav-dots" id="navDots"></div>
 
@@ -316,9 +573,19 @@
             <div class="slide-content">
                 <h1>OFFERI</h1>
                 <h2>Study Abroad AI Agent</h2>
-                <h3>Youth Empowerment & Inclusive Futures</h3>
+                <p class="subtitle">Presented by Claude Coder</p>
+                <p class="description">
+                    Lightweight overseas study school selection agent,<br>
+                    eliminating information asymmetry in overseas study
+                </p>
+                <h3>Thematic track - Youth Empowerment & Inclusive Futures</h3>
                 <div class="team">
-                    <p>Claude Coder Team @ HKUST</p>
+                    <p><strong>Team Members:</strong></p>
+                    <p>LIU YUCHEN - HKUST</p>
+                    <p>Li Chun Ting - HKUST</p>
+                    <p>WU Dailin - HKUST</p>
+                    <p>CHOW TSZ KIT - HKUST</p>
+                    <p>GUO YAMING - HKUST</p>
                 </div>
             </div>
         </section>
@@ -326,24 +593,29 @@
         <!-- Slide 2: Problem -->
         <section class="slide" id="slide-2">
             <div class="slide-content">
-                <h2>The Problem</h2>
-                <div class="keywords">
+                <h2>The Problem - Information Asymmetry Crisis</h2>
+                <div class="keywords stagger-in">
                     <div class="keyword">Information Chaos</div>
                     <div class="keyword">Complex Search</div>
                     <div class="keyword">$3-10K Barrier</div>
                 </div>
-                <div class="grid-3">
+                <div class="grid-3 stagger-in">
                     <div class="box">
                         <h3>Scattered Data</h3>
-                        <p>No standardized format</p>
+                        <p>Inconsistent program information<br>
+                        No standardized format<br>
+                        Outdated details</p>
                     </div>
                     <div class="box">
-                        <h3>100+ Programs</h3>
-                        <p>Hundreds of hours wasted</p>
+                        <h3>Manual Research</h3>
+                        <p>50-100+ programs to research<br>
+                        Hundreds of hours wasted<br>
+                        High risk of missing opportunities</p>
                     </div>
                     <div class="box">
-                        <h3>High Cost</h3>
-                        <p>Educational inequality</p>
+                        <h3>High Agency Fee</h3>
+                        <p>Traditional agencies charge $3-10K<br>
+                        Creates educational inequality</p>
                     </div>
                 </div>
             </div>
@@ -352,24 +624,36 @@
         <!-- Slide 3: Solution -->
         <section class="slide" id="slide-3">
             <div class="slide-content">
-                <h2>Our Solution</h2>
+                <h2>Our Solution - OFFERI Database Power</h2>
                 <div class="grid-2">
                     <div>
-                        <h3>Database Power</h3>
-                        <div class="keywords">
-                            <div class="keyword">59,000+ Programs</div>
-                            <div class="keyword">Live & Operational</div>
-                            <div class="keyword">Quarterly Updates</div>
-                        </div>
+                        <h3>59,000+ Master's Programs Database</h3>
+                        <ul class="list-items">
+                            <li>Currently live and operational</li>
+                            <li>Bachelor's & PhD programs (Post-MVP)</li>
+                        </ul>
+                        <h3 style="margin-top: 2rem;">Data Sources:</h3>
+                        <ul class="list-items">
+                            <li>Public overseas study information platforms</li>
+                            <li>Official regional education data</li>
+                            <li>Direct web scraping from university websites worldwide</li>
+                            <li>Continuously updated quarterly</li>
+                        </ul>
                     </div>
                     <div>
-                        <h3>Key Innovation</h3>
+                        <h3>Our Key Innovation</h3>
                         <div class="pixel-border">
-                            <p style="font-size: 1.3rem; line-height: 1.8;">
-                                AI Knowledge<br>
-                                + Web Search<br>
-                                + Structured Data<br>
-                                = Superior Accuracy
+                            <h3 style="color: var(--fg); margin-bottom: 1.5rem;">Database + AI Collaboration, Not Replacement</h3>
+                            <p style="font-size: 1.1rem; line-height: 1.8;">
+                                We don't let AI directly conclude from database →<br><br>
+                                We use database to assist AI in combining:<br><br>
+                                <strong>Its own knowledge</strong><br>
+                                +<br>
+                                <strong>Real-time web search</strong><br>
+                                +<br>
+                                <strong>Structured program data</strong><br>
+                                =<br>
+                                <strong>Superior decision-making accuracy</strong>
                             </p>
                         </div>
                     </div>
@@ -377,52 +661,66 @@
             </div>
         </section>
 
-        <!-- Slide 4: Advantages -->
+        <!-- Slide 4: Workflow -->
         <section class="slide" id="slide-4">
             <div class="slide-content">
-                <h2>Why We Win</h2>
-                <div class="grid-3">
-                    <div class="box">
-                        <h3>MCP > RAG</h3>
-                        <p>Zero hallucinations</p>
+                <h2>How It Works - Our Workflow</h2>
+                <h3 style="text-align: center; margin-bottom: 2rem;">Intelligent Multi-Stage Process</h3>
+                <div class="stages stagger-in">
+                    <div class="stage">
+                        <div class="stage-num">Stage 1</div>
+                        <h3>Initial Targeting</h3>
+                        <p>1. User inputs background/preferences<br><br>
+                        2. DB Query #1: Retrieve university shortlist<br><br>
+                        3. Web search + LLM knowledge → School selection</p>
                     </div>
-                    <div class="box">
-                        <h3>100K+ Programs</h3>
-                        <p>Clear AI guidance</p>
+                    <div class="stage">
+                        <div class="stage-num">Stage 2</div>
+                        <h3>Program Discovery</h3>
+                        <p>1. DB Query #2: Extract ALL programs from selected schools<br><br>
+                        2. First Filter: Program name matching</p>
                     </div>
-                    <div class="box">
-                        <h3>$6 vs $3000</h3>
-                        <p>500× cheaper</p>
+                    <div class="stage">
+                        <div class="stage-num">Stage 3</div>
+                        <h3>Deep Screening</h3>
+                        <p>1. DB Query #3: Program description, duration, career outcomes<br><br>
+                        2. Second Filter: Detailed criteria matching<br><br>
+                        3. LLM Web Search: Third screening with latest information</p>
+                    </div>
+                    <div class="stage">
+                        <div class="stage-num">Stage 4</div>
+                        <h3>Final Recommendation</h3>
+                        <p>1. LLM scores remaining programs<br><br>
+                        2. Deep Search: Top 10 programs get thorough analysis<br><br>
+                        3. Final Report: Personalized, actionable recommendations</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Slide 5: Workflow -->
+        <!-- Slide 5: Advantages -->
         <section class="slide" id="slide-5">
             <div class="slide-content">
-                <h2>How It Works</h2>
-                <div class="stages">
-                    <div class="stage">
-                        <div class="stage-num">01</div>
-                        <h3>Targeting</h3>
-                        <p>User input → DB query → School selection</p>
+                <h2>Why OFFERI Wins - Technical Advantages</h2>
+                <div class="grid-2" style="margin-top: 3rem;">
+                    <div class="box" style="min-height: 250px;">
+                        <h3>No RAG! But MCP Database and Workflow</h3>
+                        <p style="font-size: 1.1rem; line-height: 1.8;">
+                            Packaging the database and workflow into an MCP greatly surpasses RAG in reducing AI hallucinations and improving the accuracy of information retrieval.
+                        </p>
                     </div>
-                    <div class="stage">
-                        <div class="stage-num">02</div>
-                        <h3>Discovery</h3>
-                        <p>Extract programs → Name matching</p>
+                    <div class="box" style="min-height: 250px;">
+                        <h3>Premium Curated Database</h3>
+                        <p style="font-size: 1.1rem; line-height: 1.8;">
+                            We have integrated 59,000 high-quality programs from 300K+ master's program sources, selecting only the most popular study abroad programs - currently the highest quality database available.
+                        </p>
                     </div>
-                    <div class="stage">
-                        <div class="stage-num">03</div>
-                        <h3>Screening</h3>
-                        <p>Deep analysis → Web search → Filter</p>
+                </div>
+                <div style="text-align: center; margin-top: 3rem;">
+                    <div class="keyword" style="font-size: 2rem; padding: 1rem 3rem;">
+                        $<span class="count-up" data-target="6">0</span> per consultation vs. $<span class="count-up" data-target="3000">0</span>-<span class="count-up" data-target="10000">0</span> traditional agencies
                     </div>
-                    <div class="stage">
-                        <div class="stage-num">04</div>
-                        <h3>Report</h3>
-                        <p>Score → Top 10 → Final recommendations</p>
-                    </div>
+                    <h3 style="margin-top: 2rem;">More affordable to students</h3>
                 </div>
             </div>
         </section>
@@ -430,22 +728,25 @@
         <!-- Slide 6: Business Model -->
         <section class="slide" id="slide-6">
             <div class="slide-content">
-                <h2>Business Model</h2>
+                <h2>Sustainable Business Model</h2>
                 <div class="grid-2">
                     <div class="box">
-                        <h3>B2C: $6/consultation</h3>
-                        <p>One-time payment<br>Scalable revenue</p>
+                        <h3>1. One-time payment: $6</h3>
+                        <p>We only require a one-time payment of $6 since choosing a school for studying abroad can be dealt once and forever.</p>
                     </div>
                     <div class="box">
-                        <h3>B2B: MCP API</h3>
-                        <p>Agency partnerships<br>Recurring licensing</p>
+                        <h3>2. B2B MCP API Service</h3>
+                        <p>Partner with traditional study abroad agencies<br>
+                        Enhance their efficiency and accuracy<br>
+                        Recurring licensing revenue</p>
                     </div>
                 </div>
-                <div class="keywords" style="margin-top: 3rem;">
-                    <div class="keyword">Q1 2026: Web MVP</div>
-                    <div class="keyword">Q2: WeChat</div>
-                    <div class="keyword">Q4: PhD/Bachelor</div>
-                    <div class="keyword">2027: Multilingual</div>
+                <h3 style="margin-top: 3rem; text-align: center;">Go-to-Market Strategy</h3>
+                <div class="keywords stagger-in" style="margin-top: 2rem; justify-content: center;">
+                    <div class="keyword">Phase 1 (Q1 2026): Web MVP - 1000 users</div>
+                    <div class="keyword">Phase 2 (Q2-Q3 2026): WeChat Mini Program</div>
+                    <div class="keyword">Phase 3 (Q3 2026): Bachelor's & PhD databases</div>
+                    <div class="keyword">Phase 4 (Q4 2026): Multilingual support</div>
                 </div>
             </div>
         </section>
@@ -453,19 +754,22 @@
         <!-- Slide 7: Impact -->
         <section class="slide" id="slide-7">
             <div class="slide-content">
-                <h2>Impact Metrics</h2>
+                <h2>Impact Metrics & Scale</h2>
                 <div style="text-align: center; margin: 3rem 0;">
-                    <h1 style="font-size: 8rem; margin-bottom: 2rem;">30%</h1>
-                    <h3>of international students use OFFERI</h3>
+                    <h3 style="margin-bottom: 2rem;">Target Metrics:</h3>
+                    <h1 style="font-size: 8rem; margin-bottom: 2rem;"><span class="count-up" data-target="30">0</span>%</h1>
+                    <h3>of quarterly international students use OFFERI</h3>
                 </div>
                 <div class="grid-2">
                     <div class="box">
-                        <h3>Students</h3>
-                        <p>Save $3K-10K<br>Equal access to quality education</p>
+                        <h3>1. Empower Independent Students</h3>
+                        <p style="font-size: 1.1rem;">Save $3,000-10,000 in consultation fees<br>
+                        Equal access to quality education</p>
                     </div>
                     <div class="box">
-                        <h3>Agencies</h3>
-                        <p>70% efficiency boost<br>Better recommendations</p>
+                        <h3>2. Elevate Agency Operations</h3>
+                        <p style="font-size: 1.1rem;">Boost efficiency and recommendation accuracy by 70%<br>
+                        Better student outcomes</p>
                     </div>
                 </div>
             </div>
@@ -477,22 +781,23 @@
                 <h2>Sustainability</h2>
                 <div class="grid-2">
                     <div>
-                        <h3>Technical</h3>
-                        <div class="keywords" style="flex-direction: column; align-items: flex-start;">
-                            <div class="keyword">Automated pipelines</div>
-                            <div class="keyword">Quarterly updates</div>
-                            <div class="keyword">Scalable infrastructure</div>
-                        </div>
+                        <h3>Technical Sustainability</h3>
+                        <ul class="list-items" style="margin-top: 1.5rem;">
+                            <li>Quarterly database updates</li>
+                            <li>Automated scraping pipelines</li>
+                            <li>Enterprise-grade LLM API (OpenRouter)</li>
+                            <li>Scalable cloud infrastructure</li>
+                            <li>Collaborative refinement over database with agencies</li>
+                        </ul>
                     </div>
                     <div>
-                        <h3>Financial</h3>
-                        <div class="pixel-border">
-                            <p style="font-size: 1.2rem; line-height: 2;">
-                                Break-even: 5,000 users<br>
-                                Timeline: 6 months<br>
-                                Low operating costs
-                            </p>
-                        </div>
+                        <h3>Financial Sustainability</h3>
+                        <ul class="list-items" style="margin-top: 1.5rem;">
+                            <li>B2C Revenue: Scalable with user growth</li>
+                            <li>B2B Partnerships: Recurring API licensing</li>
+                            <li>Low Operating Costs: Efficient AI usage</li>
+                            <li>Break-even: ~5,000 users (achievable in 6 months)</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -502,22 +807,39 @@
         <section class="slide" id="slide-9">
             <div class="slide-content">
                 <h2>Ethics</h2>
-                <div class="grid-3">
+                <div class="grid-3 stagger-in">
                     <div class="box">
-                        <h3>Privacy</h3>
-                        <p>GDPR/CCPA<br>No data sale<br>Encrypted</p>
+                        <h3>Privacy Protection</h3>
+                        <p>• No personal data sale<br>
+                        • GDPR/CCPA compliant<br>
+                        • Encrypted user information</p>
                     </div>
                     <div class="box">
-                        <h3>Fairness</h3>
-                        <p>Algorithm audits<br>Transparent ranking<br>Bias mitigation</p>
+                        <h3>Bias Mitigation</h3>
+                        <p>• Regular algorithm audits<br>
+                        • Diverse training data inclusion<br>
+                        • Transparent ranking methodology</p>
                     </div>
                     <div class="box">
-                        <h3>Access</h3>
-                        <p>Affordable pricing<br>Multilingual<br>NGO partnerships</p>
+                        <h3>Accessibility</h3>
+                        <p>• Affordable pricing for all students<br>
+                        • Multi-language support (roadmap)<br>
+                        • Partnership with NGOs</p>
                     </div>
                 </div>
-                <div class="pixel-border" style="margin-top: 2rem; text-align: center;">
-                    <h3>Enhance, not replace consultants</h3>
+                <div class="grid-2 stagger-in" style="margin-top: 2rem;">
+                    <div class="box">
+                        <h3>User Empowerment</h3>
+                        <p>• Transparent recommendations (explain why)<br>
+                        • No vendor lock-in<br>
+                        • Educational content provided</p>
+                    </div>
+                    <div class="box">
+                        <h3>Agency Collaboration</h3>
+                        <p>• Enhance rather than replace consultants<br>
+                        • Create better student outcomes together<br>
+                        • Share success stories and feedback</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -528,13 +850,24 @@
                 <h1 style="font-size: clamp(6rem, 15vw, 12rem);">THANK YOU</h1>
                 <div class="keywords" style="justify-content: center; margin-top: 3rem;">
                     <div class="keyword">offeri.org</div>
-                    <div class="keyword">@claudecoder</div>
+                    <div class="keyword">github.com/kaminoguo/OfferI_Public</div>
                 </div>
             </div>
         </section>
     </div>
 
     <script>
+        // Custom Cursor
+        const cursor = document.querySelector('.cursor');
+        const cursorGlow = document.querySelector('.cursor-glow');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            cursorGlow.style.left = e.clientX + 'px';
+            cursorGlow.style.top = e.clientY + 'px';
+        });
+
         // Navigation dots generation
         const navDots = document.getElementById('navDots');
         const slides = document.querySelectorAll('.slide');
@@ -575,25 +908,83 @@
 
                 // Update progress
                 progress.textContent = `${String(currentSlide + 1).padStart(2, '0')}/${String(slides.length).padStart(2, '0')}`;
+
+                // Trigger counting animation
+                if (currentSlide === 4 || currentSlide === 6) {
+                    animateCounters();
+                }
             }
         };
 
         container.addEventListener('scroll', updateProgress);
 
+        // Mouse click navigation
+        let isNavigating = false;
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.keyword, .box, .dot, .stage')) return;
+            if (isNavigating) return;
+
+            e.preventDefault();
+            if (currentSlide < slides.length - 1) {
+                isNavigating = true;
+                slides[currentSlide + 1].scrollIntoView({ behavior: 'smooth' });
+                setTimeout(() => { isNavigating = false; }, 1200);
+            }
+        });
+
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            if (isNavigating) return;
+
+            if (currentSlide > 0) {
+                isNavigating = true;
+                slides[currentSlide - 1].scrollIntoView({ behavior: 'smooth' });
+                setTimeout(() => { isNavigating = false; }, 1200);
+            }
+        });
+
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowDown' || e.key === ' ') {
+            if (isNavigating) return;
+
+            if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight' || e.key === 'PageDown') {
                 e.preventDefault();
                 if (currentSlide < slides.length - 1) {
+                    isNavigating = true;
                     slides[currentSlide + 1].scrollIntoView({ behavior: 'smooth' });
+                    setTimeout(() => { isNavigating = false; }, 1200);
                 }
-            } else if (e.key === 'ArrowUp') {
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
                 e.preventDefault();
                 if (currentSlide > 0) {
+                    isNavigating = true;
                     slides[currentSlide - 1].scrollIntoView({ behavior: 'smooth' });
+                    setTimeout(() => { isNavigating = false; }, 1200);
                 }
             }
         });
+
+        // Counting Animation
+        function animateCounters() {
+            const counters = document.querySelectorAll('.count-up');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const duration = 2000;
+                const step = target / (duration / 16);
+                let current = 0;
+
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) {
+                        counter.textContent = target.toLocaleString();
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = Math.floor(current).toLocaleString();
+                    }
+                }, 16);
+            });
+        }
 
         // Animate elements on scroll
         const observerOptions = {
@@ -604,18 +995,22 @@
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('active');
+
+                    // Trigger stagger animation
+                    const staggerElements = entry.target.querySelectorAll('.stagger-in');
+                    staggerElements.forEach(el => {
+                        el.classList.add('active');
+                    });
                 }
             });
         }, observerOptions);
 
         slides.forEach(slide => observer.observe(slide));
 
-        // Mouse trail effect (optional pixel effect)
-        let mouseTrail = [];
-        document.addEventListener('mousemove', (e) => {
-            mouseTrail.push({ x: e.clientX, y: e.clientY, time: Date.now() });
-            mouseTrail = mouseTrail.filter(point => Date.now() - point.time < 500);
-        });
+        // Initial counter animation for visible slides
+        if (currentSlide === 4 || currentSlide === 6) {
+            animateCounters();
+        }
     </script>
 </body>
 </html>
