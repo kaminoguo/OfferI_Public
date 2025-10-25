@@ -58,7 +58,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
           setReportReady(true);
         } else if (status.status === 'failed') {
           setIsLoading(false);
-          setError(status.error || '生成报告失败，请重试');
+          setError(status.error || 'Report generation failed, please try again');
 
           // Check if payment allows retry
           if (paymentId) {
@@ -128,7 +128,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
         setError('Payment verification failed. Please try again.');
         setIsPaymentModalOpen(true);
       } else {
-        setError(error.message || '提交失败，请稍后重试');
+        setError(error.message || 'Submission failed, please try again later');
       }
     }
   };
@@ -164,7 +164,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Download failed:', error);
-      setError('下载失败，请重试');
+      setError('Download failed, please try again');
     }
   };
 
@@ -196,7 +196,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
         setCanRetry(false);
         setIsPaymentModalOpen(true);
       } else {
-        setError(error.message || '提交失败，请稍后重试');
+        setError(error.message || 'Submission failed, please try again later');
         // Re-check retry eligibility after error
         if (paymentId) {
           checkRetryEligibility(paymentId);

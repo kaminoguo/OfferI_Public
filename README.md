@@ -148,45 +148,6 @@ claude mcp add offeri --transport http https://api.offeri.org/mcp \
 claude mcp list
 ```
 
-### Usage Example
-
-```
-You: Find computer science master's programs in Singapore
-     for a student with 3.5 GPA and $50K budget
-
-Claude: [Uses OfferI MCP to query 93,716 programs...]
-        Found 12 matching programs in Singapore:
-        1. NUS MSc Computer Science - $45K, 1.5 years
-        2. NTU MSc AI - $42K, 1 year
-        ...
-```
-
-## License
-
-**Elastic License 2.0** - Same license used by Elasticsearch and Kibana
-
-**What You CAN Do:**
-- ✅ Use the code for learning and education
-- ✅ Modify and deploy for your own internal projects
-- ✅ Study the implementation and architecture
-- ✅ Contribute improvements via pull requests
-
-**What You CANNOT Do:**
-- ❌ Offer this software as a hosted/managed SaaS service to third parties
-- ❌ Build a competing study abroad consultation platform using our code
-- ❌ Sell access to the software's features or functionality
-
-**Proprietary Components (Not in This Repository):**
-- Database (100,000+ programs)
-- Crawler implementation
-- Data processing tools
-
-**Why Elastic License 2.0?**
-
-We chose this license to protect our commercial service while keeping code accessible for learning. It's the same approach used by companies like Elastic, ensuring our 6+ months of development work isn't immediately copied by competitors.
-
-See [LICENSE](./LICENSE) for full legal text.
-
 ---
 
 ## Contact

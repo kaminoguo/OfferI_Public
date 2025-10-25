@@ -28,8 +28,8 @@ mcp = FastMCP(
     Study abroad program database with 93,716 programs worldwide.
     Current date: October 2025
 
-    DATABASE ROLE: Search index for finding programs. Use web searches for conclusions.
-    TOKEN BUDGET: Allocate 15% to DB queries, 85% to web searches.
+    DATABASE ROLE: Search index for finding programs. Use exa MCP searches for conclusions.
+    TOKEN BUDGET: Allocate 15% to DB queries, 85% to exa MCP searches.
 
     LANGUAGE POLICY: Output language MUST match user's input language.
     - If user writes in English → respond in English
@@ -41,11 +41,19 @@ mcp = FastMCP(
 
     Step 1: list_universities(country) - Get all universities
 
-    Step 2: WEB SEARCH admission cases (CRITICAL - DO 3-5 SEARCHES!)
-            Multiple searches with different keywords to find REAL outcomes:
+    Step 2: USE EXA MCP for admission cases (CRITICAL - DO 3-5 SEARCHES!)
+            CRITICAL: Use mcp__exa__web_search_exa tool instead of generic web search
+
+            Multiple exa searches with different keywords to find REAL outcomes:
             - "GPA [X.X] [internship] [field] graduate admission 2024 2025"
             - "low GPA strong experience graduate school acceptance [country]"
             - "[Background] [field] masters admission outcomes 2024"
+
+            Use exa parameters:
+            - num_results: 5-10 per query
+            - use_autoprompt: true
+            - text: true (get admission story details)
+
             This helps you understand admission patterns
 
     Step 3: REVIEW EVERY UNIVERSITY NAME from list_universities(country)
@@ -76,11 +84,12 @@ mcp = FastMCP(
             ❌ WRONG: grep for "product|management|AI" and skip others
             ✅ RIGHT: Read EVERY name, use your intelligence to judge relevance
 
-    Step 5: get_program_details_optimized([id1, id2, ...]) for 100-200 programs
+    Step 5: get_program_details_optimized([id1, id2, ...]) for 50-100 programs
             Quick TSV format for initial screening (minimal fields)
 
-    Step 6: Filter to 30-50 programs, then get_program_details_batch([ids])
+    Step 6: Filter to MAX 15 programs, then get_program_details_batch([ids])
             Get essential details for scoring (NO tuition data - unreliable)
+            CRITICAL: Select only 15 BEST-FIT programs based on student profile
 
     Step 7: Calculate transparent scores for ALL programs from ALL countries
             CRITICAL: Rank programs TOGETHER in a SINGLE GLOBAL LIST
@@ -92,8 +101,10 @@ mcp = FastMCP(
             - Prestige: ranking(40%) + reputation(30%) + outcomes(30%)
             - Fit: career_alignment(40%) + technical_depth(20%) + location(20%) + other(20%)
 
-    Step 8: WEB SEARCH TOP 10 programs (DO 6-10 QUERIES PER PROGRAM!)
-            For EACH of top 10 programs, search multiple angles:
+    Step 8: USE EXA MCP for TOP 10 programs (DO 6-10 QUERIES PER PROGRAM!)
+            CRITICAL: Use mcp__exa__web_search_exa tool instead of generic web search
+
+            For EACH of top 10 programs, search multiple angles using exa:
             - "[University] [Program] career outcomes salary 2024 2025"
             - "[University] [Program] admission requirements deadline 2025 2026"
             - "[University] [Program] student review reddit experience"
@@ -102,9 +113,15 @@ mcp = FastMCP(
             - "[University] [Program] location housing cost living"
             - "[University] [Program] workload difficulty pressure"
             - "[University] [Program] tuition fees cost 2025 2026"
-            THIS IS CRITICAL - Expect 60-100 total web searches for top 10!
 
-    Step 9: Generate TWO-TIER comprehensive report with TOP 30 programs
+            Use exa parameters:
+            - num_results: 5-10 per query
+            - use_autoprompt: true (for better relevance)
+            - text: true (get full content for analysis)
+
+            THIS IS CRITICAL - Expect 60-100 total exa searches for top 10!
+
+    Step 9: Generate TWO-TIER comprehensive report with TOP 20 programs
             Output in user's language (Chinese if user wrote in Chinese)
 
             ═══ TIER 1: TOP 10 DETAILED PROFILES ═══
@@ -134,22 +151,22 @@ mcp = FastMCP(
                - Essays, recommendation letters
 
             6. Total Cost Breakdown
-               - Tuition: $X (from web search, NOT database)
+               - Tuition: $X (from exa MCP search, NOT database)
                - Living expenses: $X for full program duration
                - Total cost: $X
                - Financial aid/scholarships if available
 
-            CRITICAL: If web search did not find complete info:
+            CRITICAL: If exa search did not find complete info:
             ❌ DO NOT leave dimension blank
             ❌ DO NOT write "information unavailable"
-            ✅ Search again with different keywords
+            ✅ Search again with different keywords using exa MCP
             ✅ If truly unavailable, explain WHY and how to get the info
 
-            ═══ TIER 2: PROGRAMS 11-30 SUMMARY TABLE ═══
+            ═══ TIER 2: PROGRAMS 11-20 SUMMARY TABLE ═══
             Tabular format:
             | Rank | Program Name | University | Country | Duration | Score | Key Strength |
 
-            For programs 11-30, provide 1-2 sentence summary of why it's in top 30
+            For programs 11-20, provide 1-2 sentence summary of why it's in top 20
 
     ═══════════════════════════════════════════════════════════════
     TOOLS
@@ -161,7 +178,7 @@ mcp = FastMCP(
     • get_program_details_batch([ids]) → Essential fields ONLY (no tuition/description/structure)
     • get_statistics() → Database overview
 
-    CRITICAL: Database tuition data is UNRELIABLE. Always get tuition from web search.
+    CRITICAL: Database tuition data is UNRELIABLE. Always get tuition from exa MCP search.
 
     ═══════════════════════════════════════════════════════════════
     USAGE TRACKING (INTERNAL - DO NOT MENTION TO USER)
@@ -342,7 +359,7 @@ async def get_program_details(program_id: int) -> dict:
         - country_standardized, city, degree_type
         - duration_months, is_part_time (if applicable)
 
-    NOTE: Database tuition data is UNRELIABLE - get from web search.
+    NOTE: Database tuition data is UNRELIABLE - get from exa MCP search.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -387,7 +404,7 @@ async def get_program_details_batch(program_ids: List[int]) -> List[dict]:
     Get ESSENTIAL details for MULTIPLE programs in ONE call.
 
     OPTIMIZED: Returns only essential fields to save tokens.
-    Database tuition data is UNRELIABLE - get from web search instead.
+    Database tuition data is UNRELIABLE - get from exa MCP search instead.
 
     Args:
         program_ids: List of program IDs from search_programs() results
@@ -401,10 +418,10 @@ async def get_program_details_batch(program_ids: List[int]) -> List[dict]:
         - duration_months, is_part_time
 
     WORKFLOW:
-        1. After filtering from optimized search (100-200 programs)
-        2. Call this ONCE with shortlisted IDs (30-50 programs)
+        1. After filtering from optimized search (50-100 programs)
+        2. Call this ONCE with shortlisted IDs (MAX 15 programs)
         3. Analyze and score all programs
-        4. Do extensive web searches for top 10
+        4. Do extensive exa MCP searches for top 10
 
     Example:
         details = get_program_details_batch([123, 456, 789, ...])
@@ -455,14 +472,14 @@ async def get_program_details_batch(program_ids: List[int]) -> List[dict]:
 
 @mcp.tool
 async def get_program_details_optimized(program_ids: List[int]) -> str:
-    """Get 6 essential fields for bulk filtering (100-200 programs).
+    """Get 6 essential fields for bulk filtering (50-100 programs).
     Returns TSV: "id\tname\tuniversity\tcountry\tmonths\tdegree"
     Header on first line only.
 
-    NO tuition (database data unreliable - get from web search).
+    NO tuition (database data unreliable - get from exa MCP search).
 
     Use this for initial screening of many programs.
-    Then call get_program_details_batch() for TOP 30-50 programs."""
+    Then call get_program_details_batch() for MAX 15 programs."""
     if not program_ids:
         return "id\tname\tuniversity\tcountry\tmonths\tdegree"
 
