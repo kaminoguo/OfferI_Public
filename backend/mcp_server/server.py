@@ -213,7 +213,7 @@ async def start_consultation(
     Args:
         background: Student background (GPA, university, internships, projects, etc.)
         exa_admission_searches: List of 7 Exa search results
-            Each: {"query": "...", "num_results": 5-8, "key_findings": "..."}
+            Each: {"query": "...", "num_results": 5, "key_findings": "..."}
 
     Returns:
         consultation_token + next_step instructions
@@ -224,8 +224,8 @@ async def start_consultation(
     for i, search in enumerate(exa_admission_searches):
         if not isinstance(search, dict) or "query" not in search or "num_results" not in search:
             raise ValueError(f"Search #{i+1} must be a dict with 'query' and 'num_results' fields")
-        if search["num_results"] < 5:
-            raise ValueError(f"Search #{i+1} must have at least 5 results (you provided {search['num_results']})")
+        if search["num_results"] != 5:
+            raise ValueError(f"Search #{i+1} must have EXACTLY 5 results (you provided {search['num_results']})")
 
     token = generate_token("consultation", {
         "background": background,
@@ -576,7 +576,7 @@ For EACH of the top {detailed_count} programs (Tier 1), do EXACTLY 3 Exa searche
 2. "[University] [Program] application deadline tuition cost requirements"
 3. "[University] [Program] career outcomes placement salary workload"
 
-Each search: numResults=15
+Each search: numResults=7
 
 Work systematically: Program #1 (3 searches) → #2 → ... → #{detailed_count}
 
@@ -599,9 +599,9 @@ async def generate_final_report(
             Each: {
                 "program_id": 123,
                 "exa_searches": [
-                    {"query": "curriculum...", "num_results": 15, "findings": "..."},
-                    {"query": "application...", "num_results": 15, "findings": "..."},
-                    {"query": "career...", "num_results": 15, "findings": "..."}
+                    {"query": "curriculum...", "num_results": 7, "findings": "..."},
+                    {"query": "application...", "num_results": 7, "findings": "..."},
+                    {"query": "career...", "num_results": 7, "findings": "..."}
                 ],
                 "dimensions": {
                     "location_environment": {...},
@@ -643,8 +643,8 @@ async def generate_final_report(
         for j, search in enumerate(exa_searches):
             if not isinstance(search, dict) or "num_results" not in search:
                 raise ValueError(f"Program {program_id}, Search #{j+1}: must be a dict with 'num_results' field")
-            if search["num_results"] < 15:
-                raise ValueError(f"Program {program_id}, Search #{j+1}: must have at least 15 results. You provided {search['num_results']}")
+            if search["num_results"] != 7:
+                raise ValueError(f"Program {program_id}, Search #{j+1}: must have EXACTLY 7 results. You provided {search['num_results']}")
             total_searches += 1
         
         required_dims = ["location_environment", "career_prospects", "program_intensity", 

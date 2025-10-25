@@ -26,6 +26,72 @@
             cursor: none;
         }
 
+        /* Mobile Block Screen */
+        .mobile-block {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .mobile-block.active {
+            display: flex;
+        }
+
+        .mobile-block-content {
+            max-width: 500px;
+        }
+
+        .mobile-block h1 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+        }
+
+        .mobile-block p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .mobile-block .icon {
+            font-size: 5rem;
+            margin-bottom: 2rem;
+        }
+
+        .mobile-block-box {
+            border: 2px solid var(--fg);
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-block {
+                display: flex !important;
+            }
+
+            .cursor,
+            .cursor-glow,
+            .grid-bg,
+            .scanline,
+            .progress,
+            .nav-dots,
+            .container {
+                display: none !important;
+            }
+        }
+
         /* Custom Cursor with Glow */
         .cursor {
             position: fixed;
@@ -559,6 +625,24 @@
     </style>
 </head>
 <body>
+    <!-- Mobile Block Screen -->
+    <div class="mobile-block" id="mobileBlock">
+        <div class="mobile-block-content">
+            <div class="icon">🖥️</div>
+            <h1>DESKTOP ONLY</h1>
+            <p>This is a presentation deck designed for large screens.</p>
+            <div class="mobile-block-box">
+                <p style="color: var(--fg); font-weight: 700; margin-bottom: 0;">
+                    Please access this page on a desktop or laptop computer for the full experience.
+                </p>
+            </div>
+            <p style="margin-top: 2rem; font-size: 0.9rem;">
+                OFFERI - Study Abroad AI Agent<br>
+                github.com/kaminoguo/OfferI_Public
+            </p>
+        </div>
+    </div>
+
     <div class="cursor"></div>
     <div class="cursor-glow"></div>
     <div class="grid-bg"></div>
@@ -857,6 +941,26 @@
     </div>
 
     <script>
+        // Mobile Detection - Block mobile devices
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                   || window.innerWidth <= 1024;
+        }
+
+        // Check on load
+        if (isMobileDevice()) {
+            document.getElementById('mobileBlock').classList.add('active');
+        }
+
+        // Re-check on resize
+        window.addEventListener('resize', () => {
+            if (isMobileDevice()) {
+                document.getElementById('mobileBlock').classList.add('active');
+            } else {
+                document.getElementById('mobileBlock').classList.remove('active');
+            }
+        });
+
         // Custom Cursor
         const cursor = document.querySelector('.cursor');
         const cursorGlow = document.querySelector('.cursor-glow');
