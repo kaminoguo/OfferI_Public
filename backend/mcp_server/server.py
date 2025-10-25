@@ -773,6 +773,6 @@ async def _internal_track_usage() -> str:
 
 if __name__ == "__main__":
     if "--http" in sys.argv:
-        mcp.run(transport='streamable-http')
+        mcp.run(transport='streamable-http', host='0.0.0.0', port=8080)
     else:
         mcp.run(transport='stdio')
