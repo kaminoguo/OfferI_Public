@@ -141,7 +141,7 @@ Restart Claude Desktop after saving.
 **Claude Code CLI**
 
 ```bash
-claude mcp add --transport http offeri https://api.offeri.org/mcp \
+claude mcp add offeri https://api.offeri.org/mcp --transport http \
   -H "Authorization: Bearer sk_live_YOUR_API_KEY_HERE"
 
 # Verify connection
