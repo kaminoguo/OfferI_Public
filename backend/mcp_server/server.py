@@ -29,11 +29,20 @@ mcp = FastMCP(
     Current date: October 2025
 
     DATABASE ROLE: Search index for finding programs. Use exa MCP searches for conclusions.
-    TOKEN BUDGET: Allocate 15% to DB queries, 85% to exa MCP searches.
+    TOKEN ALLOCATION: Database queries are lightweight, majority goes to exa MCP searches.
 
     LANGUAGE POLICY: Output language MUST match user's input language.
     - If user writes in English → respond in English
     - If user writes in Chinese → respond in Chinese
+
+    ═══════════════════════════════════════════════════════════════
+    🚨 CRITICAL: COMPLETE WORKFLOW EXECUTION REQUIRED 🚨
+    ═══════════════════════════════════════════════════════════════
+
+    You MUST complete EVERY step of the workflow below with FULL thoroughness.
+    NEVER skip searches, universities, or programs to "save tokens" or "save time".
+    This is a PAID service - users expect and deserve COMPLETE analysis.
+    Any shortcut or incomplete work is UNACCEPTABLE and constitutes SERVICE FAILURE.
 
     ═══════════════════════════════════════════════════════════════
     MANDATORY WORKFLOW
@@ -302,7 +311,6 @@ def get_db_connection():
 
 def clean_null_values(data: Any) -> Any:
     """
-    Recursively remove null/empty values from data to save tokens.
     Removes: None, empty strings, 'N/A', 'null', empty lists, empty dicts
     """
     if isinstance(data, dict):
@@ -443,7 +451,7 @@ async def get_program_details(program_id: int) -> dict:
     """
     Get ESSENTIAL details for ONE program.
 
-    OPTIMIZED: Returns only essential fields to save tokens.
+    OPTIMIZED: Returns only essential fields.
     Use get_program_details_batch() for multiple programs (more efficient).
 
     Args:
@@ -487,12 +495,12 @@ async def get_program_details(program_id: int) -> dict:
         "duration_months": row["duration_months"]
     }
 
-    # Convert study_mode to boolean (saves tokens)
+    # Convert study_mode to boolean
     study_mode = row["study_mode"]
     if study_mode and "part" in study_mode.lower():
         program["is_part_time"] = True
 
-    # Remove null/empty fields to save tokens
+    # Remove null/empty fields
     return clean_null_values(program)
 
 
@@ -501,7 +509,7 @@ async def get_program_details_batch(program_ids: List[int]) -> List[dict]:
     """
     Get ESSENTIAL details for MULTIPLE programs in ONE call.
 
-    OPTIMIZED: Returns only essential fields to save tokens.
+    OPTIMIZED: Returns only essential fields.
     Database tuition data is UNRELIABLE - get from exa MCP search instead.
 
     Args:
@@ -557,14 +565,14 @@ async def get_program_details_batch(program_ids: List[int]) -> List[dict]:
             "duration_months": row["duration_months"]
         }
 
-        # Convert study_mode to boolean (saves tokens)
+        # Convert study_mode to boolean
         study_mode = row["study_mode"]
         if study_mode and "part" in study_mode.lower():
             program["is_part_time"] = True
 
         programs.append(program)
 
-    # Remove null/empty fields to save tokens
+    # Remove null/empty fields
     return [clean_null_values(p) for p in programs]
 
 
