@@ -87,8 +87,9 @@ Using vendor-official tools means we benefit from their improvements without add
 
 **AI/LLM**
 - Claude Code CLI (Headless mode)
+- Claude Pro OAuth authentication
 - MCP (Model Context Protocol)
-- Two-stage pipeline (Analysis + Review)
+- Single-stage pipeline (Claude Sonnet 4.5)
 
 **Infrastructure**
 - Docker + Docker Compose

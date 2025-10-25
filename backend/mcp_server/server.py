@@ -18,8 +18,8 @@ from pathlib import Path
 from typing import Optional, List, Any, Dict, Union
 from fastmcp import FastMCP
 
-# Database path
-DB_PATH = os.getenv("DB_PATH", str(Path(__file__).parent / "programs.db"))
+# Database path (use absolute path fallback for Docker container)
+DB_PATH = os.getenv("DB_PATH", "/app/mcp/programs.db")
 
 # Initialize FastMCP server
 mcp = FastMCP(

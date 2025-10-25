@@ -152,6 +152,7 @@ async def submit_background(
     user_background: UserBackground,
     payment_id: str,
     background_tasks: BackgroundTasks,
+    model: Optional[str] = None,  # Optional: specify model for this job
     db: Session = Depends(get_db)
 ):
     """
@@ -161,6 +162,9 @@ async def submit_background(
     - School, GPA, major (flexible format)
     - Projects, papers, internships (free text)
     - Career goal, target countries, budget
+
+    Optional parameters:
+    - model: Specify model for this job (e.g., "openai/o4-mini-deep-research")
 
     Returns job_id for tracking progress
 
@@ -219,6 +223,11 @@ async def submit_background(
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat()
         }
+
+        # Add model if specified
+        if model:
+            job_data["model"] = model
+            logger.info(f"Job {job_id} will use model: {model}")
 
         redis_client.hset(f"job:{job_id}", mapping=job_data)
 
@@ -404,6 +413,52 @@ async def get_markdown(job_id: str):
         raise HTTPException(
             status_code=500,
             detail=f"Failed to get markdown: {str(e)}"
+        )
+
+
+@app.get("/api/results/{job_id}/cost")
+async def get_cost_data(job_id: str):
+    """
+    Get cost breakdown for completed job
+
+    Returns:
+        - model: Model used
+        - cost_breakdown: Token usage and costs
+    """
+    try:
+        if not redis_client.exists(f"job:{job_id}"):
+            raise HTTPException(status_code=404, detail="Job not found")
+
+        status = redis_client.hget(f"job:{job_id}", "status")
+        if status != "completed":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Job not completed yet. Current status: {status}"
+            )
+
+        # Get cost data
+        cost_data_str = redis_client.hget(f"job:{job_id}", "cost_data")
+        if not cost_data_str:
+            raise HTTPException(status_code=404, detail="Cost data not found")
+
+        cost_data = json.loads(cost_data_str)
+
+        # Get model used
+        model = redis_client.hget(f"job:{job_id}", "model") or "unknown"
+
+        return {
+            "job_id": job_id,
+            "model": model,
+            "cost_breakdown": cost_data
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting cost data: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get cost data: {str(e)}"
         )
 
 

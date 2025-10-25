@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { Key, TrendingUp, Copy, Plus, Trash2, AlertCircle, Mail, Github, Youtube } from 'lucide-react';
+import { Key, Copy, Plus, Trash2, AlertCircle, Mail, Github, Youtube } from 'lucide-react';
 
 interface APIKey {
   key_preview: string;
@@ -161,41 +161,6 @@ export default function SettingsPage() {
           <p className="text-muted-foreground">
             Manage your API keys and view usage statistics
           </p>
-        </div>
-
-        {/* MCP API Usage */}
-        <div className="bg-white border border-border rounded-lg p-6 mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <TrendingUp className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">MCP API Usage</h2>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">This Month</p>
-              <p className="text-2xl font-bold text-foreground">{profile.mcp_usage.used}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Limit</p>
-              <p className="text-2xl font-bold text-foreground">
-                {profile.mcp_usage.is_unlimited ? '∞' : profile.mcp_usage.limit}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Period</p>
-              <p className="text-2xl font-bold text-foreground">
-                {profile.mcp_usage.month}/{profile.mcp_usage.year}
-              </p>
-            </div>
-          </div>
-
-          {!profile.mcp_usage.is_unlimited && profile.mcp_usage.remaining === 0 && (
-            <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-md">
-              <p className="text-sm text-orange-800">
-                You've used all your free consultations this month. Contact us for unlimited access (Super API key).
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Newly Created Key Alert */}

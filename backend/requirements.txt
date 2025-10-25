@@ -15,6 +15,9 @@ md2pdf>=1.0.1
 mcp>=1.0.0
 fastmcp>=0.2.0
 
+# OpenAI Client (for OpenRouter API compatibility)
+openai>=1.0.0
+
 # Anthropic API (for Phase 2 migration)
 # anthropic  # Commented out to avoid conflicts - install when needed
 
