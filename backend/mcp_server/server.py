@@ -992,10 +992,12 @@ async def validate_programs_with_web(
 
         # Check each program in third_round has a search entry
         for prog_id in third_round_ids:
-            if prog_id not in program_searches:
+            # Convert to string because JSON object keys are always strings
+            prog_id_str = str(prog_id)
+            if prog_id_str not in program_searches:
                 raise ValueError(f"{uni}: program {prog_id} passed Round 3 but has no search entry in program_searches")
 
-            prog_search = program_searches[prog_id]
+            prog_search = program_searches[prog_id_str]
             if not isinstance(prog_search, dict):
                 raise ValueError(f"{uni}: program_searches[{prog_id}] must be a dict")
 
