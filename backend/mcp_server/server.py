@@ -892,31 +892,44 @@ async def validate_programs_with_web(
     Args:
         web_validations: Dict mapping university name to validation data
             Keys must be from shortlist_programs_by_name (you can validate a subset)
+
+            ✨ v1.11 Simplified Structure (reduced required fields from 5 → 2):
+
             Example: {
                 "University Name": {
-                    "third_round_program_ids": [123, 456, 789],  # After Round 3 career-based filtering
+                    "third_round_program_ids": [123, 456, 789],  # Required: After Round 3 career-based filtering
                     "program_searches": {
-                        123: {  # program_id
-                            "program_name": "MISM",
+                        "123": {  # program_id as string (JSON requirement)
+                            "program_name": "MISM",  # ✅ OPTIONAL: Auto-filled from database if omitted
                             "search": {
-                                "skipped": false,
-                                "query": "CMU MISM target audience ideal candidates...",
-                                "num_results": 5,
-                                "findings": "..."
+                                "skipped": false,  # ✅ REQUIRED
+                                "query": "CMU MISM target audience ideal candidates...",  # ✅ REQUIRED (if not skipped)
+                                "num_results": 5,  # ✅ OPTIONAL: Auto-defaults to 5 (range 3-8)
+                                "findings": "..."  # Your search results
                             }
                         },
-                        456: {
-                            "program_name": "MSCS",
+                        "456": {
+                            "program_name": "MSCS",  # ✅ OPTIONAL
                             "search": {
-                                "skipped": true,
-                                "known_info": "This program targets students with strong CS background..."
+                                "skipped": true,  # ✅ REQUIRED
+                                "known_info": "Targets students with strong CS background..."  # ✅ OPTIONAL: Auto-generated if omitted
                             }
                         }
                     },
-                    "final_program_ids": [123, 456]  # After Round 4 final filtering
+                    "final_program_ids": [123, 456]  # Required: After Round 4 final filtering
                 },
                 ...
             }
+
+            📝 Field Summary:
+            - program_name: Optional (auto-filled from database)
+            - skipped: Required (boolean)
+            - query: Required if skipped=false
+            - num_results: Optional (defaults to 5)
+            - known_info: Optional if skipped=true (auto-generated)
+
+            ⚠️ Error Reporting: All validation errors returned at once (batch mode)
+
         shortlist_token: From shortlist_programs_by_name() for THIS batch
         previous_validation_token: From previous validate_programs_with_web() call (if not first batch)
 
@@ -966,76 +979,118 @@ async def validate_programs_with_web(
         )
 
     # Validate each university's four-round filtering
+    # v1.11: Collect all errors instead of failing immediately (batch error reporting)
     all_final_ids = []
     total_searches = 0
     total_skipped = 0
+    errors = []
+
+    # Get all program IDs to fetch names from database
+    all_prog_ids = set()
+    for validation in web_validations.values():
+        third_round_ids = validation.get("third_round_program_ids", [])
+        all_prog_ids.update(third_round_ids)
+
+    # Fetch program names from database for auto-fill
+    program_info_map = {}
+    if all_prog_ids:
+        program_details = _get_program_details_batch(list(all_prog_ids))
+        program_info_map = {p["program_id"]: p["program_name"] for p in program_details}
 
     for uni, validation in web_validations.items():
         if not isinstance(validation, dict):
-            raise ValueError(f"{uni}: validation must be a dict")
+            errors.append(f"• {uni}: validation must be a dict")
+            continue
 
         # Validate Round 3 - Career-based filtering results
         if "third_round_program_ids" not in validation:
-            raise ValueError(f"{uni}: missing 'third_round_program_ids' (after career-clarity-based filtering)")
+            errors.append(f"• {uni}: missing 'third_round_program_ids' (after career-clarity-based filtering)")
+            continue
 
         third_round_ids = validation["third_round_program_ids"]
         if not isinstance(third_round_ids, list):
-            raise ValueError(f"{uni}: third_round_program_ids must be a list")
+            errors.append(f"• {uni}: third_round_program_ids must be a list")
+            continue
 
         # Validate per-program searches
         if "program_searches" not in validation:
-            raise ValueError(f"{uni}: missing 'program_searches' (per-program target audience validation)")
+            errors.append(f"• {uni}: missing 'program_searches' (per-program target audience validation)")
+            continue
 
         program_searches = validation["program_searches"]
         if not isinstance(program_searches, dict):
-            raise ValueError(f"{uni}: program_searches must be a dict")
+            errors.append(f"• {uni}: program_searches must be a dict")
+            continue
 
         # Check each program in third_round has a search entry
         for prog_id in third_round_ids:
             # Convert to string because JSON object keys are always strings
             prog_id_str = str(prog_id)
             if prog_id_str not in program_searches:
-                raise ValueError(f"{uni}: program {prog_id} passed Round 3 but has no search entry in program_searches")
+                errors.append(f"• {uni}: program {prog_id} passed Round 3 but has no search entry in program_searches")
+                continue
 
             prog_search = program_searches[prog_id_str]
             if not isinstance(prog_search, dict):
-                raise ValueError(f"{uni}: program_searches[{prog_id}] must be a dict")
+                errors.append(f"• {uni}: program {prog_id} search entry must be a dict")
+                continue
 
-            if "program_name" not in prog_search:
-                raise ValueError(f"{uni}: program {prog_id} missing 'program_name'")
+            # v1.11: Auto-fill program_name from database if not provided
+            if "program_name" not in prog_search or not prog_search["program_name"]:
+                prog_name = program_info_map.get(prog_id, f"Program {prog_id}")
+                prog_search["program_name"] = prog_name
 
             if "search" not in prog_search:
-                raise ValueError(f"{uni}: program {prog_id} missing 'search' field")
+                errors.append(f"• {uni}: program {prog_id} missing 'search' field")
+                continue
 
             search = prog_search["search"]
             if not isinstance(search, dict):
-                raise ValueError(f"{uni}: program {prog_id} search must be a dict")
+                errors.append(f"• {uni}: program {prog_id} search must be a dict")
+                continue
 
             if "skipped" not in search:
-                raise ValueError(f"{uni}: program {prog_id} search missing 'skipped' field")
+                errors.append(f"• {uni}: program {prog_id} search missing 'skipped' field")
+                continue
 
             if search["skipped"]:
-                # Skipped search - must have known_info
-                if "known_info" not in search:
-                    raise ValueError(f"{uni}: program {prog_id} search is skipped but missing 'known_info'")
+                # v1.11: Auto-generate known_info if not provided
+                if "known_info" not in search or not search["known_info"]:
+                    prog_name = prog_search.get("program_name", f"Program {prog_id}")
+                    search["known_info"] = f"Program validated based on general knowledge of {prog_name}"
                 total_skipped += 1
             else:
-                # Actual search - must have query and num_results
-                if "query" not in search or "num_results" not in search:
-                    raise ValueError(f"{uni}: program {prog_id} search must have 'query' and 'num_results' if not skipped")
-                if not (3 <= search["num_results"] <= 8):
-                    raise ValueError(f"{uni}: program {prog_id} search must have 3-8 results. You provided {search['num_results']}")
+                # Actual search - must have query
+                if "query" not in search:
+                    errors.append(f"• {uni}: program {prog_id} search missing 'query' field (required when not skipped)")
+                    continue
+
+                # v1.11: Auto-default num_results to 5 if not provided
+                if "num_results" not in search:
+                    search["num_results"] = 5
+                elif not (3 <= search["num_results"] <= 8):
+                    errors.append(f"• {uni}: program {prog_id} search num_results must be 3-8 (you provided {search['num_results']})")
+                    continue
+
                 total_searches += 1
 
         # Validate Round 4 - Final filtering results
         if "final_program_ids" not in validation:
-            raise ValueError(f"{uni}: missing 'final_program_ids' (after Round 4 final filtering)")
+            errors.append(f"• {uni}: missing 'final_program_ids' (after Round 4 final filtering)")
+            continue
 
         final_ids = validation["final_program_ids"]
         if not isinstance(final_ids, list):
-            raise ValueError(f"{uni}: final_program_ids must be a list")
+            errors.append(f"• {uni}: final_program_ids must be a list")
+            continue
 
         all_final_ids.extend(final_ids)
+
+    # If any errors were collected, raise them all at once
+    if errors:
+        error_msg = f"Found {len(errors)} validation error(s):\n\n" + "\n".join(errors)
+        error_msg += "\n\n💡 Tip: Fix all errors listed above and retry."
+        raise ValueError(error_msg)
 
     if len(all_final_ids) == 0:
         raise ValueError("No programs passed validation. Did you filter too aggressively?")
