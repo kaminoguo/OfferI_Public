@@ -507,7 +507,7 @@ async def start_consultation(
     - ✅ Search if: Borderline GPA for target tier, unique compensating factors, 2024-2025 trend uncertainties
     - ❌ DO NOT search if: Obviously strong profile or obviously weak profile
     - If searching: Find similar admission cases to validate tier judgment
-    - Use YOUR OWN web search tools (Exa, gemini-cli web-search, Bright Data, etc.)
+    - Use your built-in web search capability
 
     STEP 3: CALL THIS TOOL
     - Submit background + tier_assessment + optional web_searches
@@ -525,18 +525,18 @@ async def start_consultation(
                 "reach_tier": "Top 10-20",         # Ambitious schools
                 "match_tier": "Top 20-40",         # Realistic schools
                 "safety_tier": "Top 40-60",        # Safe schools
-                "key_strengths": ["Google PM intern", "4×100★ repos", ...],
-                "key_weaknesses": ["GPA 3.0", ...],
+                "key_strengths": ["Industry internship", "Strong projects", "Research publications", ...],
+                "key_weaknesses": ["Below average GPA", "Limited research experience", ...]
                 "career_clarity": "high",  # high/medium/low - affects ranking weights
-                    # high: Clear career goals/interests (e.g., "AI research", "fintech PM")
+                    # high: Clear career goals/interests (e.g., "Machine learning research", "Corporate strategy")
                     #       → Prioritize program fit over university reputation
-                    # medium: General direction (e.g., "tech industry", "data science")
+                    # medium: General direction (e.g., "Technology sector", "Finance industry")
                     #       → Balanced weights
-                    # low: Uncertain/exploring (e.g., "not sure", "keep options open")
+                    # low: Uncertain/exploring (e.g., "Still deciding", "Keeping options open")
                     #       → Prioritize university reputation over program fit
-                "reasoning": "HKUST GPA 3.0 is borderline, but Google PM + projects compensate..."
+                "reasoning": "Example: Strong technical background but borderline GPA, compensated by internships..."
             }
-        web_searches: Optional list of 0-3 web search results (using YOUR search tools)
+        web_searches: Optional list of 0-3 web search results (using your built-in search)
             Each: {"query": "...", "num_results": <1-25>, "key_findings": "..."}
             ONLY include if genuinely uncertain after knowledge-based analysis
 
@@ -715,22 +715,22 @@ You now have programs for this batch of universities.
 - Accumulate all programs_tokens from multiple batches
 - After all batches complete, proceed to TWO-PASS screening across ALL programs
 
-CRITICAL: Perform TWO-PASS screening to ensure quality and reduce Exa search load.
+CRITICAL: Perform TWO-PASS screening to ensure quality and reduce web search load.
 
-PASS 1 - Liberal Selection (宁多不少):
+PASS 1 - Remove Obvious Mismatches (排除法):
 - Review ALL program names carefully across all batches
-- Select ALL potentially relevant programs
-- Use LIBERAL criteria (better to keep potential matches than miss good programs)
-- Include programs if they "might" be relevant - err on the side of inclusion
-- Focus: Cast a wide net, don't worry about false positives yet
-- Philosophy: 宁多不少 (better more than less)
+- Remove programs that are OBVIOUSLY unrelated to student's field/interests
+- Examples of obvious mismatches: Architecture for CS student, Pure Arts for Engineering student,
+  Biology for Business student, Humanities for Tech student
+- Only remove programs that are clearly in completely different domains
+- Philosophy: 宁少不多 (remove clear mismatches, but don't be overly aggressive)
 
-PASS 2 - Remove ONLY Obvious Mismatches:
-- Review your Pass 1 selection
-- Remove programs that are OBVIOUSLY irrelevant (e.g., healthcare programs for CS students)
-- Remove programs with CLEAR mismatches to student background
-- Keep ALL borderline cases (they will be validated by Exa in next step)
-- Goal: Remove only the most obvious mismatches, preserve quality candidates
+PASS 2 - Select Relevant Programs (选择法):
+- Review remaining programs from Pass 1
+- Positively SELECT programs that match student's background and interests
+- Consider: Student's major, internships, career goals, skills
+- Include borderline cases (they will be validated in next steps)
+- Goal: From the remaining pool, select programs with reasonable fit
 
 Submit ONLY the final shortlist after both passes to shortlist_programs_by_name().
 
@@ -754,8 +754,8 @@ async def shortlist_programs_by_name(
     - Then move to next batch: Tool 3 → Tool 4 → Tool 5 → repeat
 
     TWO-PASS SCREENING (for this batch):
-    PASS 1 - Liberal Selection (宁多不少): Cast wide net, select ALL potentially relevant programs
-    PASS 2 - Remove Obvious Mismatches: Only remove OBVIOUSLY irrelevant programs
+    PASS 1 - Remove Obvious Mismatches (排除法): Eliminate programs in completely different domains
+    PASS 2 - Select Relevant Programs (选择法): From remaining programs, positively select those matching student profile
 
     Args:
         shortlisted_by_university: Dict mapping university name to list of program IDs
@@ -801,12 +801,12 @@ async def shortlist_programs_by_name(
 ⚠️ IMMEDIATE NEXT STEP: Perform THIRD-ROUND filtering, then web search, then proceed to Tool 5
 
 📋 THIRD-ROUND FILTERING (严格筛选):
-Based on career_clarity and user background, aggressively filter programs:
+Based on career_clarity and student background, aggressively filter programs:
 
 If career_clarity = "high" (目标清晰):
-→ STRICTLY remove programs that DON'T match career direction
-→ Example: User wants "AI product" → Remove FinTech, Environmental Eng, pure Data Science, Hardware/CE programs
-→ Only keep programs DIRECTLY aligned with stated goals
+→ STRICTLY remove programs that DON'T match student's stated career direction
+→ Only keep programs DIRECTLY aligned with career goals
+→ Example: Student targets research → Remove professional/industry-focused programs
 → Be aggressive: 宁缺毋滥 (better to have fewer perfect matches)
 
 If career_clarity = "low" (看重学校牌子):
@@ -858,9 +858,8 @@ async def validate_programs_with_web(
     YOU must perform this filtering BEFORE calling this tool.
 
     If career_clarity = "high" (目标清晰):
-    - STRICTLY remove programs that DON'T match stated career direction
-    - Example: User wants "AI product" → Remove FinTech, Environmental Eng, pure DS, Hardware/CE
-    - Only keep programs DIRECTLY aligned with goals
+    - STRICTLY remove programs that DON'T match student's stated career direction
+    - Only keep programs DIRECTLY aligned with career goals
     - Philosophy: 宁缺毋滥 (better fewer perfect matches than many mediocre ones)
 
     If career_clarity = "low" (看重学校牌子):
@@ -877,7 +876,7 @@ async def validate_programs_with_web(
     - Query pattern: "[University] [Program Name] target audience ideal candidates background requirements"
     - Purpose: Understand what kind of students THIS SPECIFIC PROGRAM is looking for
     - Results: 3-8 recommended per program (small focused searches)
-    - Use YOUR OWN web search tools (Exa, gemini-cli, Bright Data, etc.)
+    - Use your built-in web search capability
 
     ⚠️ OPTIMIZATION: Skip search if you already know the program
     - If your knowledge base has clear info about this program's target audience
