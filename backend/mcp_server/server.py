@@ -1372,18 +1372,21 @@ async def score_and_rank_programs(
     # Determine report format
     if universities_count >= 7:
         report_format = "TOP_20"
-        detailed_count = 10
-        required_searches = 30  # 10 programs × 3 searches = 30
+        detailed_count = 10  # Tier 1: Full Exa research
+        concise_count = 10   # Tier 2: Concise summaries (LLM knowledge allowed)
+        required_searches = 30  # Tier 1 only: 10 programs × 3 searches = 30
     else:
         report_format = "TOP_10"
-        detailed_count = 5
+        detailed_count = 5   # Tier 1: Full Exa research
+        concise_count = 0    # No Tier 2 for small selection
         required_searches = 15  # 5 programs × 3 searches = 15
-    
-    top_programs = programs[:detailed_count * 2]
+
+    top_programs = programs[:detailed_count + concise_count]
 
     token = generate_token("ranking", {
         "report_format": report_format,
         "detailed_tier_count": detailed_count,
+        "concise_tier_count": concise_count,  # v1.15: Added for Tier 2
         "required_exa_searches": required_searches,
         "top_programs": top_programs,
         "total_universities_validated": universities_count,
@@ -1396,7 +1399,7 @@ async def score_and_rank_programs(
         "ranking_token": token,
         "report_format": report_format,
         "detailed_tier_programs": detailed_count,
-        "concise_tier_programs": detailed_count,
+        "concise_tier_programs": concise_count,  # v1.15: Fixed to use concise_count
         "total_top_programs": len(top_programs),
         "required_exa_searches": required_searches,
         "top_programs": top_programs,
@@ -1405,14 +1408,27 @@ async def score_and_rank_programs(
 
 Report format: {report_format}
 - Tier 1 (detailed): {detailed_count} programs
-- Tier 2 (concise): {detailed_count} programs
+- Tier 2 (concise): {concise_count} programs
 
-CRITICAL: You must complete {required_searches} Exa searches before generating report.
+📋 TWO-TIER RESEARCH WORKFLOW:
 
-🎯 Search Strategy:
+TIER 1 (Detailed Research) - {detailed_count} programs:
+- MUST perform 3 Exa searches per program (tuition/features/deadline)
+- MUST provide full 6-dimension analysis
+- Total: {required_searches} Exa searches required
+
+TIER 2 (Concise Summary) - {concise_count} programs:
+- NO Exa searches required (use your knowledge base up to Jan 2025)
+- Provide concise summary with 3 fields:
+  * quick_facts: Basic info (tuition range, duration, format)
+  * fit_reasoning: Why recommend for this student
+  * application_notes: Key application points
+- Source: mark as "llm_knowledge"
+
+🎯 Tier 1 Search Strategy:
 1. FIRST: Try Exa MCP (mcp__exa__web_search_exa) for each search
-2. IF Exa returns no useful results: Use your own knowledge (up to Jan 2025)
-3. ALWAYS fill "findings" field with detailed content (min 50 chars) - empty findings = validation error
+2. IF Exa returns no useful results: Use your own knowledge
+3. ALWAYS fill "findings" field with detailed content (min 50 chars)
 
 For EACH of the top {detailed_count} programs (Tier 1), do EXACTLY 3 Exa searches:
 
@@ -1479,24 +1495,26 @@ Then fill findings field:
 
 Total: 4 + 8 + 4 = 16 results per program ({detailed_count} programs × 16 = {required_searches} searches)
 
-Work systematically: Program #1 (3 searches) → #2 → ... → #{detailed_count}
-
-Call generate_final_report(detailed_research, ranking_token)
+Work systematically:
+1. Complete all Tier 1 programs (3 searches each): Program #1 → #2 → ... → #{detailed_count}
+2. Then provide Tier 2 concise summaries (knowledge-based): Program #{detailed_count+1} → ... → #{detailed_count + concise_count}
+3. Call generate_final_report(detailed_research, ranking_token, concise_research)
         """,
-        "next_step": f"Complete {required_searches} Exa searches, then call generate_final_report()"
+        "next_step": f"Complete {required_searches} Exa searches for Tier 1, then provide Tier 2 summaries, then call generate_final_report()"
     }
 
 
 @mcp.tool
 async def generate_final_report(
     detailed_program_research: List[dict],
-    ranking_token: str
+    ranking_token: str,
+    concise_program_research: Optional[List[dict]] = None
 ) -> dict:
     """
-    Step 7: Generate comprehensive two-tier report
+    Step 7: Generate comprehensive two-tier report (v1.15)
 
     Args:
-        detailed_program_research: List of research for Tier 1 programs
+        detailed_program_research: Tier 1 programs with full Exa research
             Each: {
                 "program_id": 123,
                 "exa_searches": [
@@ -1534,32 +1552,56 @@ async def generate_final_report(
         - If Exa returns no useful results, use your own knowledge and mark source="llm_knowledge"
         - NEVER submit empty findings or skip this field
 
+        concise_program_research: Tier 2 programs with concise summaries (TOP_20 format only)
+            Each: {
+                "program_id": 456,
+                "summary": {
+                    "quick_facts": "1-year MS, ~$60k total cost, STEM-designated, evening classes available",
+                    "fit_reasoning": "Strong PM training with tech emphasis, matches Google PM experience. Industry partnerships for capstone projects.",
+                    "application_notes": "Round 1 deadline typically Jan 5, requires PM portfolio or work samples, GRE optional, 3.0+ GPA recommended"
+                },
+                "source": "llm_knowledge"
+            }
+
+        ⚠️ TIER 2 REQUIREMENTS (v1.15):
+        - Required when report_format="TOP_20" (≥7 universities selected)
+        - NO Exa searches needed - use your knowledge base
+        - Each field in summary must be ≥30 characters
+        - quick_facts: Basic program facts (cost, duration, format)
+        - fit_reasoning: Why suitable for this student's profile
+        - application_notes: Key application requirements and deadlines
+
         ranking_token: From score_and_rank_programs()
 
     Returns:
         Validation confirmation + instructions to generate report
     """
     ranking_data = validate_token(ranking_token, "ranking")
-    
+
     report_format = ranking_data["report_format"]
     detailed_count = ranking_data["detailed_tier_count"]
+    concise_count = ranking_data.get("concise_tier_count", 0)  # v1.15: Get Tier 2 count
     required_searches = ranking_data["required_exa_searches"]
-    
-    if not detailed_program_research or len(detailed_program_research) != detailed_count:
-        raise ValueError(f"You must provide research for EXACTLY {detailed_count} programs. You provided {len(detailed_program_research) if detailed_program_research else 0}.")
 
-    # NEW VALIDATION: Ensure sufficient program research when analyzing many universities
-    total_universities = ranking_data.get("total_universities_validated", 0)
-    if total_universities > 7 and len(detailed_program_research) < 20:
+    # v1.15: Validate Tier 1 (detailed) count based on token contract
+    if not detailed_program_research or len(detailed_program_research) != detailed_count:
         raise ValueError(
-            f"❌ INSUFFICIENT PROGRAM RESEARCH!\n\n"
-            f"You selected {total_universities} universities (>7), but only provided "
-            f"detailed research for {len(detailed_program_research)} programs.\n\n"
-            f"When analyzing 7+ universities, you MUST provide research for at least 20 programs "
-            f"(10 for Tier 1 detailed + 10 for Tier 2 concise).\n\n"
-            f"This ensures comprehensive coverage across all selected universities. "
-            f"Please expand your research to meet the minimum threshold."
+            f"Tier 1 (detailed): Expected {detailed_count} programs, got {len(detailed_program_research) if detailed_program_research else 0}.\n\n"
+            f"You must provide research for EXACTLY {detailed_count} Tier 1 programs with full Exa searches."
         )
+
+    # v1.15: Validate Tier 2 (concise) only if report_format requires it
+    if concise_count > 0:
+        if not concise_program_research:
+            raise ValueError(
+                f"Tier 2 (concise): {report_format} format requires Tier 2 summaries.\n\n"
+                f"Provide concise_program_research with {concise_count} programs.\n\n"
+                f"Tier 2 does NOT require Exa searches - use your knowledge base."
+            )
+        if len(concise_program_research) != concise_count:
+            raise ValueError(
+                f"Tier 2 (concise): Expected {concise_count} programs, got {len(concise_program_research)}."
+            )
 
     total_searches = 0
     validation_results = []
@@ -1635,29 +1677,66 @@ async def generate_final_report(
         
         validation_results.append({
             "program_id": program_id,
+            "tier": 1,
             "exa_searches_count": len(exa_searches),
             "dimensions_complete": True
         })
-    
+
+    # v1.15: Validate Tier 2 (concise) programs - RELAXED validation
+    if concise_program_research:
+        for i, research in enumerate(concise_program_research):
+            program_id = research.get("program_id")
+            summary = research.get("summary", {})
+            source = research.get("source", "")
+
+            if not program_id:
+                raise ValueError(f"Tier 2 Research #{i+1}: missing program_id")
+
+            if not summary or not isinstance(summary, dict):
+                raise ValueError(f"Tier 2 Program {program_id}: missing or invalid 'summary' dict")
+
+            # Check required fields in summary
+            required_fields = ["quick_facts", "fit_reasoning", "application_notes"]
+            for field in required_fields:
+                if field not in summary or not summary[field]:
+                    raise ValueError(f"Tier 2 Program {program_id}: missing '{field}' in summary")
+                if not isinstance(summary[field], str) or len(summary[field].strip()) < 30:
+                    raise ValueError(
+                        f"Tier 2 Program {program_id}: '{field}' must be a string with at least 30 characters. "
+                        f"You provided {len(summary[field].strip()) if isinstance(summary[field], str) else 0} chars."
+                    )
+
+            # Optional: validate source if provided
+            if source and source not in ["llm_knowledge", "exa"]:
+                raise ValueError(f"Tier 2 Program {program_id}: source must be 'llm_knowledge' or 'exa'. You provided: {source}")
+
+            validation_results.append({
+                "program_id": program_id,
+                "tier": 2,
+                "summary_complete": True
+            })
+
     if total_searches != required_searches:
-        raise ValueError(f"Expected {required_searches} total Exa searches, but you provided {total_searches}")
+        raise ValueError(f"Expected {required_searches} total Exa searches for Tier 1, but you provided {total_searches}")
     
     return {
         "report_generated": True,
         "report_format": report_format,
         "tier1_programs": detailed_count,
-        "tier2_programs": detailed_count,
+        "tier2_programs": concise_count,  # v1.15: Fixed to use concise_count
         "total_exa_searches_validated": total_searches,
         "validation": validation_results,
         "message": f"""
 ✅ All validations passed! Generate the comprehensive report now.
 
-Report structure:
-- TIER 1: {detailed_count} programs with full 6-dimension profiles
-- TIER 2: {detailed_count} programs with concise summaries
+Report structure (v1.15):
+- TIER 1: {detailed_count} programs with full 6-dimension profiles (Exa-researched)
+- TIER 2: {concise_count} programs with concise summaries (knowledge-based)
 - Final section: Application strategy
 
 Output in user's language (Chinese if they wrote in Chinese).
+
+Include specific details from Exa searches for Tier 1 programs (tuition, deadlines, features).
         """
     }
 
