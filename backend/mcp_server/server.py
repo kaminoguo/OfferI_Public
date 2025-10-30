@@ -644,14 +644,17 @@ async def explore_universities(
         "universities": universities,
         "total_count": len(universities),
         "instructions": """
-Review EVERY university name. Select appropriate ones based on:
+Review university list. Select ALL appropriate ones based on:
 - School tier matches student credentials?
 - Values student's strengths (internships/projects/awards)?
 - Supports student's career goals?
 
-DO NOT just pick "famous Top 20". Consider fit over fame.
+💡 Selection Strategy:
+- Be comprehensive (not just "famous Top 20")
+- Consider fit over fame
+- Include reach/match/safety schools across the tier spectrum
 
-Next: Call get_university_programs() for EACH selected university
+Next: Call get_university_programs(universities, exploration_token) with your selected universities
         """,
         "next_step": "Call get_university_programs(universities, exploration_token)"
     }
@@ -665,15 +668,14 @@ async def get_university_programs(
     """
     Step 3: Get ALL programs for EACH selected university
 
-    ⚠️ IMPORTANT: Maximum 5 universities per call to avoid 25k token response limit.
-    If you need more universities, call this tool multiple times with batches of 5.
-
     Args:
-        universities: List of university names (MAX 5 per call, e.g., ["CMU", "Stanford", "MIT", "Berkeley", "Cornell"])
+        universities: List of university names (e.g., ["CMU", "Stanford", "MIT"])
         exploration_token: From explore_universities()
 
     Returns:
         programs_token + all programs grouped by university
+
+    Note: System will guide you on batch processing if needed (no need to worry about limits upfront)
     """
     exploration_data = validate_token(exploration_token, "exploration")
     career_clarity = exploration_data.get("career_clarity", "medium")
@@ -683,7 +685,24 @@ async def get_university_programs(
 
     # Enforce batch size limit to avoid token overflow
     if len(universities) > 5:
-        raise ValueError(f"Too many universities in one batch ({len(universities)}). Maximum is 5 per call to avoid 25k token response limit. Please process in batches of 5 or fewer.")
+        # Provide helpful batch processing guidance
+        total = len(universities)
+        batches = (total + 4) // 5  # Ceiling division
+        first_batch = universities[:5]
+        remaining = universities[5:]
+
+        suggestion = f"Batch 1: {first_batch}\n"
+        if len(remaining) <= 5:
+            suggestion += f"Batch 2: {remaining}"
+        else:
+            suggestion += f"Batch 2-{batches}: Process {len(remaining)} remaining universities in groups of 5"
+
+        raise ValueError(
+            f"⚠️ Batch Size Limit: You provided {total} universities, but this tool handles max 5 per call.\n\n"
+            f"💡 Solution: Process in {batches} batches of ≤5 universities each.\n\n"
+            f"Suggested batching:\n{suggestion}\n\n"
+            f"After each batch, accumulate the programs_tokens before proceeding to screening."
+        )
 
     all_programs = {}
     total_programs = 0
