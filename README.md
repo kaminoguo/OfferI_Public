@@ -60,11 +60,11 @@ For structured data like university programs (name, tuition, duration), SQL is i
 
 **2. Using Official CLI Tools → Product Improves Automatically**
 
-We use **official CLI tools from major vendors** (Claude Code, Gemini CLI, Context7):
+We use **official CLI tools from major vendors** (Claude Code, Gemini CLI, Codex):
 
 - **Our Advantage**: When vendors update their CLIs, our product gets better automatically
 - **LangChain/LangGraph Risk**: Framework abstractions can break with LLM updates, requiring constant maintenance
-- **Multi-vendor Testing**: We've tested Claude Code CLI, Gemini CLI, and Context7 to ensure flexibility
+- **Multi-vendor Testing**: We've tested Claude Code CLI, Gemini CLI, and Codex CLI to ensure flexibility
 
 Using vendor-official tools means we benefit from their improvements without additional engineering work.
 
@@ -156,38 +156,41 @@ claude mcp list
 <details>
 <summary><b>Gemini CLI</b> - Click to expand</summary>
 
-```bash
-# Add OfferI MCP server
-gemini mcp add offeri https://api.offeri.org/mcp
-
-# Verify connection
-gemini mcp list
-```
-
-**Note**: Gemini CLI currently does not support HTTP headers for authentication. Use the free tier (5 consultations/month) or switch to Claude Desktop/Code for authenticated access.
-
-</details>
-
-<details>
-<summary><b>Context7 / Other MCP Clients</b> - Click to expand</summary>
-
-For other MCP-compatible clients, add the following configuration:
+Edit `~/.gemini/settings.json` or create `.gemini/settings.json` in your project directory:
 
 ```json
 {
   "mcpServers": {
     "offeri": {
-      "type": "http",
-      "url": "https://api.offeri.org/mcp",
+      "httpUrl": "https://api.offeri.org/mcp",
       "headers": {
         "Authorization": "Bearer sk_live_YOUR_API_KEY_HERE"
-      }
+      },
+      "trust": false
     }
   }
 }
 ```
 
-Or if your client doesn't support authentication headers, use without the `headers` field for free tier access.
+Restart Gemini CLI after saving.
+
+</details>
+
+<details>
+<summary><b>Codex CLI (OpenAI)</b> - Click to expand</summary>
+
+Edit `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.offeri]
+command = "/home/YOUR_USERNAME/.npm-global/bin/mcp-remote"
+args = ["https://api.offeri.org/mcp"]
+env = { "AUTHORIZATION" = "Bearer sk_live_YOUR_API_KEY_HERE" }
+```
+
+Note: Replace `/home/YOUR_USERNAME` with your actual home directory path.
+
+Restart Codex CLI after saving.
 
 </details>
 
