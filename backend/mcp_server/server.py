@@ -663,25 +663,112 @@ Next: Call get_university_programs(universities, exploration_token) with your se
 @mcp.tool
 async def get_university_programs(
     universities: List[str],
-    exploration_token: str
+    exploration_token: str,
+    all_selected_universities: Optional[List[str]] = None,
+    previous_programs_token: Optional[str] = None
 ) -> dict:
     """
     Step 3: Get ALL programs for EACH selected university
 
     Args:
-        universities: List of university names (e.g., ["CMU", "Stanford", "MIT"])
+        universities: List of university names for THIS batch (max 5)
         exploration_token: From explore_universities()
+        all_selected_universities: REQUIRED on first batch - complete list of ALL universities you plan to process
+        previous_programs_token: For 2nd+ batches - token from previous get_university_programs() call
 
     Returns:
         programs_token + all programs grouped by university
 
-    Note: System will guide you on batch processing if needed (no need to worry about limits upfront)
+    🔄 BATCH WORKFLOW (for >5 universities):
+
+    Example: You selected 12 universities total
+
+    Batch 1 (first call):
+    get_university_programs(
+        universities=["CMU", "Stanford", "MIT", "Berkeley", "Cornell"],  # First 5
+        exploration_token="...",
+        all_selected_universities=["CMU", "Stanford", "MIT", "Berkeley", "Cornell",
+                                   "UW", "GT", "UMich", "UCI", "Syracuse", "UT Austin", "UMD"]  # ALL 12
+    )
+
+    Batch 2 (second call):
+    get_university_programs(
+        universities=["UW", "GT", "UMich", "UCI", "Syracuse"],  # Next 5
+        exploration_token="...",
+        previous_programs_token="programs_xxx"  # From batch 1
+    )
+
+    Batch 3 (final):
+    get_university_programs(
+        universities=["UT Austin", "UMD"],  # Remaining 2
+        exploration_token="...",
+        previous_programs_token="programs_yyy"  # From batch 2
+    )
+
+    Note: System will guide you on batch processing if needed
     """
     exploration_data = validate_token(exploration_token, "exploration")
     career_clarity = exploration_data.get("career_clarity", "medium")
 
     if not universities or not isinstance(universities, list):
         raise ValueError("You must provide a list of university names")
+
+    # Determine total selected universities list
+    total_selected_unis = None
+    cumulative_programs = {}
+    cumulative_unis_processed = []
+
+    if previous_programs_token:
+        # Batch 2+: inherit from previous batch
+        previous_data = validate_token(previous_programs_token, "programs")
+        total_selected_unis = previous_data.get("total_selected_universities")
+        cumulative_programs = previous_data.get("cumulative_all_programs", {})
+        cumulative_unis_processed = previous_data.get("cumulative_universities_processed", [])
+
+        if not total_selected_unis:
+            raise ValueError(
+                "Previous programs_token is missing total_selected_universities.\n"
+                "This shouldn't happen - please report this error."
+            )
+    else:
+        # Batch 1: must provide all_selected_universities
+        if not all_selected_universities:
+            raise ValueError(
+                "⚠️ FIRST BATCH REQUIREMENT:\n\n"
+                "On the first call to get_university_programs(), you MUST provide 'all_selected_universities' parameter.\n\n"
+                "This should be the COMPLETE list of ALL universities you plan to process (not just the first 5).\n\n"
+                "Example:\n"
+                "get_university_programs(\n"
+                "    universities=['CMU', 'Stanford', 'MIT', 'Berkeley', 'Cornell'],  # First batch (5)\n"
+                "    exploration_token='...',\n"
+                "    all_selected_universities=['CMU', 'Stanford', 'MIT', 'Berkeley', 'Cornell',\n"
+                "                               'UW', 'GT', 'UMich', 'UCI', 'Syracuse', 'UT Austin', 'UMD']  # ALL 12\n"
+                ")"
+            )
+
+        if not isinstance(all_selected_universities, list):
+            raise ValueError("all_selected_universities must be a list")
+
+        total_selected_unis = all_selected_universities
+
+    # Validate current batch universities are in total list
+    invalid_unis = [uni for uni in universities if uni not in total_selected_unis]
+    if invalid_unis:
+        raise ValueError(
+            f"Invalid universities in current batch: {invalid_unis}\n\n"
+            f"These universities are not in your all_selected_universities list.\n"
+            f"Total selected: {total_selected_unis}"
+        )
+
+    # Check for duplicates
+    already_processed = set(cumulative_unis_processed)
+    duplicates = set(universities) & already_processed
+    if duplicates:
+        raise ValueError(
+            f"Universities already processed in previous batch: {duplicates}\n\n"
+            f"Previously processed: {cumulative_unis_processed}\n"
+            f"Remaining to process: {sorted(set(total_selected_unis) - already_processed)}"
+        )
 
     # Enforce batch size limit to avoid token overflow
     if len(universities) > 5:
@@ -713,25 +800,54 @@ async def get_university_programs(
             all_programs[uni] = programs
             total_programs += len(programs)
 
+    # Accumulate with previous batches
+    cumulative_all_programs = {**cumulative_programs, **all_programs}
+    cumulative_universities_processed = cumulative_unis_processed + universities
+    cumulative_total_programs = sum(len(progs) for progs in cumulative_all_programs.values())
+
+    # Check if all universities have been processed
+    remaining_unis = set(total_selected_unis) - set(cumulative_universities_processed)
+    is_complete = len(remaining_unis) == 0
+
     token = generate_token("programs", {
         "universities": universities,
         "all_programs": all_programs,
         "total_programs": total_programs,
-        "career_clarity": career_clarity
+        "career_clarity": career_clarity,
+        "total_selected_universities": total_selected_unis,
+        "cumulative_universities_processed": cumulative_universities_processed,
+        "cumulative_all_programs": cumulative_all_programs,
+        "is_complete": is_complete
     })
-    
+
+    completion_status = "✅ ALL BATCHES COMPLETE" if is_complete else f"⏳ IN PROGRESS - {len(remaining_unis)} universities remaining"
+
     return {
         "programs_token": token,
         "programs_by_university": all_programs,
         "total_programs": total_programs,
         "universities_count": len(all_programs),
-        "instructions": """
-You now have programs for this batch of universities.
+        "batch_number": len(cumulative_universities_processed) // 5 + (1 if len(cumulative_universities_processed) % 5 else 0),
+        "total_selected_universities": len(total_selected_unis),
+        "cumulative_universities_processed": len(cumulative_universities_processed),
+        "remaining_universities": list(remaining_unis),
+        "is_complete": is_complete,
+        "completion_status": completion_status,
+        "instructions": f"""
+✅ Batch complete! Progress: {len(cumulative_universities_processed)}/{len(total_selected_unis)} universities processed.
+
+{completion_status}
+
+{f'''📋 NEXT BATCH REQUIRED:
+- Call get_university_programs() again with remaining {len(remaining_unis)} universities
+- Include previous_programs_token="{token}"
+- Remaining: {sorted(remaining_unis)}
+''' if not is_complete else '''✅ ALL UNIVERSITIES PROCESSED!
+- Proceed to TWO-PASS screening (shortlist_programs_by_name)
+- Use the programs_token from this response'''}
 
 ⚠️ BATCH PROCESSING GUIDANCE:
 - This tool can handle 5 universities per call (to avoid 25k token response limit)
-- If you selected >5 universities, process them in batches of 5
-- Accumulate all programs_tokens from multiple batches
 - After all batches complete, proceed to TWO-PASS screening across ALL programs
 
 CRITICAL: Perform TWO-PASS screening to ensure quality and reduce web search load.
@@ -769,8 +885,15 @@ async def shortlist_programs_by_name(
 
     ⚠️ WORKFLOW: Process ONE batch at a time
     - This tool processes programs from ONE get_university_programs() call
-    - After shortlisting, immediately proceed to validate_programs_with_exa() for THIS batch
+    - After shortlisting, immediately proceed to validate_programs_with_web() for THIS batch
     - Then move to next batch: Tool 3 → Tool 4 → Tool 5 → repeat
+    - System tracks total selected universities to ensure ALL batches complete before scoring
+
+    🔄 BATCH TRACKING (v1.14):
+    - Tool 3 records total_selected_universities on first call
+    - This list propagates through all tokens (programs → shortlist → validation)
+    - Tool 5 checks if ALL universities validated before marking is_complete=True
+    - Tool 6 enforces is_complete=True before allowing scoring/ranking
 
     TWO-PASS SCREENING (for this batch):
     PASS 1 - Remove Obvious Mismatches (排除法): Eliminate programs in completely different domains
@@ -790,6 +913,7 @@ async def shortlist_programs_by_name(
     """
     programs_data = validate_token(programs_token, "programs")
     career_clarity = programs_data.get("career_clarity", "medium")
+    total_selected_unis = programs_data.get("total_selected_universities", [])
 
     if not shortlisted_by_university or not isinstance(shortlisted_by_university, dict):
         raise ValueError("You must provide shortlisted_by_university as a dict")
@@ -803,7 +927,8 @@ async def shortlist_programs_by_name(
         "universities": list(shortlisted_by_university.keys()),
         "shortlisted_by_university": shortlisted_by_university,
         "total_shortlisted": total_shortlisted,
-        "career_clarity": career_clarity
+        "career_clarity": career_clarity,
+        "total_selected_universities": total_selected_unis
     })
     
     university_names = list(shortlisted_by_university.keys())
@@ -961,7 +1086,13 @@ async def validate_programs_with_web(
     if not web_validations or not isinstance(web_validations, dict):
         raise ValueError("You must provide web_validations as a dict")
 
-    expected_unis = shortlist_data["universities"]
+    # v1.14: Use total_selected_universities instead of current batch universities
+    # This fixes the bug where LLM could finish with just one batch
+    expected_unis = shortlist_data.get("total_selected_universities", shortlist_data["universities"])
+
+    # Fallback for backwards compatibility (if old tokens don't have total_selected_universities)
+    if not expected_unis:
+        expected_unis = shortlist_data["universities"]
 
     # Get previously validated universities (for batch processing)
     previously_validated = set()
