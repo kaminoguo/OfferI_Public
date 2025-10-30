@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Menu, Download, Loader2 } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import FormModal from './FormModal';
 import PaymentModal from './PaymentModal';
 import ProgressBar from './ProgressBar';
@@ -17,6 +18,7 @@ interface ChatProps {
 export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
   const { user } = useUser();
   const searchParams = useSearchParams();
+  const t = useTranslations();
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentId, setPaymentId] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
           setReportReady(true);
         } else if (status.status === 'failed') {
           setIsLoading(false);
-          setError(status.error || 'Report generation failed, please try again');
+          setError(status.error || t('error.generationFailed'));
 
           // Check if payment allows retry
           if (paymentId) {
@@ -94,7 +96,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
 
   const handleStartConsultation = () => {
     if (!user) {
-      setError('Please sign in to use this service');
+      setError(t('error.pleaseSignIn'));
       return;
     }
     // NEW FLOW: Open form first (not payment)
@@ -122,20 +124,20 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
       setIsLoading(false);
 
       if (error.status === 402) {
-        setError('Payment not found or already used. Please make a new payment.');
+        setError(t('error.paymentNotFound'));
         setIsPaymentModalOpen(true);
       } else if (error.status === 403) {
-        setError('Payment verification failed. Please try again.');
+        setError(t('error.paymentVerificationFailed'));
         setIsPaymentModalOpen(true);
       } else {
-        setError(error.message || 'Submission failed, please try again later');
+        setError(error.message || t('error.submissionFailed'));
       }
     }
   };
 
   const handleSubmit = async (data: UserBackground) => {
     if (!user) {
-      setError('Please sign in to use this service');
+      setError(t('error.pleaseSignIn'));
       return;
     }
 
@@ -164,13 +166,13 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Download failed:', error);
-      setError('Download failed, please try again');
+      setError(t('error.downloadFailed'));
     }
   };
 
   const handleRetry = async () => {
     if (!lastBackground || !paymentId) {
-      setError('No previous submission found');
+      setError(t('error.noPreviousSubmission'));
       return;
     }
 
@@ -188,15 +190,15 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
 
       // Handle payment errors
       if (error.status === 402) {
-        setError('Payment not found or already used. Please make a new payment.');
+        setError(t('error.paymentNotFound'));
         setCanRetry(false);
         setIsPaymentModalOpen(true);
       } else if (error.status === 403) {
-        setError('Payment verification failed. Please try again.');
+        setError(t('error.paymentVerificationFailed'));
         setCanRetry(false);
         setIsPaymentModalOpen(true);
       } else {
-        setError(error.message || 'Submission failed, please try again later');
+        setError(error.message || t('error.submissionFailed'));
         // Re-check retry eligibility after error
         if (paymentId) {
           checkRetryEligibility(paymentId);
@@ -229,29 +231,77 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
             <Menu className="w-5 h-5 text-foreground" />
           </button>
         )}
-        <h1 className="text-lg font-semibold text-foreground">OfferI</h1>
+        <h1 className="text-lg font-semibold text-foreground">{t('common.appName')}</h1>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex items-center justify-center overflow-y-auto">
         {!isLoading && !reportReady && !error && (
           /* Welcome State */
-          <div className="text-center max-w-2xl px-8">
+          <div className="text-center max-w-3xl px-8">
             <h2 className="text-3xl font-semibold mb-4 text-foreground">
-              Welcome to OfferI
+              {t('welcome.title')}
             </h2>
             <p className="text-muted-foreground mb-8 text-lg">
-              AI-powered personalized study abroad consultant
+              {t('welcome.subtitle')}
             </p>
             <button
               onClick={handleStartConsultation}
               className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
             >
-              Start Consultation ($6)
+              {t('welcome.startButton')}
             </button>
             <p className="text-sm text-muted-foreground mt-4">
-              Fill in your background → Pay $6 → Get your personalized report
+              {t('welcome.flow')}
             </p>
+
+            {/* Important Information Section */}
+            <div className="mt-12 space-y-4 text-left bg-card border border-border rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">{t('info.title')}</h3>
+
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex gap-3">
+                  <span className="text-primary font-semibold shrink-0">⏱️</span>
+                  <p>
+                    <span className="font-medium text-foreground">{t('info.autoQueue.title')}</span> {t('info.autoQueue.description')}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <span className="text-primary font-semibold shrink-0">🔄</span>
+                  <p>
+                    <span className="font-medium text-foreground">{t('info.retries.title')}</span> {t('info.retries.description')}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <span className="text-primary font-semibold shrink-0">💬</span>
+                  <p>
+                    <span className="font-medium text-foreground">{t('info.support.title')}</span> {t('info.support.description')}{' '}
+                    <a href={`mailto:${t('common.email')}`} className="text-primary hover:underline">
+                      {t('common.email')}
+                    </a>
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <span className="text-primary font-semibold shrink-0">🚧</span>
+                  <p>
+                    <span className="font-medium text-foreground">{t('info.mvp.title')}</span> {t('info.mvp.description')}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <span className="text-primary font-semibold shrink-0">🤝</span>
+                  <p>
+                    <span className="font-medium text-foreground">{t('info.collaboration.title')}</span> {t('info.collaboration.description')}{' '}
+                    <a href={`mailto:${t('common.email')}`} className="text-primary hover:underline">
+                      {t('common.email')}
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -260,7 +310,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
           <div className="text-center max-w-md px-8 w-full">
             <ProgressBar progress={progress} />
             <p className="text-sm text-muted-foreground mt-4">
-              This may take 10-15 minutes
+              {t('progress.estimatedTime')}
             </p>
           </div>
         )}
@@ -272,10 +322,10 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
               <Download className="w-10 h-10 text-primary" />
             </div>
             <h3 className="text-2xl font-semibold mb-3 text-foreground">
-              Your report is ready!
+              {t('result.ready')}
             </h3>
             <p className="text-muted-foreground mb-6">
-              Click the button below to download your personalized study abroad recommendation report
+              {t('result.downloadPrompt')}
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -283,13 +333,13 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
                 className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
               >
                 <Download className="w-5 h-5" />
-                Download PDF Report
+                {t('result.downloadButton')}
               </button>
               <button
                 onClick={handleReset}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                Start a new consultation
+                {t('result.newConsultation')}
               </button>
             </div>
           </div>
@@ -304,7 +354,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
               </svg>
             </div>
             <h3 className="text-2xl font-semibold mb-3 text-foreground">
-              Something went wrong
+              {t('error.title')}
             </h3>
             <p className="text-muted-foreground mb-6">
               {error}
@@ -315,20 +365,20 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
               <div className="flex flex-col gap-3">
                 <div className="px-4 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg mb-2">
                   <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-                    ✓ You can retry for free (no additional charge)
+                    {t('error.retryAvailable')}
                   </p>
                 </div>
                 <button
                   onClick={handleRetry}
                   className="w-full px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
                 >
-                  Retry for Free
+                  {t('error.retryButton')}
                 </button>
                 <button
                   onClick={handleReset}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Start a new consultation
+                  {t('result.newConsultation')}
                 </button>
               </div>
             ) : (
@@ -337,7 +387,7 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
                 onClick={handleReset}
                 className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
               >
-                Try Again
+                {t('error.tryAgain')}
               </button>
             )}
           </div>

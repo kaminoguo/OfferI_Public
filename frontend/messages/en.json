@@ -1,0 +1,92 @@
+{
+  "common": {
+    "appName": "OfferI",
+    "email": "lyrica2333@gmail.com"
+  },
+  "welcome": {
+    "title": "Welcome to OfferI",
+    "subtitle": "AI-powered personalized study abroad consultant",
+    "startButton": "Start Consultation ($6)",
+    "flow": "Fill in your background → Pay $6 → Get your personalized report"
+  },
+  "info": {
+    "title": "📋 Important Information",
+    "autoQueue": {
+      "icon": "⏱️",
+      "title": "Auto-queuing system:",
+      "description": "If the queue is full, your request will be automatically queued. You'll receive your PDF report once generation completes—no need to keep the page open."
+    },
+    "retries": {
+      "icon": "🔄",
+      "title": "Unlimited free retries:",
+      "description": "If generation fails for any reason, you can retry for free without additional charges."
+    },
+    "support": {
+      "icon": "💬",
+      "title": "Need help?",
+      "descriptionBefore": "If you encounter any issues, please contact us with a screenshot at ",
+      "descriptionAfter": ""
+    },
+    "mvp": {
+      "icon": "🚧",
+      "title": "MVP Stage:",
+      "description": "This product is still in MVP stage, but we're already achieving good results. Your feedback helps us improve!"
+    },
+    "collaboration": {
+      "icon": "🤝",
+      "title": "Interested in collaboration?",
+      "descriptionBefore": "If you'd like to partner with us or provide support, please reach out at ",
+      "descriptionAfter": ""
+    }
+  },
+  "form": {
+    "title": "Tell us about your background",
+    "label": "Your background *",
+    "descriptionIntro": "Please describe your background in detail. Include information such as:",
+    "academic": "Academic:",
+    "academicDesc": "Current university/major, GPA, language test scores (TOEFL/IELTS/GRE)",
+    "experience": "Experience:",
+    "experienceDesc": "Research projects, internships, competitions, awards, publications",
+    "entrepreneurship": "Entrepreneurship:",
+    "entrepreneurshipDesc": "Startups founded, products launched, business ventures",
+    "goals": "Goals:",
+    "goalsDesc": "Target country/region, career plans, development goals",
+    "other": "Other:",
+    "otherDesc": "Anything else you think is relevant or worth highlighting",
+    "reminderBestResults": {
+      "icon": "💡",
+      "title": "For best results:",
+      "description": "Fill in only ONE target country/region at a time. This allows us to provide more focused and accurate recommendations."
+    },
+    "reminderQuality": {
+      "icon": "⚡",
+      "title": "Quality matters:",
+      "description": "The quality of AI recommendations depends on the details you provide. If there's something special about your background that deserves attention, make sure to mention it!"
+    },
+    "placeholder": "Write freely in your own words...",
+    "cancel": "Cancel",
+    "continue": "Continue to Payment"
+  },
+  "progress": {
+    "title": "Generating your report...",
+    "subtitle": "This may take 10-15 minutes"
+  },
+  "result": {
+    "title": "Your report is ready!",
+    "subtitle": "Click the button below to download your personalized study abroad recommendation report",
+    "download": "Download PDF Report",
+    "newConsultation": "Start a new consultation"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "retryFree": "✓ You can retry for free (no additional charge)",
+    "retryButton": "Retry for Free",
+    "tryAgain": "Try Again"
+  },
+  "sidebar": {
+    "newChat": "New Consultation",
+    "history": "History",
+    "settings": "Settings",
+    "signOut": "Sign Out"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "common": {
+    "appName": "OfferI",
+    "email": "lyrica2333@gmail.com"
+  },
+  "welcome": {
+    "title": "歡迎使用 OfferI",
+    "subtitle": "AI驅動的個性化留學諮詢顧問",
+    "startButton": "開始諮詢 ($6)",
+    "flow": "填寫背景資訊 → 支付 $6 → 獲取個性化報告"
+  },
+  "info": {
+    "title": "📋 重要提示",
+    "autoQueue": {
+      "icon": "⏱️",
+      "title": "自動排隊系統：",
+      "description": "佇列滿時，您的請求將自動排隊。報告生成完成後會返回PDF，無需保持網頁開啟。"
+    },
+    "retries": {
+      "icon": "🔄",
+      "title": "無限免費重試：",
+      "description": "如果生成失敗，您可以無限次免費重試，無需額外付費。"
+    },
+    "support": {
+      "icon": "💬",
+      "title": "需要幫助？",
+      "descriptionBefore": "如果遇到任何問題，請帶上截圖聯繫我們：",
+      "descriptionAfter": ""
+    },
+    "mvp": {
+      "icon": "🚧",
+      "title": "MVP階段：",
+      "description": "本產品仍處於MVP階段，但已能取得較好效果。您的回饋將幫助我們改進！"
+    },
+    "collaboration": {
+      "icon": "🤝",
+      "title": "有興趣合作？",
+      "descriptionBefore": "如果您想與我們合作或提供支援，請聯絡：",
+      "descriptionAfter": ""
+    }
+  },
+  "form": {
+    "title": "請告訴我們您的背景",
+    "label": "您的背景資訊 *",
+    "descriptionIntro": "請詳細描述您的背景，包括以下資訊：",
+    "academic": "學術背景：",
+    "academicDesc": "當前院校/專業、GPA、語言成績（托福/雅思/GRE）",
+    "experience": "經歷：",
+    "experienceDesc": "科研專案、實習、競賽、獲獎、論文發表",
+    "entrepreneurship": "創業經歷：",
+    "entrepreneurshipDesc": "創立的公司、發佈的產品、商業專案",
+    "goals": "目標：",
+    "goalsDesc": "目標國家/地區、職業規劃、發展目標",
+    "other": "其他：",
+    "otherDesc": "任何您認為相關或值得注意的內容",
+    "reminderBestResults": {
+      "icon": "💡",
+      "title": "最佳效果提示：",
+      "description": "為獲得更聚焦和準確的推薦，一次最多填寫一個目標國家/地區。"
+    },
+    "reminderQuality": {
+      "icon": "⚡",
+      "title": "質量很重要：",
+      "description": "AI推薦的質量取決於您提供的背景詳細程度。如果您的背景中有特別值得注意的地方，請務必說明！"
+    },
+    "placeholder": "用您自己的話自由表達...",
+    "cancel": "取消",
+    "continue": "繼續支付"
+  },
+  "progress": {
+    "title": "正在生成您的報告...",
+    "subtitle": "這可能需要10-15分鐘"
+  },
+  "result": {
+    "title": "您的報告已準備好！",
+    "subtitle": "點擊下方按鈕下載您的個性化留學推薦報告",
+    "download": "下載PDF報告",
+    "newConsultation": "開始新的諮詢"
+  },
+  "error": {
+    "title": "出現問題",
+    "retryFree": "✓ 您可以免費重試（無需額外付費）",
+    "retryButton": "免費重試",
+    "tryAgain": "重試"
+  },
+  "sidebar": {
+    "newChat": "新建諮詢",
+    "history": "歷史記錄",
+    "settings": "設定",
+    "signOut": "登出"
+  }
+}

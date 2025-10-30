@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface FormModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface FormModalProps {
 
 export default function FormModal({ isOpen, onClose, onSubmit }: FormModalProps) {
   const [background, setBackground] = useState('');
+  const t = useTranslations();
 
   if (!isOpen) return null;
 
@@ -28,7 +30,7 @@ export default function FormModal({ isOpen, onClose, onSubmit }: FormModalProps)
         {/* Header */}
         <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-foreground">
-            Tell us about your background
+            {t('form.title')}
           </h2>
           <button
             onClick={onClose}
@@ -43,18 +45,45 @@ export default function FormModal({ isOpen, onClose, onSubmit }: FormModalProps)
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium mb-2 text-foreground">
-              Your background *
+              {t('form.label')}
             </label>
             <p className="text-sm text-muted-foreground mb-3">
-              Include: university, GPA, major, projects, internships, papers/competitions,
-              recommendations, career goals, target countries/regions, budget, etc.
+              {t('form.description.intro')}
+              <br />
+              <span className="font-medium">{t('form.description.academic')}:</span> {t('form.description.academicDetails')}
+              <br />
+              <span className="font-medium">{t('form.description.experience')}:</span> {t('form.description.experienceDetails')}
+              <br />
+              <span className="font-medium">{t('form.description.entrepreneurship')}:</span> {t('form.description.entrepreneurshipDetails')}
+              <br />
+              <span className="font-medium">{t('form.description.goals')}:</span> {t('form.description.goalsDetails')}
+              <br />
+              <span className="font-medium">{t('form.description.other')}:</span> {t('form.description.otherDetails')}
             </p>
+
+            {/* Important Reminders */}
+            <div className="mb-3 space-y-2">
+              <div className="flex gap-2 items-start bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
+                <span className="text-blue-600 dark:text-blue-400 font-semibold shrink-0">💡</span>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  <span className="font-semibold">{t('form.reminder.focus.title')}</span> {t('form.reminder.focus.description')}
+                </p>
+              </div>
+
+              <div className="flex gap-2 items-start bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
+                <span className="text-amber-600 dark:text-amber-400 font-semibold shrink-0">⚡</span>
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  <span className="font-semibold">{t('form.reminder.quality.title')}</span> {t('form.reminder.quality.description')}
+                </p>
+              </div>
+            </div>
+
             <textarea
               value={background}
               onChange={(e) => setBackground(e.target.value)}
               rows={12}
               className="w-full bg-background border border-input rounded-md px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-              placeholder="Example: I'm studying ELEC+AI at HKUST with GPA 3.0, had 3-month Google TPM internship, 9-month OpenAI TPM internship, graduated 1 year early, have 4 GitHub projects with 100+ stars each (maintained for 1+ year), 3 major hackathon awards, weak recommendation from AI expert, strong recommendation from OpenAI. Aiming for Product Manager / AI CPO, considering Hong Kong, Japan, USA schools, unlimited budget"
+              placeholder={t('form.placeholder')}
               required
             />
           </div>
@@ -66,14 +95,14 @@ export default function FormModal({ isOpen, onClose, onSubmit }: FormModalProps)
               onClick={onClose}
               className="flex-1 px-6 py-3 border border-border rounded-md text-foreground hover-minimal transition-colors"
             >
-              Cancel
+              {t('form.cancel')}
             </button>
             <button
               type="submit"
               disabled={!background.trim()}
               className="flex-1 px-6 py-3 bg-primary text-white rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Continue to Payment
+              {t('form.submit')}
             </button>
           </div>
         </form>

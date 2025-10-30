@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
+      <html suppressHydrationWarning>
         <body className={`${inter.className} bg-background text-foreground antialiased`}>
           {children}
         </body>

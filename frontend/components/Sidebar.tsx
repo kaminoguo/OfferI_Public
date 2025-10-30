@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { X, User, LogOut, FileText, Download, Clock } from 'lucide-react';
 import { useUser, useClerk } from '@clerk/nextjs';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -21,6 +23,7 @@ interface Consultation {
 export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
+  const t = useTranslations();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,7 +57,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     <div className="w-64 bg-background border-r border-border flex flex-col">
       {/* Header */}
       <div className="h-14 flex items-center justify-between px-4 border-b border-border">
-        <h2 className="font-semibold text-foreground">OfferI</h2>
+        <h2 className="font-semibold text-foreground">{t('common.appName')}</h2>
         <button
           onClick={onToggle}
           className="p-1.5 rounded-md hover-minimal"
@@ -64,31 +67,36 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         </button>
       </div>
 
+      {/* Language Switcher */}
+      <div className="px-4 pt-4 pb-2 border-b border-border">
+        <LanguageSwitcher />
+      </div>
+
       {/* Consultation History */}
       <div className="flex-1 p-4 overflow-y-auto">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-3">
-          Consultation History
+          {t('sidebar.history')}
         </h3>
 
         {loading ? (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
-            <p className="text-xs text-muted-foreground mt-2">Loading...</p>
+            <p className="text-xs text-muted-foreground mt-2">{t('sidebar.loading')}</p>
           </div>
         ) : !user ? (
           <div className="text-center py-8">
             <p className="text-sm text-muted-foreground">
-              Sign in to view your consultation history
+              {t('sidebar.signInPrompt')}
             </p>
           </div>
         ) : consultations.length === 0 ? (
           <div className="text-center py-8">
             <FileText className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
             <p className="text-sm text-muted-foreground">
-              No consultations yet
+              {t('sidebar.noConsultations')}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Your generated PDFs will appear here
+              {t('sidebar.pdfsAppear')}
             </p>
           </div>
         ) : (
@@ -103,7 +111,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                     <div className="flex items-center gap-2 mb-1">
                       <FileText className="w-4 h-4 text-primary flex-shrink-0" />
                       <span className="text-sm font-medium text-foreground truncate">
-                        Consultation
+                        {t('sidebar.consultation')}
                       </span>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -167,7 +175,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                   {user.fullName || user.emailAddresses[0]?.emailAddress || 'User'}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  MCP API • Web $6
+                  {t('sidebar.pricing')}
                 </p>
               </div>
             </Link>
@@ -176,7 +184,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md transition-colors"
             >
               <LogOut className="w-4 h-4" />
-              Sign out
+              {t('sidebar.signOut')}
             </button>
           </>
         ) : (
@@ -185,20 +193,20 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
                 <User className="w-5 h-5 text-muted-foreground" />
               </div>
-              <span className="text-sm font-medium text-foreground">Guest User</span>
+              <span className="text-sm font-medium text-foreground">{t('sidebar.guestUser')}</span>
             </div>
             <div className="space-y-2">
               <Link
                 href="/sign-in"
                 className="block w-full text-center px-3 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
               >
-                Sign in
+                {t('sidebar.signIn')}
               </Link>
               <Link
                 href="/sign-up"
                 className="block w-full text-center px-3 py-2 text-sm border border-border text-foreground rounded-md hover:bg-secondary transition-colors"
               >
-                Sign up
+                {t('sidebar.signUp')}
               </Link>
             </div>
           </>

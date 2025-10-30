@@ -1,0 +1,92 @@
+{
+  "common": {
+    "appName": "OfferI",
+    "email": "lyrica2333@gmail.com"
+  },
+  "welcome": {
+    "title": "Bienvenue sur OfferI",
+    "subtitle": "Consultant d'études à l'étranger personnalisé par IA",
+    "startButton": "Commencer la consultation ($6)",
+    "flow": "Remplissez votre profil → Payez $6 → Obtenez votre rapport personnalisé"
+  },
+  "info": {
+    "title": "📋 Informations importantes",
+    "autoQueue": {
+      "icon": "⏱️",
+      "title": "Système de file d'attente automatique :",
+      "description": "Si la file d'attente est pleine, votre demande sera automatiquement mise en file d'attente. Vous recevrez votre rapport PDF une fois la génération terminée, pas besoin de garder la page ouverte."
+    },
+    "retries": {
+      "icon": "🔄",
+      "title": "Réessais gratuits illimités :",
+      "description": "Si la génération échoue pour quelque raison que ce soit, vous pouvez réessayer gratuitement sans frais supplémentaires."
+    },
+    "support": {
+      "icon": "💬",
+      "title": "Besoin d'aide ?",
+      "descriptionBefore": "Si vous rencontrez des problèmes, contactez-nous avec une capture d'écran à ",
+      "descriptionAfter": ""
+    },
+    "mvp": {
+      "icon": "🚧",
+      "title": "Phase MVP :",
+      "description": "Ce produit est encore en phase MVP, mais nous obtenons déjà de bons résultats. Vos commentaires nous aident à nous améliorer !"
+    },
+    "collaboration": {
+      "icon": "🤝",
+      "title": "Intéressé par une collaboration ?",
+      "descriptionBefore": "Si vous souhaitez vous associer avec nous ou fournir un soutien, contactez-nous à ",
+      "descriptionAfter": ""
+    }
+  },
+  "form": {
+    "title": "Parlez-nous de votre profil",
+    "label": "Votre profil *",
+    "descriptionIntro": "Décrivez votre profil en détail. Incluez des informations telles que :",
+    "academic": "Académique :",
+    "academicDesc": "Université/spécialisation actuelle, GPA, scores aux tests de langue (TOEFL/IELTS/GRE)",
+    "experience": "Expérience :",
+    "experienceDesc": "Projets de recherche, stages, compétitions, prix, publications",
+    "entrepreneurship": "Entrepreneuriat :",
+    "entrepreneurshipDesc": "Entreprises fondées, produits lancés, projets commerciaux",
+    "goals": "Objectifs :",
+    "goalsDesc": "Pays/région cible, plans de carrière, objectifs de développement",
+    "other": "Autre :",
+    "otherDesc": "Tout ce que vous jugez pertinent ou digne d'être souligné",
+    "reminderBestResults": {
+      "icon": "💡",
+      "title": "Pour de meilleurs résultats :",
+      "description": "Remplissez UN seul pays/région cible à la fois. Cela nous permet de fournir des recommandations plus ciblées et précises."
+    },
+    "reminderQuality": {
+      "icon": "⚡",
+      "title": "La qualité compte :",
+      "description": "La qualité des recommandations de l'IA dépend des détails que vous fournissez. S'il y a quelque chose de spécial dans votre profil qui mérite attention, assurez-vous de le mentionner !"
+    },
+    "placeholder": "Écrivez librement avec vos propres mots...",
+    "cancel": "Annuler",
+    "continue": "Continuer vers le paiement"
+  },
+  "progress": {
+    "title": "Génération de votre rapport...",
+    "subtitle": "Cela peut prendre 10 à 15 minutes"
+  },
+  "result": {
+    "title": "Votre rapport est prêt !",
+    "subtitle": "Cliquez sur le bouton ci-dessous pour télécharger votre rapport personnalisé de recommandations d'études à l'étranger",
+    "download": "Télécharger le rapport PDF",
+    "newConsultation": "Commencer une nouvelle consultation"
+  },
+  "error": {
+    "title": "Quelque chose s'est mal passé",
+    "retryFree": "✓ Vous pouvez réessayer gratuitement (sans frais supplémentaires)",
+    "retryButton": "Réessayer gratuitement",
+    "tryAgain": "Réessayer"
+  },
+  "sidebar": {
+    "newChat": "Nouvelle consultation",
+    "history": "Historique",
+    "settings": "Paramètres",
+    "signOut": "Se déconnecter"
+  }
+}

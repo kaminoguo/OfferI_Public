@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check-translations": "node scripts/check-translations.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.33.7",
@@ -15,6 +16,7 @@
     "framer-motion": "^11.15.0",
     "lucide-react": "^0.460.0",
     "next": "^15.5.6",
+    "next-intl": "^3.26.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^9.0.1",

@@ -1,0 +1,92 @@
+{
+  "common": {
+    "appName": "OfferI",
+    "email": "lyrica2333@gmail.com"
+  },
+  "welcome": {
+    "title": "Willkommen bei OfferI",
+    "subtitle": "KI-gestützter personalisierter Studienberater im Ausland",
+    "startButton": "Beratung starten ($6)",
+    "flow": "Profil ausfüllen → $6 bezahlen → Personalisierten Bericht erhalten"
+  },
+  "info": {
+    "title": "📋 Wichtige Informationen",
+    "autoQueue": {
+      "icon": "⏱️",
+      "title": "Automatisches Warteschlangensystem:",
+      "description": "Wenn die Warteschlange voll ist, wird Ihre Anfrage automatisch in die Warteschlange gestellt. Sie erhalten Ihren PDF-Bericht, sobald die Generierung abgeschlossen ist. Die Seite muss nicht geöffnet bleiben."
+    },
+    "retries": {
+      "icon": "🔄",
+      "title": "Unbegrenzte kostenlose Wiederholungen:",
+      "description": "Wenn die Generierung aus irgendeinem Grund fehlschlägt, können Sie kostenlos ohne zusätzliche Gebühren erneut versuchen."
+    },
+    "support": {
+      "icon": "💬",
+      "title": "Brauchen Sie Hilfe?",
+      "descriptionBefore": "Wenn Sie auf Probleme stoßen, kontaktieren Sie uns bitte mit einem Screenshot unter ",
+      "descriptionAfter": ""
+    },
+    "mvp": {
+      "icon": "🚧",
+      "title": "MVP-Phase:",
+      "description": "Dieses Produkt befindet sich noch in der MVP-Phase, erzielt aber bereits gute Ergebnisse. Ihr Feedback hilft uns, uns zu verbessern!"
+    },
+    "collaboration": {
+      "icon": "🤝",
+      "title": "Interessiert an einer Zusammenarbeit?",
+      "descriptionBefore": "Wenn Sie mit uns zusammenarbeiten oder Unterstützung bieten möchten, kontaktieren Sie uns unter ",
+      "descriptionAfter": ""
+    }
+  },
+  "form": {
+    "title": "Erzählen Sie uns von Ihrem Hintergrund",
+    "label": "Ihr Hintergrund *",
+    "descriptionIntro": "Beschreiben Sie Ihren Hintergrund detailliert. Fügen Sie Informationen wie folgt hinzu:",
+    "academic": "Akademisch:",
+    "academicDesc": "Aktuelle Universität/Hauptfach, GPA, Sprachtestergebnisse (TOEFL/IELTS/GRE)",
+    "experience": "Erfahrung:",
+    "experienceDesc": "Forschungsprojekte, Praktika, Wettbewerbe, Auszeichnungen, Veröffentlichungen",
+    "entrepreneurship": "Unternehmertum:",
+    "entrepreneurshipDesc": "Gegründete Unternehmen, veröffentlichte Produkte, Geschäftsprojekte",
+    "goals": "Ziele:",
+    "goalsDesc": "Zielland/Region, Karrierepläne, Entwicklungsziele",
+    "other": "Sonstiges:",
+    "otherDesc": "Alles andere, was Sie für relevant oder hervorhebungswürdig halten",
+    "reminderBestResults": {
+      "icon": "💡",
+      "title": "Für beste Ergebnisse:",
+      "description": "Füllen Sie jeweils nur EIN Zielland/Region aus. Dadurch können wir fokussiertere und genauere Empfehlungen geben."
+    },
+    "reminderQuality": {
+      "icon": "⚡",
+      "title": "Qualität ist wichtig:",
+      "description": "Die Qualität der KI-Empfehlungen hängt von den Details ab, die Sie angeben. Wenn es etwas Besonderes in Ihrem Hintergrund gibt, das Aufmerksamkeit verdient, erwähnen Sie es unbedingt!"
+    },
+    "placeholder": "Schreiben Sie frei mit Ihren eigenen Worten...",
+    "cancel": "Abbrechen",
+    "continue": "Weiter zur Zahlung"
+  },
+  "progress": {
+    "title": "Ihr Bericht wird generiert...",
+    "subtitle": "Dies kann 10-15 Minuten dauern"
+  },
+  "result": {
+    "title": "Ihr Bericht ist fertig!",
+    "subtitle": "Klicken Sie auf die Schaltfläche unten, um Ihren personalisierten Studienberatungsbericht im Ausland herunterzuladen",
+    "download": "PDF-Bericht herunterladen",
+    "newConsultation": "Neue Beratung starten"
+  },
+  "error": {
+    "title": "Etwas ist schief gelaufen",
+    "retryFree": "✓ Sie können kostenlos erneut versuchen (keine zusätzlichen Gebühren)",
+    "retryButton": "Kostenlos erneut versuchen",
+    "tryAgain": "Erneut versuchen"
+  },
+  "sidebar": {
+    "newChat": "Neue Beratung",
+    "history": "Verlauf",
+    "settings": "Einstellungen",
+    "signOut": "Abmelden"
+  }
+}

@@ -270,3 +270,86 @@ async def get_payment_history(user_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Error getting payment history: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get payment history: {str(e)}")
+
+
+@router.post("/retry/{job_id}")
+async def manual_retry_report(
+    job_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Allow user to manually retry a failed report generation for free.
+
+    This endpoint:
+    1. Checks if the job failed (status = failed or retry_scheduled)
+    2. Allows free retry if payment status is PENDING_RETRY
+    3. Re-enqueues the job for processing
+    4. Returns apologetic message
+
+    Users can retry failed reports without paying again.
+    """
+    try:
+        from workers.queue import RedisQueue
+
+        # Initialize queue
+        queue = RedisQueue()
+
+        # Get job data
+        job_data = queue.get_job_data(job_id)
+        if not job_data:
+            raise HTTPException(status_code=404, detail="任务不存在")
+
+        # Check job status
+        job_status = job_data.get("status")
+        if job_status not in ["failed", "retry_scheduled"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"该任务无法重试（当前状态: {job_status}）"
+            )
+
+        # Get payment ID and check payment status
+        payment_id = job_data.get("payment_id")
+        if payment_id:
+            payment = db.query(Payment).filter(Payment.id == payment_id).first()
+            if not payment:
+                raise HTTPException(status_code=404, detail="支付记录不存在")
+
+            # Only allow retry if payment is PENDING_RETRY (already refunded)
+            if payment.status != PaymentStatus.PENDING_RETRY:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"该支付无法重试（当前状态: {payment.status}）"
+                )
+
+        # Reset retry count for manual retry
+        queue.client.hset(f"job:{job_id}", "retry_count", "0")
+
+        # Update job status to queued
+        queue.update_job_status(
+            job_id,
+            "queued",
+            progress=0,
+            error=None
+        )
+
+        # Re-enqueue job
+        queue.client.lpush("job_queue", job_id)
+
+        logger.info(f"Manual retry triggered for job {job_id} by user")
+
+        return {
+            "status": "success",
+            "job_id": job_id,
+            "message": "非常抱歉给您带来不便！我们已为您重新启动报告生成，本次重试完全免费。",
+            "apology": {
+                "zh": "我们对之前的失败表示诚挚的歉意。您的报告正在重新生成，预计10-15分钟完成。",
+                "en": "We sincerely apologize for the previous failure. Your report is being regenerated and should be ready in 10-15 minutes."
+            },
+            "queued_at": datetime.now().isoformat()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing manual retry: {e}")
+        raise HTTPException(status_code=500, detail=f"重试失败: {str(e)}")

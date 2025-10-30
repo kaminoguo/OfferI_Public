@@ -1,0 +1,92 @@
+{
+  "common": {
+    "appName": "OfferI",
+    "email": "lyrica2333@gmail.com"
+  },
+  "welcome": {
+    "title": "OfferI에 오신 것을 환영합니다",
+    "subtitle": "AI 기반 맞춤형 유학 컨설턴트",
+    "startButton": "상담 시작 ($6)",
+    "flow": "배경 정보 입력 → $6 결제 → 맞춤형 보고서 받기"
+  },
+  "info": {
+    "title": "📋 중요 정보",
+    "autoQueue": {
+      "icon": "⏱️",
+      "title": "자동 대기열 시스템:",
+      "description": "대기열이 가득 차면 요청이 자동으로 대기열에 추가됩니다. 생성이 완료되면 PDF 보고서를 받게 됩니다. 페이지를 열어 둘 필요가 없습니다."
+    },
+    "retries": {
+      "icon": "🔄",
+      "title": "무제한 무료 재시도:",
+      "description": "어떤 이유로든 생성이 실패하면 추가 비용 없이 무료로 재시도할 수 있습니다."
+    },
+    "support": {
+      "icon": "💬",
+      "title": "도움이 필요하신가요?",
+      "descriptionBefore": "문제가 발생하면 스크린샷과 함께 문의하세요:",
+      "descriptionAfter": ""
+    },
+    "mvp": {
+      "icon": "🚧",
+      "title": "MVP 단계:",
+      "description": "이 제품은 아직 MVP 단계이지만 이미 좋은 결과를 얻고 있습니다. 여러분의 피드백이 개선에 도움이 됩니다!"
+    },
+    "collaboration": {
+      "icon": "🤝",
+      "title": "협력에 관심이 있으신가요?",
+      "descriptionBefore": "파트너십 또는 지원을 원하시면 문의하세요:",
+      "descriptionAfter": ""
+    }
+  },
+  "form": {
+    "title": "배경에 대해 알려주세요",
+    "label": "귀하의 배경 *",
+    "descriptionIntro": "배경을 자세히 설명해 주세요. 다음 정보를 포함하세요:",
+    "academic": "학력:",
+    "academicDesc": "현재 대학/전공, GPA, 어학 시험 점수(TOEFL/IELTS/GRE)",
+    "experience": "경험:",
+    "experienceDesc": "연구 프로젝트, 인턴십, 대회, 수상 경력, 논문 발표",
+    "entrepreneurship": "창업 경험:",
+    "entrepreneurshipDesc": "설립한 회사, 출시한 제품, 비즈니스 벤처",
+    "goals": "목표:",
+    "goalsDesc": "대상 국가/지역, 경력 계획, 개발 목표",
+    "other": "기타:",
+    "otherDesc": "관련이 있거나 강조할 가치가 있다고 생각하는 기타 내용",
+    "reminderBestResults": {
+      "icon": "💡",
+      "title": "최상의 결과를 위해:",
+      "description": "한 번에 하나의 대상 국가/지역만 작성하세요. 이를 통해 더 집중적이고 정확한 추천을 제공할 수 있습니다."
+    },
+    "reminderQuality": {
+      "icon": "⚡",
+      "title": "품질이 중요합니다:",
+      "description": "AI 추천의 품질은 제공하는 세부 정보에 따라 달라집니다. 배경에 특별히 주목할 만한 점이 있다면 반드시 언급하세요!"
+    },
+    "placeholder": "자유롭게 자신의 말로 표현하세요...",
+    "cancel": "취소",
+    "continue": "결제 계속하기"
+  },
+  "progress": {
+    "title": "보고서를 생성하고 있습니다...",
+    "subtitle": "10~15분 정도 소요될 수 있습니다"
+  },
+  "result": {
+    "title": "보고서가 준비되었습니다!",
+    "subtitle": "아래 버튼을 클릭하여 맞춤형 유학 추천 보고서를 다운로드하세요",
+    "download": "PDF 보고서 다운로드",
+    "newConsultation": "새 상담 시작"
+  },
+  "error": {
+    "title": "문제가 발생했습니다",
+    "retryFree": "✓ 무료로 재시도할 수 있습니다(추가 요금 없음)",
+    "retryButton": "무료 재시도",
+    "tryAgain": "다시 시도"
+  },
+  "sidebar": {
+    "newChat": "새 상담",
+    "history": "기록",
+    "settings": "설정",
+    "signOut": "로그아웃"
+  }
+}

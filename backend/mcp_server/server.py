@@ -543,6 +543,98 @@ async def start_consultation(
     Returns:
         consultation_token + validated tier assessment + next_step instructions
     """
+    # ═══════════════════════════════════════════════════════════════
+    # QUOTA VALIDATION (v1.16)
+    # ═══════════════════════════════════════════════════════════════
+    import psycopg2
+    from fastmcp.server.dependencies import get_http_headers
+
+    FREE_CONSULTATION_LIMIT = 5  # 5 free consultations per month
+
+    # Get API key from headers
+    api_key = ""
+    try:
+        headers = get_http_headers()
+        auth_header = headers.get("authorization", "")
+        if auth_header.startswith("Bearer "):
+            api_key = auth_header[7:]
+    except:
+        api_key = os.getenv("SSE_API_KEY", "")
+
+    if not api_key or not api_key.startswith("sk_"):
+        raise ValueError("❌ Invalid or missing API key. Please provide a valid API key in Authorization header.")
+
+    # Check quota in database
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv("POSTGRES_HOST", "localhost"),
+            port=os.getenv("POSTGRES_PORT", "5432"),
+            dbname=os.getenv("POSTGRES_DB", "offeri"),
+            user=os.getenv("POSTGRES_USER", "offeri_user"),
+            password=os.getenv("POSTGRES_PASSWORD", "")
+        )
+        cursor = conn.cursor()
+        now = datetime.utcnow()
+
+        # Get user_id and check if super key
+        cursor.execute("""
+            SELECT user_id, is_super_key, is_active
+            FROM api_keys
+            WHERE id = %s
+        """, (api_key,))
+        result = cursor.fetchone()
+
+        if not result:
+            conn.close()
+            raise ValueError(f"❌ API key not found or invalid: {api_key[:20]}...")
+
+        user_id, is_super_key, is_active = result
+
+        if not is_active:
+            conn.close()
+            raise ValueError(f"❌ API key has been revoked. Please generate a new key at https://offeri.org/dashboard")
+
+        # Super keys have unlimited access
+        if is_super_key:
+            conn.close()
+            # No quota check needed for super keys
+        else:
+            # Check current month usage
+            usage_id = f"{user_id}_{now.year}_{now.month}"
+            cursor.execute("""
+                SELECT usage_count FROM mcp_usage
+                WHERE id = %s
+            """, (usage_id,))
+            usage_result = cursor.fetchone()
+
+            current_usage = usage_result[0] if usage_result else 0
+
+            if current_usage >= FREE_CONSULTATION_LIMIT:
+                conn.close()
+                raise ValueError(
+                    f"❌ MONTHLY QUOTA EXCEEDED\n\n"
+                    f"You've used all {FREE_CONSULTATION_LIMIT} free consultations this month ({now.year}-{now.month:02d}).\n\n"
+                    f"📊 Usage: {current_usage}/{FREE_CONSULTATION_LIMIT}\n"
+                    f"📅 Resets: {now.year}-{(now.month % 12) + 1:02d}-01\n\n"
+                    f"💡 Options:\n"
+                    f"  1. Wait for monthly reset (1st of next month)\n"
+                    f"  2. Contact us for unlimited Super API keys: support@offeri.org\n"
+                )
+
+            conn.close()
+
+    except ValueError:
+        # Re-raise validation errors (quota exceeded, invalid key, etc.)
+        raise
+    except Exception as e:
+        # Log database errors but don't block (fail-open for reliability)
+        print(f"⚠️ Quota check failed (database error): {e}")
+        pass
+
+    # ═══════════════════════════════════════════════════════════════
+    # END QUOTA VALIDATION
+    # ═══════════════════════════════════════════════════════════════
+
     # Validate tier_assessment
     if not tier_assessment or not isinstance(tier_assessment, dict):
         raise ValueError("tier_assessment is required and must be a dict")
@@ -1835,12 +1927,15 @@ async def _internal_track_usage() -> str:
             conn.close()
             return ""
         
+        # Use correct id format for ON CONFLICT to work
+        usage_id = f"{user_id}_{now.year}_{now.month}"
+
         cursor.execute("""
             INSERT INTO mcp_usage (id, user_id, year, month, usage_count, created_at, updated_at)
-            VALUES (gen_random_uuid()::text, %s, %s, %s, 1, NOW(), NOW())
-            ON CONFLICT (user_id, year, month)
+            VALUES (%s, %s, %s, %s, 1, NOW(), NOW())
+            ON CONFLICT (id)
             DO UPDATE SET usage_count = mcp_usage.usage_count + 1, updated_at = NOW()
-        """, (user_id, now.year, now.month))
+        """, (usage_id, user_id, now.year, now.month))
         
         conn.commit()
         conn.close()

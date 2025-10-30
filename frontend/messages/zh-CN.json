@@ -1,0 +1,92 @@
+{
+  "common": {
+    "appName": "OfferI",
+    "email": "lyrica2333@gmail.com"
+  },
+  "welcome": {
+    "title": "欢迎使用 OfferI",
+    "subtitle": "AI驱动的个性化留学咨询顾问",
+    "startButton": "开始咨询 ($6)",
+    "flow": "填写背景信息 → 支付 $6 → 获取个性化报告"
+  },
+  "info": {
+    "title": "📋 重要提示",
+    "autoQueue": {
+      "icon": "⏱️",
+      "title": "自动排队系统：",
+      "description": "队列满时，您的请求将自动排队。报告生成完成后会返回PDF，无需保持网页开启。"
+    },
+    "retries": {
+      "icon": "🔄",
+      "title": "无限免费重试：",
+      "description": "如果生成失败，您可以无限次免费重试，无需额外付费。"
+    },
+    "support": {
+      "icon": "💬",
+      "title": "需要帮助？",
+      "descriptionBefore": "如果遇到任何问题，请带上截图联系我们：",
+      "descriptionAfter": ""
+    },
+    "mvp": {
+      "icon": "🚧",
+      "title": "MVP阶段：",
+      "description": "本产品仍处于MVP阶段，但已能取得较好效果。您的反馈将帮助我们改进！"
+    },
+    "collaboration": {
+      "icon": "🤝",
+      "title": "有兴趣合作？",
+      "descriptionBefore": "如果您想与我们合作或提供支持，请联系：",
+      "descriptionAfter": ""
+    }
+  },
+  "form": {
+    "title": "请告诉我们您的背景",
+    "label": "您的背景信息 *",
+    "descriptionIntro": "请详细描述您的背景，包括以下信息：",
+    "academic": "学术背景：",
+    "academicDesc": "当前院校/专业、GPA、语言成绩（托福/雅思/GRE）",
+    "experience": "经历：",
+    "experienceDesc": "科研项目、实习、竞赛、获奖、论文发表",
+    "entrepreneurship": "创业经历：",
+    "entrepreneurshipDesc": "创立的公司、发布的产品、商业项目",
+    "goals": "目标：",
+    "goalsDesc": "目标国家/地区、职业规划、发展目标",
+    "other": "其他：",
+    "otherDesc": "任何您认为相关或值得注意的内容",
+    "reminderBestResults": {
+      "icon": "💡",
+      "title": "最佳效果提示：",
+      "description": "为获得更聚焦和准确的推荐，一次最多填写一个目标国家/地区。"
+    },
+    "reminderQuality": {
+      "icon": "⚡",
+      "title": "质量很重要：",
+      "description": "AI推荐的质量取决于您提供的背景详细程度。如果您的背景中有特别值得注意的地方，请务必说明！"
+    },
+    "placeholder": "用您自己的话自由表达...",
+    "cancel": "取消",
+    "continue": "继续支付"
+  },
+  "progress": {
+    "title": "正在生成您的报告...",
+    "subtitle": "这可能需要10-15分钟"
+  },
+  "result": {
+    "title": "您的报告已准备好！",
+    "subtitle": "点击下方按钮下载您的个性化留学推荐报告",
+    "download": "下载PDF报告",
+    "newConsultation": "开始新的咨询"
+  },
+  "error": {
+    "title": "出现问题",
+    "retryFree": "✓ 您可以免费重试（无需额外付费）",
+    "retryButton": "免费重试",
+    "tryAgain": "重试"
+  },
+  "sidebar": {
+    "newChat": "新建咨询",
+    "history": "历史记录",
+    "settings": "设置",
+    "signOut": "退出登录"
+  }
+}
