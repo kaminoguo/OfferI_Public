@@ -1278,15 +1278,20 @@ Report format: {report_format}
 
 CRITICAL: You must complete {required_searches} Exa searches before generating report.
 
+🎯 Search Strategy:
+1. FIRST: Try Exa MCP (mcp__exa__web_search_exa) for each search
+2. IF Exa returns no useful results: Use your own knowledge (up to Jan 2025)
+3. ALWAYS fill "findings" field with detailed content (min 50 chars) - empty findings = validation error
+
 For EACH of the top {detailed_count} programs (Tier 1), do EXACTLY 3 Exa searches:
 
-🔍 Search 1: Tuition & Living Cost (4-5 results recommended)
+🔍 Search 1: Tuition & Living Cost (4 results required)
 Query: "[University] [Program] tuition fees living cost total expense 2025"
 
 Recommended Exa MCP Parameters:
 mcp__exa__web_search_exa(
     query="<constructed query>",
-    numResults=4,  # 4-5 both acceptable; 5 gives better coverage
+    numResults=4,
     useAutoprompt=true,
     searchType="auto",
     startPublishedDate="2025-01-01",  # MUST be 2025 for current tuition!
@@ -1296,7 +1301,11 @@ mcp__exa__web_search_exa(
     highlightPerUrl=4
 )
 
-🔍 Search 2: Program Features & Career Outlook (8 results)
+Then fill findings field:
+- If Exa found info: "findings": "Based on Exa search: Tuition $X, living $Y, total ~$Z..."
+- If Exa failed: "findings": "Exa returned no results. Based on general knowledge: Typical range $X-Y..."
+
+🔍 Search 2: Program Features & Career Outlook (8 results required)
 Query: "[University] [Program] curriculum faculty career outcomes alumni reviews"
 
 Exa MCP Parameters:
@@ -1311,7 +1320,11 @@ mcp__exa__web_search_exa(
     # NO includeDomains - need both official info and real student reviews!
 )
 
-🔍 Search 3: Application Deadlines & Requirements (4 results)
+Then fill findings field:
+- If Exa found info: "findings": "Based on Exa search: Core courses include X, Y. 95% employment rate..."
+- If Exa failed: "findings": "Exa returned limited results. Based on general knowledge: Program focuses on..."
+
+🔍 Search 3: Application Deadlines & Requirements (4 results required)
 Query: "[University] [Program] admissions deadline [month keywords] [year]"
       ⚠️ Use SPECIFIC keywords: include deadline months and application year
       Example: "Carnegie Mellon MISM admissions deadline December January 2026"
@@ -1328,6 +1341,10 @@ mcp__exa__web_search_exa(
     highlightNumSentences=5,
     highlightPerUrl=3
 )
+
+Then fill findings field:
+- If Exa found info: "findings": "Based on Exa search: Round 1 deadline Jan 5, Round 2 Mar 15..."
+- If Exa failed: "findings": "Exa found no specific dates. Based on general knowledge: Typically early January..."
 
 Total: 4 + 8 + 4 = 16 results per program ({detailed_count} programs × 16 = {required_searches} searches)
 
@@ -1352,9 +1369,24 @@ async def generate_final_report(
             Each: {
                 "program_id": 123,
                 "exa_searches": [
-                    {"query": "tuition cost...", "num_results": 4, "findings": "..."},
-                    {"query": "program features career...", "num_results": 8, "findings": "..."},
-                    {"query": "application deadline...", "num_results": 4, "findings": "..."}
+                    {
+                        "query": "CMU MISM tuition fees living cost 2025",
+                        "num_results": 4,
+                        "findings": "Based on Exa search: Total cost ~$85k (tuition $70k + living $15k)...",
+                        "source": "exa"  # Optional: "exa" or "llm_knowledge"
+                    },
+                    {
+                        "query": "CMU MISM curriculum faculty career outcomes",
+                        "num_results": 8,
+                        "findings": "Based on Exa search: Strong analytics focus, 95% employment rate...",
+                        "source": "exa"
+                    },
+                    {
+                        "query": "CMU MISM admissions deadline January 2026",
+                        "num_results": 4,
+                        "findings": "Could not find via Exa. Based on general knowledge: Typically Jan 5...",
+                        "source": "llm_knowledge"  # Use when Exa fails
+                    }
                 ],
                 "dimensions": {
                     "location_environment": {...},
@@ -1365,6 +1397,12 @@ async def generate_final_report(
                     "total_cost": {...}
                 }
             }
+
+        ⚠️ CRITICAL: "findings" field is REQUIRED and MUST be non-empty (min 50 chars)
+        - First try Exa MCP search (mcp__exa__web_search_exa)
+        - If Exa returns no useful results, use your own knowledge and mark source="llm_knowledge"
+        - NEVER submit empty findings or skip this field
+
         ranking_token: From score_and_rank_programs()
 
     Returns:
@@ -1411,8 +1449,12 @@ async def generate_final_report(
         search_names = ["Tuition & Cost", "Program Features & Career", "Application Deadline"]
 
         for j, search in enumerate(exa_searches):
-            if not isinstance(search, dict) or "num_results" not in search:
-                raise ValueError(f"Program {program_id}, Search #{j+1} ({search_names[j]}): must be a dict with 'num_results' field")
+            if not isinstance(search, dict):
+                raise ValueError(f"Program {program_id}, Search #{j+1} ({search_names[j]}): must be a dict")
+
+            # Validate num_results
+            if "num_results" not in search:
+                raise ValueError(f"Program {program_id}, Search #{j+1} ({search_names[j]}): missing 'num_results' field")
 
             expected = expected_results[j]
             actual = search["num_results"]
@@ -1422,6 +1464,35 @@ async def generate_final_report(
                     f"Program {program_id}, Search #{j+1} ({search_names[j]}): "
                     f"must have EXACTLY {expected} results. You provided {actual}"
                 )
+
+            # NEW: Validate findings field (CRITICAL for preventing Exa bypass)
+            if "findings" not in search:
+                raise ValueError(
+                    f"Program {program_id}, Search #{j+1} ({search_names[j]}): missing 'findings' field.\n"
+                    f"You MUST perform Exa search OR use LLM knowledge if Exa fails."
+                )
+
+            findings = search["findings"]
+            if not findings or not isinstance(findings, str):
+                raise ValueError(
+                    f"Program {program_id}, Search #{j+1} ({search_names[j]}): 'findings' must be a non-empty string"
+                )
+
+            # Ensure findings has substantial content (at least 50 characters)
+            if len(findings.strip()) < 50:
+                raise ValueError(
+                    f"Program {program_id}, Search #{j+1} ({search_names[j]}): "
+                    f"'findings' too short ({len(findings.strip())} chars). Provide detailed findings (min 50 chars)."
+                )
+
+            # Optional: Validate source field if provided
+            if "source" in search:
+                valid_sources = ["exa", "llm_knowledge"]
+                if search["source"] not in valid_sources:
+                    raise ValueError(
+                        f"Program {program_id}, Search #{j+1} ({search_names[j]}): "
+                        f"'source' must be one of {valid_sources}. You provided: {search['source']}"
+                    )
 
             total_searches += 1
         
