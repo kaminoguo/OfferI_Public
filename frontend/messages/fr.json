@@ -4,89 +4,98 @@
     "email": "lyrica2333@gmail.com"
   },
   "welcome": {
-    "title": "Bienvenue sur OfferI",
-    "subtitle": "Consultant d'études à l'étranger personnalisé par IA",
-    "startButton": "Commencer la consultation ($6)",
-    "flow": "Remplissez votre profil → Payez $6 → Obtenez votre rapport personnalisé"
+    "title": "Welcome to OfferI",
+    "subtitle": "AI-powered personalized study abroad consultant",
+    "startButton": "Start Consultation ($6)",
+    "flow": "Fill in your background → Pay $6 → Get your personalized report"
   },
   "info": {
-    "title": "📋 Informations importantes",
+    "title": "📋 Important Information",
     "autoQueue": {
-      "icon": "⏱️",
-      "title": "Système de file d'attente automatique :",
-      "description": "Si la file d'attente est pleine, votre demande sera automatiquement mise en file d'attente. Vous recevrez votre rapport PDF une fois la génération terminée, pas besoin de garder la page ouverte."
+      "title": "Auto-queuing system:",
+      "description": "If the queue is full, your request will be automatically queued. You'll receive your PDF report once generation completes—no need to keep the page open."
     },
     "retries": {
-      "icon": "🔄",
-      "title": "Réessais gratuits illimités :",
-      "description": "Si la génération échoue pour quelque raison que ce soit, vous pouvez réessayer gratuitement sans frais supplémentaires."
+      "title": "Unlimited free retries:",
+      "description": "If generation fails for any reason, you can retry for free without additional charges."
     },
     "support": {
-      "icon": "💬",
-      "title": "Besoin d'aide ?",
-      "descriptionBefore": "Si vous rencontrez des problèmes, contactez-nous avec une capture d'écran à ",
-      "descriptionAfter": ""
+      "title": "Need help?",
+      "description": "If you encounter any issues, please contact us with a screenshot at"
     },
     "mvp": {
-      "icon": "🚧",
-      "title": "Phase MVP :",
-      "description": "Ce produit est encore en phase MVP, mais nous obtenons déjà de bons résultats. Vos commentaires nous aident à nous améliorer !"
+      "title": "MVP Stage:",
+      "description": "This product is still in MVP stage, but we're already achieving good results. Your feedback helps us improve!"
     },
     "collaboration": {
-      "icon": "🤝",
-      "title": "Intéressé par une collaboration ?",
-      "descriptionBefore": "Si vous souhaitez vous associer avec nous ou fournir un soutien, contactez-nous à ",
-      "descriptionAfter": ""
+      "title": "Interested in collaboration?",
+      "description": "If you'd like to partner with us or provide support, please reach out at"
     }
   },
   "form": {
-    "title": "Parlez-nous de votre profil",
-    "label": "Votre profil *",
-    "descriptionIntro": "Décrivez votre profil en détail. Incluez des informations telles que :",
-    "academic": "Académique :",
-    "academicDesc": "Université/spécialisation actuelle, GPA, scores aux tests de langue (TOEFL/IELTS/GRE)",
-    "experience": "Expérience :",
-    "experienceDesc": "Projets de recherche, stages, compétitions, prix, publications",
-    "entrepreneurship": "Entrepreneuriat :",
-    "entrepreneurshipDesc": "Entreprises fondées, produits lancés, projets commerciaux",
-    "goals": "Objectifs :",
-    "goalsDesc": "Pays/région cible, plans de carrière, objectifs de développement",
-    "other": "Autre :",
-    "otherDesc": "Tout ce que vous jugez pertinent ou digne d'être souligné",
-    "reminderBestResults": {
-      "icon": "💡",
-      "title": "Pour de meilleurs résultats :",
-      "description": "Remplissez UN seul pays/région cible à la fois. Cela nous permet de fournir des recommandations plus ciblées et précises."
+    "title": "Tell us about your background",
+    "label": "Your background *",
+    "description": {
+      "intro": "Please describe your background in detail. Include information such as:",
+      "academic": "Academic",
+      "academicDetails": "Current university/major, GPA, language test scores (TOEFL/IELTS/GRE)",
+      "experience": "Experience",
+      "experienceDetails": "Research projects, internships, competitions, awards, publications",
+      "entrepreneurship": "Entrepreneurship",
+      "entrepreneurshipDetails": "Startups founded, products launched, business ventures",
+      "goals": "Goals",
+      "goalsDetails": "Target country/region, career plans, development goals",
+      "other": "Other",
+      "otherDetails": "Anything else you think is relevant or worth highlighting"
     },
-    "reminderQuality": {
-      "icon": "⚡",
-      "title": "La qualité compte :",
-      "description": "La qualité des recommandations de l'IA dépend des détails que vous fournissez. S'il y a quelque chose de spécial dans votre profil qui mérite attention, assurez-vous de le mentionner !"
+    "reminder": {
+      "focus": {
+        "title": "For best results:",
+        "description": "Fill in only ONE target country/region at a time. This allows us to provide more focused and accurate recommendations."
+      },
+      "quality": {
+        "title": "Quality matters:",
+        "description": "The quality of AI recommendations depends on the details you provide. If there's something special about your background that deserves attention, make sure to mention it!"
+      }
     },
-    "placeholder": "Écrivez librement avec vos propres mots...",
-    "cancel": "Annuler",
-    "continue": "Continuer vers le paiement"
+    "placeholder": "Write freely in your own words...",
+    "cancel": "Cancel",
+    "submit": "Continue to Payment"
   },
   "progress": {
-    "title": "Génération de votre rapport...",
-    "subtitle": "Cela peut prendre 10 à 15 minutes"
+    "title": "Generating your report...",
+    "estimatedTime": "This may take 10-15 minutes"
   },
   "result": {
-    "title": "Votre rapport est prêt !",
-    "subtitle": "Cliquez sur le bouton ci-dessous pour télécharger votre rapport personnalisé de recommandations d'études à l'étranger",
-    "download": "Télécharger le rapport PDF",
-    "newConsultation": "Commencer une nouvelle consultation"
+    "ready": "Your report is ready!",
+    "downloadPrompt": "Click the button below to download your personalized study abroad recommendation report",
+    "downloadButton": "Download PDF Report",
+    "newConsultation": "Start a new consultation"
   },
   "error": {
-    "title": "Quelque chose s'est mal passé",
-    "retryFree": "✓ Vous pouvez réessayer gratuitement (sans frais supplémentaires)",
-    "retryButton": "Réessayer gratuitement",
-    "tryAgain": "Réessayer"
+    "title": "Something went wrong",
+    "pleaseSignIn": "Please sign in to use this service",
+    "generationFailed": "Report generation failed, please try again",
+    "paymentNotFound": "Payment not found or already used. Please make a new payment.",
+    "paymentVerificationFailed": "Payment verification failed. Please try again.",
+    "submissionFailed": "Submission failed, please try again later",
+    "downloadFailed": "Download failed, please try again",
+    "noPreviousSubmission": "No previous submission found",
+    "retryAvailable": "✓ You can retry for free (no additional charge)",
+    "retryButton": "Retry for Free",
+    "tryAgain": "Try Again"
   },
   "sidebar": {
-    "newChat": "Nouvelle consultation",
-    "history": "Historique",
-    "settings": "Paramètres",
-    "signOut": "Se déconnecter"
+    "history": "Consultation History",
+    "loading": "Loading...",
+    "signInPrompt": "Sign in to view your consultation history",
+    "noConsultations": "No consultations yet",
+    "pdfsAppear": "Your generated PDFs will appear here",
+    "consultation": "Consultation",
+    "pricing": "MCP API • Web $6",
+    "signOut": "Sign out",
+    "guestUser": "Guest User",
+    "signIn": "Sign in",
+    "signUp": "Sign up"
   }
 }

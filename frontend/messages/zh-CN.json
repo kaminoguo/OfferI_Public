@@ -4,89 +4,98 @@
     "email": "lyrica2333@gmail.com"
   },
   "welcome": {
-    "title": "欢迎使用 OfferI",
-    "subtitle": "AI驱动的个性化留学咨询顾问",
+    "title": "欢迎来到 OfferI",
+    "subtitle": "AI驱动的个性化留学顾问",
     "startButton": "开始咨询 ($6)",
-    "flow": "填写背景信息 → 支付 $6 → 获取个性化报告"
+    "flow": "填写背景 → 支付$6 → 获取个性化报告"
   },
   "info": {
-    "title": "📋 重要提示",
+    "title": "📋 重要信息",
     "autoQueue": {
-      "icon": "⏱️",
       "title": "自动排队系统：",
-      "description": "队列满时，您的请求将自动排队。报告生成完成后会返回PDF，无需保持网页开启。"
+      "description": "如果队列已满，您的请求将自动排队。生成完成后您将收到PDF报告 —— 无需保持页面打开。"
     },
     "retries": {
-      "icon": "🔄",
-      "title": "无限免费重试：",
-      "description": "如果生成失败，您可以无限次免费重试，无需额外付费。"
+      "title": "无限次免费重试：",
+      "description": "如果生成失败，您可以免费重试，无需额外费用。"
     },
     "support": {
-      "icon": "💬",
       "title": "需要帮助？",
-      "descriptionBefore": "如果遇到任何问题，请带上截图联系我们：",
-      "descriptionAfter": ""
+      "description": "如果遇到任何问题，请带截图联系我们："
     },
     "mvp": {
-      "icon": "🚧",
       "title": "MVP阶段：",
-      "description": "本产品仍处于MVP阶段，但已能取得较好效果。您的反馈将帮助我们改进！"
+      "description": "本产品仍处于MVP阶段，但已能取得良好效果。您的反馈将帮助我们改进！"
     },
     "collaboration": {
-      "icon": "🤝",
       "title": "有兴趣合作？",
-      "descriptionBefore": "如果您想与我们合作或提供支持，请联系：",
-      "descriptionAfter": ""
+      "description": "如果您想与我们合作或提供支持，请联系："
     }
   },
   "form": {
-    "title": "请告诉我们您的背景",
-    "label": "您的背景信息 *",
-    "descriptionIntro": "请详细描述您的背景，包括以下信息：",
-    "academic": "学术背景：",
-    "academicDesc": "当前院校/专业、GPA、语言成绩（托福/雅思/GRE）",
-    "experience": "经历：",
-    "experienceDesc": "科研项目、实习、竞赛、获奖、论文发表",
-    "entrepreneurship": "创业经历：",
-    "entrepreneurshipDesc": "创立的公司、发布的产品、商业项目",
-    "goals": "目标：",
-    "goalsDesc": "目标国家/地区、职业规划、发展目标",
-    "other": "其他：",
-    "otherDesc": "任何您认为相关或值得注意的内容",
-    "reminderBestResults": {
-      "icon": "💡",
-      "title": "最佳效果提示：",
-      "description": "为获得更聚焦和准确的推荐，一次最多填写一个目标国家/地区。"
+    "title": "告诉我们您的背景",
+    "label": "您的背景 *",
+    "description": {
+      "intro": "请详细描述您的背景。包括以下信息：",
+      "academic": "学术背景",
+      "academicDetails": "当前大学/专业、GPA、语言考试成绩（托福/雅思/GRE）",
+      "experience": "经历",
+      "experienceDetails": "科研项目、实习、竞赛、获奖、论文发表",
+      "entrepreneurship": "创业",
+      "entrepreneurshipDetails": "创办的初创公司、推出的产品、商业项目",
+      "goals": "目标",
+      "goalsDetails": "目标国家/地区、职业规划、发展目标",
+      "other": "其他",
+      "otherDetails": "您认为相关或值得强调的其他内容"
     },
-    "reminderQuality": {
-      "icon": "⚡",
-      "title": "质量很重要：",
-      "description": "AI推荐的质量取决于您提供的背景详细程度。如果您的背景中有特别值得注意的地方，请务必说明！"
+    "reminder": {
+      "focus": {
+        "title": "为获得最佳结果：",
+        "description": "一次只填写一个目标国家/地区。这样我们可以提供更专注和准确的推荐。"
+      },
+      "quality": {
+        "title": "质量很重要：",
+        "description": "AI推荐的质量取决于您提供的细节。如果您的背景中有值得特别注意的地方，请务必提及！"
+      }
     },
-    "placeholder": "用您自己的话自由表达...",
+    "placeholder": "用您自己的话自由书写...",
     "cancel": "取消",
-    "continue": "继续支付"
+    "submit": "继续支付"
   },
   "progress": {
     "title": "正在生成您的报告...",
-    "subtitle": "这可能需要10-15分钟"
+    "estimatedTime": "这可能需要10-15分钟"
   },
   "result": {
-    "title": "您的报告已准备好！",
-    "subtitle": "点击下方按钮下载您的个性化留学推荐报告",
-    "download": "下载PDF报告",
+    "ready": "您的报告已准备好！",
+    "downloadPrompt": "点击下方按钮下载您的个性化留学推荐报告",
+    "downloadButton": "下载PDF报告",
     "newConsultation": "开始新的咨询"
   },
   "error": {
-    "title": "出现问题",
-    "retryFree": "✓ 您可以免费重试（无需额外付费）",
+    "title": "出了点问题",
+    "pleaseSignIn": "请登录以使用此服务",
+    "generationFailed": "报告生成失败，请重试",
+    "paymentNotFound": "未找到支付或已使用。请重新支付。",
+    "paymentVerificationFailed": "支付验证失败。请重试。",
+    "submissionFailed": "提交失败，请稍后重试",
+    "downloadFailed": "下载失败，请重试",
+    "noPreviousSubmission": "未找到之前的提交",
+    "retryAvailable": "✓ 您可以免费重试（无需额外费用）",
     "retryButton": "免费重试",
     "tryAgain": "重试"
   },
   "sidebar": {
-    "newChat": "新建咨询",
-    "history": "历史记录",
-    "settings": "设置",
-    "signOut": "退出登录"
+    "history": "咨询历史",
+    "loading": "加载中...",
+    "signInPrompt": "登录以查看您的咨询历史",
+    "noConsultations": "还没有咨询记录",
+    "pdfsAppear": "您生成的PDF将显示在这里",
+    "consultation": "咨询",
+    "pricing": "MCP API • 网页 $6",
+    "signOut": "退出登录",
+    "guestUser": "访客用户",
+    "signIn": "登录",
+    "signUp": "注册"
   }
 }

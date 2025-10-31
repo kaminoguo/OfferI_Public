@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, User, LogOut, FileText, Download, Clock } from 'lucide-react';
 import { useUser, useClerk } from '@clerk/nextjs';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import LanguageSwitcher from './LanguageSwitcher';
 
 interface SidebarProps {

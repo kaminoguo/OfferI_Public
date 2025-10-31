@@ -4,89 +4,98 @@
     "email": "lyrica2333@gmail.com"
   },
   "welcome": {
-    "title": "歡迎使用 OfferI",
-    "subtitle": "AI驅動的個性化留學諮詢顧問",
-    "startButton": "開始諮詢 ($6)",
-    "flow": "填寫背景資訊 → 支付 $6 → 獲取個性化報告"
+    "title": "Welcome to OfferI",
+    "subtitle": "AI-powered personalized study abroad consultant",
+    "startButton": "Start Consultation ($6)",
+    "flow": "Fill in your background → Pay $6 → Get your personalized report"
   },
   "info": {
-    "title": "📋 重要提示",
+    "title": "📋 Important Information",
     "autoQueue": {
-      "icon": "⏱️",
-      "title": "自動排隊系統：",
-      "description": "佇列滿時，您的請求將自動排隊。報告生成完成後會返回PDF，無需保持網頁開啟。"
+      "title": "Auto-queuing system:",
+      "description": "If the queue is full, your request will be automatically queued. You'll receive your PDF report once generation completes—no need to keep the page open."
     },
     "retries": {
-      "icon": "🔄",
-      "title": "無限免費重試：",
-      "description": "如果生成失敗，您可以無限次免費重試，無需額外付費。"
+      "title": "Unlimited free retries:",
+      "description": "If generation fails for any reason, you can retry for free without additional charges."
     },
     "support": {
-      "icon": "💬",
-      "title": "需要幫助？",
-      "descriptionBefore": "如果遇到任何問題，請帶上截圖聯繫我們：",
-      "descriptionAfter": ""
+      "title": "Need help?",
+      "description": "If you encounter any issues, please contact us with a screenshot at"
     },
     "mvp": {
-      "icon": "🚧",
-      "title": "MVP階段：",
-      "description": "本產品仍處於MVP階段，但已能取得較好效果。您的回饋將幫助我們改進！"
+      "title": "MVP Stage:",
+      "description": "This product is still in MVP stage, but we're already achieving good results. Your feedback helps us improve!"
     },
     "collaboration": {
-      "icon": "🤝",
-      "title": "有興趣合作？",
-      "descriptionBefore": "如果您想與我們合作或提供支援，請聯絡：",
-      "descriptionAfter": ""
+      "title": "Interested in collaboration?",
+      "description": "If you'd like to partner with us or provide support, please reach out at"
     }
   },
   "form": {
-    "title": "請告訴我們您的背景",
-    "label": "您的背景資訊 *",
-    "descriptionIntro": "請詳細描述您的背景，包括以下資訊：",
-    "academic": "學術背景：",
-    "academicDesc": "當前院校/專業、GPA、語言成績（托福/雅思/GRE）",
-    "experience": "經歷：",
-    "experienceDesc": "科研專案、實習、競賽、獲獎、論文發表",
-    "entrepreneurship": "創業經歷：",
-    "entrepreneurshipDesc": "創立的公司、發佈的產品、商業專案",
-    "goals": "目標：",
-    "goalsDesc": "目標國家/地區、職業規劃、發展目標",
-    "other": "其他：",
-    "otherDesc": "任何您認為相關或值得注意的內容",
-    "reminderBestResults": {
-      "icon": "💡",
-      "title": "最佳效果提示：",
-      "description": "為獲得更聚焦和準確的推薦，一次最多填寫一個目標國家/地區。"
+    "title": "Tell us about your background",
+    "label": "Your background *",
+    "description": {
+      "intro": "Please describe your background in detail. Include information such as:",
+      "academic": "Academic",
+      "academicDetails": "Current university/major, GPA, language test scores (TOEFL/IELTS/GRE)",
+      "experience": "Experience",
+      "experienceDetails": "Research projects, internships, competitions, awards, publications",
+      "entrepreneurship": "Entrepreneurship",
+      "entrepreneurshipDetails": "Startups founded, products launched, business ventures",
+      "goals": "Goals",
+      "goalsDetails": "Target country/region, career plans, development goals",
+      "other": "Other",
+      "otherDetails": "Anything else you think is relevant or worth highlighting"
     },
-    "reminderQuality": {
-      "icon": "⚡",
-      "title": "質量很重要：",
-      "description": "AI推薦的質量取決於您提供的背景詳細程度。如果您的背景中有特別值得注意的地方，請務必說明！"
+    "reminder": {
+      "focus": {
+        "title": "For best results:",
+        "description": "Fill in only ONE target country/region at a time. This allows us to provide more focused and accurate recommendations."
+      },
+      "quality": {
+        "title": "Quality matters:",
+        "description": "The quality of AI recommendations depends on the details you provide. If there's something special about your background that deserves attention, make sure to mention it!"
+      }
     },
-    "placeholder": "用您自己的話自由表達...",
-    "cancel": "取消",
-    "continue": "繼續支付"
+    "placeholder": "Write freely in your own words...",
+    "cancel": "Cancel",
+    "submit": "Continue to Payment"
   },
   "progress": {
-    "title": "正在生成您的報告...",
-    "subtitle": "這可能需要10-15分鐘"
+    "title": "Generating your report...",
+    "estimatedTime": "This may take 10-15 minutes"
   },
   "result": {
-    "title": "您的報告已準備好！",
-    "subtitle": "點擊下方按鈕下載您的個性化留學推薦報告",
-    "download": "下載PDF報告",
-    "newConsultation": "開始新的諮詢"
+    "ready": "Your report is ready!",
+    "downloadPrompt": "Click the button below to download your personalized study abroad recommendation report",
+    "downloadButton": "Download PDF Report",
+    "newConsultation": "Start a new consultation"
   },
   "error": {
-    "title": "出現問題",
-    "retryFree": "✓ 您可以免費重試（無需額外付費）",
-    "retryButton": "免費重試",
-    "tryAgain": "重試"
+    "title": "Something went wrong",
+    "pleaseSignIn": "Please sign in to use this service",
+    "generationFailed": "Report generation failed, please try again",
+    "paymentNotFound": "Payment not found or already used. Please make a new payment.",
+    "paymentVerificationFailed": "Payment verification failed. Please try again.",
+    "submissionFailed": "Submission failed, please try again later",
+    "downloadFailed": "Download failed, please try again",
+    "noPreviousSubmission": "No previous submission found",
+    "retryAvailable": "✓ You can retry for free (no additional charge)",
+    "retryButton": "Retry for Free",
+    "tryAgain": "Try Again"
   },
   "sidebar": {
-    "newChat": "新建諮詢",
-    "history": "歷史記錄",
-    "settings": "設定",
-    "signOut": "登出"
+    "history": "Consultation History",
+    "loading": "Loading...",
+    "signInPrompt": "Sign in to view your consultation history",
+    "noConsultations": "No consultations yet",
+    "pdfsAppear": "Your generated PDFs will appear here",
+    "consultation": "Consultation",
+    "pricing": "MCP API • Web $6",
+    "signOut": "Sign out",
+    "guestUser": "Guest User",
+    "signIn": "Sign in",
+    "signUp": "Sign up"
   }
 }

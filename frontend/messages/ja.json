@@ -4,89 +4,98 @@
     "email": "lyrica2333@gmail.com"
   },
   "welcome": {
-    "title": "OfferIへようこそ",
-    "subtitle": "AI搭載のパーソナライズド留学コンサルタント",
-    "startButton": "コンサルティングを開始 ($6)",
-    "flow": "背景情報を入力 → $6を支払う → パーソナライズドレポートを受け取る"
+    "title": "Welcome to OfferI",
+    "subtitle": "AI-powered personalized study abroad consultant",
+    "startButton": "Start Consultation ($6)",
+    "flow": "Fill in your background → Pay $6 → Get your personalized report"
   },
   "info": {
-    "title": "📋 重要な情報",
+    "title": "📋 Important Information",
     "autoQueue": {
-      "icon": "⏱️",
-      "title": "自動キューシステム：",
-      "description": "キューが満杯の場合、リクエストは自動的にキューに入ります。生成が完了するとPDFレポートが届きます。ページを開いたままにする必要はありません。"
+      "title": "Auto-queuing system:",
+      "description": "If the queue is full, your request will be automatically queued. You'll receive your PDF report once generation completes—no need to keep the page open."
     },
     "retries": {
-      "icon": "🔄",
-      "title": "無制限の無料再試行：",
-      "description": "何らかの理由で生成が失敗した場合、追加料金なしで無料で再試行できます。"
+      "title": "Unlimited free retries:",
+      "description": "If generation fails for any reason, you can retry for free without additional charges."
     },
     "support": {
-      "icon": "💬",
-      "title": "ヘルプが必要ですか？",
-      "descriptionBefore": "問題が発生した場合は、スクリーンショットを添えてお問い合わせください：",
-      "descriptionAfter": ""
+      "title": "Need help?",
+      "description": "If you encounter any issues, please contact us with a screenshot at"
     },
     "mvp": {
-      "icon": "🚧",
-      "title": "MVP段階：",
-      "description": "この製品はまだMVP段階ですが、すでに良い結果を達成しています。あなたのフィードバックが改善に役立ちます！"
+      "title": "MVP Stage:",
+      "description": "This product is still in MVP stage, but we're already achieving good results. Your feedback helps us improve!"
     },
     "collaboration": {
-      "icon": "🤝",
-      "title": "協力に興味がありますか？",
-      "descriptionBefore": "パートナーシップまたはサポートをご希望の場合は、お問い合わせください：",
-      "descriptionAfter": ""
+      "title": "Interested in collaboration?",
+      "description": "If you'd like to partner with us or provide support, please reach out at"
     }
   },
   "form": {
-    "title": "あなたの背景について教えてください",
-    "label": "あなたの背景 *",
-    "descriptionIntro": "背景を詳しく説明してください。以下の情報を含めてください：",
-    "academic": "学歴：",
-    "academicDesc": "現在の大学/専攻、GPA、語学テストスコア（TOEFL/IELTS/GRE）",
-    "experience": "経験：",
-    "experienceDesc": "研究プロジェクト、インターンシップ、コンテスト、受賞歴、論文発表",
-    "entrepreneurship": "起業経験：",
-    "entrepreneurshipDesc": "設立した会社、リリースした製品、ビジネスベンチャー",
-    "goals": "目標：",
-    "goalsDesc": "対象国/地域、キャリアプラン、開発目標",
-    "other": "その他：",
-    "otherDesc": "関連性があると思われる、または強調する価値があると思われるその他の内容",
-    "reminderBestResults": {
-      "icon": "💡",
-      "title": "最良の結果のために：",
-      "description": "一度に1つの対象国/地域のみを記入してください。これにより、より焦点を絞った正確な推奨が提供されます。"
+    "title": "Tell us about your background",
+    "label": "Your background *",
+    "description": {
+      "intro": "Please describe your background in detail. Include information such as:",
+      "academic": "Academic",
+      "academicDetails": "Current university/major, GPA, language test scores (TOEFL/IELTS/GRE)",
+      "experience": "Experience",
+      "experienceDetails": "Research projects, internships, competitions, awards, publications",
+      "entrepreneurship": "Entrepreneurship",
+      "entrepreneurshipDetails": "Startups founded, products launched, business ventures",
+      "goals": "Goals",
+      "goalsDetails": "Target country/region, career plans, development goals",
+      "other": "Other",
+      "otherDetails": "Anything else you think is relevant or worth highlighting"
     },
-    "reminderQuality": {
-      "icon": "⚡",
-      "title": "質が重要：",
-      "description": "AI推奨の質は、提供する詳細の程度に依存します。背景に特に注目すべき点がある場合は、必ず言及してください！"
+    "reminder": {
+      "focus": {
+        "title": "For best results:",
+        "description": "Fill in only ONE target country/region at a time. This allows us to provide more focused and accurate recommendations."
+      },
+      "quality": {
+        "title": "Quality matters:",
+        "description": "The quality of AI recommendations depends on the details you provide. If there's something special about your background that deserves attention, make sure to mention it!"
+      }
     },
-    "placeholder": "自分の言葉で自由に表現してください...",
-    "cancel": "キャンセル",
-    "continue": "支払いに進む"
+    "placeholder": "Write freely in your own words...",
+    "cancel": "Cancel",
+    "submit": "Continue to Payment"
   },
   "progress": {
-    "title": "レポートを生成しています...",
-    "subtitle": "10〜15分かかる場合があります"
+    "title": "Generating your report...",
+    "estimatedTime": "This may take 10-15 minutes"
   },
   "result": {
-    "title": "レポートの準備ができました！",
-    "subtitle": "下のボタンをクリックして、パーソナライズドされた留学推奨レポートをダウンロードしてください",
-    "download": "PDFレポートをダウンロード",
-    "newConsultation": "新しいコンサルティングを開始"
+    "ready": "Your report is ready!",
+    "downloadPrompt": "Click the button below to download your personalized study abroad recommendation report",
+    "downloadButton": "Download PDF Report",
+    "newConsultation": "Start a new consultation"
   },
   "error": {
-    "title": "問題が発生しました",
-    "retryFree": "✓ 無料で再試行できます（追加料金なし）",
-    "retryButton": "無料で再試行",
-    "tryAgain": "再試行"
+    "title": "Something went wrong",
+    "pleaseSignIn": "Please sign in to use this service",
+    "generationFailed": "Report generation failed, please try again",
+    "paymentNotFound": "Payment not found or already used. Please make a new payment.",
+    "paymentVerificationFailed": "Payment verification failed. Please try again.",
+    "submissionFailed": "Submission failed, please try again later",
+    "downloadFailed": "Download failed, please try again",
+    "noPreviousSubmission": "No previous submission found",
+    "retryAvailable": "✓ You can retry for free (no additional charge)",
+    "retryButton": "Retry for Free",
+    "tryAgain": "Try Again"
   },
   "sidebar": {
-    "newChat": "新規コンサルティング",
-    "history": "履歴",
-    "settings": "設定",
-    "signOut": "サインアウト"
+    "history": "Consultation History",
+    "loading": "Loading...",
+    "signInPrompt": "Sign in to view your consultation history",
+    "noConsultations": "No consultations yet",
+    "pdfsAppear": "Your generated PDFs will appear here",
+    "consultation": "Consultation",
+    "pricing": "MCP API • Web $6",
+    "signOut": "Sign out",
+    "guestUser": "Guest User",
+    "signIn": "Sign in",
+    "signUp": "Sign up"
   }
 }
