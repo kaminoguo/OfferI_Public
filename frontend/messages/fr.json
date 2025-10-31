@@ -10,7 +10,7 @@
     "flow": "Fill in your background → Pay $6 → Get your personalized report"
   },
   "info": {
-    "title": "📋 Important Information",
+    "title": "Important Information",
     "autoQueue": {
       "title": "Auto-queuing system:",
       "description": "If the queue is full, your request will be automatically queued. You'll receive your PDF report once generation completes—no need to keep the page open."
@@ -97,5 +97,31 @@
     "guestUser": "Guest User",
     "signIn": "Sign in",
     "signUp": "Sign up"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your API keys and view usage statistics",
+    "loading": "Loading settings...",
+    "copiedToClipboard": "Copied to clipboard!",
+    "confirmRevoke": "Are you sure you want to revoke this API key?",
+    "keyCreated": "API Key Created!",
+    "saveKeyWarning": "Save this key now. You won't be able to see it again!",
+    "dismissKey": "I've saved it, dismiss",
+    "apiKeys": "API Keys",
+    "newKey": "New Key",
+    "keyName": "Key Name (optional)",
+    "keyNamePlaceholder": "e.g., Production API",
+    "creating": "Creating...",
+    "create": "Create",
+    "noKeys": "No API keys yet. Create one to get started!",
+    "superKey": "Super Key",
+    "revoked": "Revoked",
+    "created": "Created",
+    "lastUsed": "Last used",
+    "revokeKey": "Revoke key",
+    "contactLinks": "Contact & Links",
+    "contactMe": "Contact Me",
+    "githubRepo": "GitHub Repository",
+    "comingSoon": "Coming soon..."
   }
 }

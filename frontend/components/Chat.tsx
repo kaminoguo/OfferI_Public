@@ -261,21 +261,21 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
 
               <div className="space-y-3 text-sm text-muted-foreground">
                 <div className="flex gap-3">
-                  <span className="text-primary font-semibold shrink-0">⏱️</span>
+                  <span className="text-primary font-semibold shrink-0">•</span>
                   <p>
                     <span className="font-medium text-foreground">{t('info.autoQueue.title')}</span> {t('info.autoQueue.description')}
                   </p>
                 </div>
 
                 <div className="flex gap-3">
-                  <span className="text-primary font-semibold shrink-0">🔄</span>
+                  <span className="text-primary font-semibold shrink-0">•</span>
                   <p>
                     <span className="font-medium text-foreground">{t('info.retries.title')}</span> {t('info.retries.description')}
                   </p>
                 </div>
 
                 <div className="flex gap-3">
-                  <span className="text-primary font-semibold shrink-0">💬</span>
+                  <span className="text-primary font-semibold shrink-0">•</span>
                   <p>
                     <span className="font-medium text-foreground">{t('info.support.title')}</span> {t('info.support.description')}{' '}
                     <a href={`mailto:${t('common.email')}`} className="text-primary hover:underline">
@@ -285,14 +285,14 @@ export default function Chat({ isSidebarOpen, onToggleSidebar }: ChatProps) {
                 </div>
 
                 <div className="flex gap-3">
-                  <span className="text-primary font-semibold shrink-0">🚧</span>
+                  <span className="text-primary font-semibold shrink-0">•</span>
                   <p>
                     <span className="font-medium text-foreground">{t('info.mvp.title')}</span> {t('info.mvp.description')}
                   </p>
                 </div>
 
                 <div className="flex gap-3">
-                  <span className="text-primary font-semibold shrink-0">🤝</span>
+                  <span className="text-primary font-semibold shrink-0">•</span>
                   <p>
                     <span className="font-medium text-foreground">{t('info.collaboration.title')}</span> {t('info.collaboration.description')}{' '}
                     <a href={`mailto:${t('common.email')}`} className="text-primary hover:underline">

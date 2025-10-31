@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 import { Key, Copy, Plus, Trash2, AlertCircle, Mail, Github, Youtube } from 'lucide-react';
 
 interface APIKey {
@@ -31,6 +32,7 @@ interface UserProfile {
 export default function SettingsPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
+  const t = useTranslations();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,12 +106,12 @@ export default function SettingsPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert('Copied to clipboard!');
+    alert(t('settings.copiedToClipboard'));
   };
 
   const revokeKey = async (keyId: string) => {
     if (!user) return;
-    if (!confirm('Are you sure you want to revoke this API key?')) return;
+    if (!confirm(t('settings.confirmRevoke'))) return;
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -132,7 +134,7 @@ export default function SettingsPage() {
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading settings...</p>
+          <p className="text-muted-foreground">{t('settings.loading')}</p>
         </div>
       </div>
     );
@@ -143,7 +145,7 @@ export default function SettingsPage() {
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center max-w-md">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold text-foreground mb-2">Error</h2>
+          <h2 className="text-2xl font-semibold text-foreground mb-2">{t('error.title')}</h2>
           <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
@@ -157,18 +159,18 @@ export default function SettingsPage() {
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">{t('settings.title')}</h1>
           <p className="text-muted-foreground">
-            Manage your API keys and view usage statistics
+            {t('settings.subtitle')}
           </p>
         </div>
 
         {/* Newly Created Key Alert */}
         {newlyCreatedKey && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-green-900 mb-2">API Key Created!</h3>
+            <h3 className="text-lg font-semibold text-green-900 mb-2">{t('settings.keyCreated')}</h3>
             <p className="text-sm text-green-800 mb-3">
-              Save this key now. You won't be able to see it again!
+              {t('settings.saveKeyWarning')}
             </p>
             <div className="flex items-center gap-2">
               <code className="flex-1 px-3 py-2 bg-white border border-green-300 rounded font-mono text-sm">
@@ -185,7 +187,7 @@ export default function SettingsPage() {
               onClick={() => setNewlyCreatedKey(null)}
               className="mt-3 text-sm text-green-700 hover:text-green-900"
             >
-              I've saved it, dismiss
+              {t('settings.dismissKey')}
             </button>
           </div>
         )}
@@ -195,7 +197,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Key className="w-6 h-6 text-primary" />
-              <h2 className="text-xl font-semibold text-foreground">API Keys</h2>
+              <h2 className="text-xl font-semibold text-foreground">{t('settings.apiKeys')}</h2>
             </div>
             {/* Only show "New Key" button if user has no active keys (1 key per account) */}
             {profile.api_keys.filter(k => k.is_active).length === 0 && (
@@ -204,7 +206,7 @@ export default function SettingsPage() {
                 className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                New Key
+                {t('settings.newKey')}
               </button>
             )}
           </div>
@@ -213,14 +215,14 @@ export default function SettingsPage() {
           {showCreateForm && (
             <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-md">
               <label className="block text-sm font-medium text-foreground mb-2">
-                Key Name (optional)
+                {t('settings.keyName')}
               </label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
-                  placeholder="e.g., Production API"
+                  placeholder={t('settings.keyNamePlaceholder')}
                   className="flex-1 px-3 py-2 border border-border rounded-md"
                 />
                 <button
@@ -228,14 +230,14 @@ export default function SettingsPage() {
                   disabled={isCreating}
                   className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {isCreating ? 'Creating...' : 'Create'}
+                  {isCreating ? t('settings.creating') : t('settings.create')}
                 </button>
                 <button
                   onClick={() => setShowCreateForm(false)}
                   disabled={isCreating}
                   className="px-4 py-2 border border-border rounded-md hover:bg-gray-50 disabled:opacity-50"
                 >
-                  Cancel
+                  {t('form.cancel')}
                 </button>
               </div>
             </div>
@@ -245,7 +247,7 @@ export default function SettingsPage() {
           <div className="space-y-3">
             {profile.api_keys.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
-                No API keys yet. Create one to get started!
+                {t('settings.noKeys')}
               </p>
             ) : (
               profile.api_keys.map((key) => (
@@ -258,12 +260,12 @@ export default function SettingsPage() {
                       <code className="font-mono text-sm">{key.key_preview}</code>
                       {key.is_super_key && (
                         <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded">
-                          Super Key
+                          {t('settings.superKey')}
                         </span>
                       )}
                       {!key.is_active && (
                         <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded">
-                          Revoked
+                          {t('settings.revoked')}
                         </span>
                       )}
                     </div>
@@ -271,15 +273,15 @@ export default function SettingsPage() {
                       <p className="text-sm text-muted-foreground">{key.name}</p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      Created: {new Date(key.created_at).toLocaleDateString()}
-                      {key.last_used_at && ` • Last used: ${new Date(key.last_used_at).toLocaleDateString()}`}
+                      {t('settings.created')}: {new Date(key.created_at).toLocaleDateString()}
+                      {key.last_used_at && ` • ${t('settings.lastUsed')}: ${new Date(key.last_used_at).toLocaleDateString()}`}
                     </p>
                   </div>
                   {key.is_active && (
                     <button
                       onClick={() => revokeKey(key.key_preview.replace('...', ''))}
                       className="p-2 text-red-600 hover:bg-red-50 rounded"
-                      title="Revoke key"
+                      title={t('settings.revokeKey')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -294,7 +296,7 @@ export default function SettingsPage() {
         <div className="bg-white border border-border rounded-lg p-6">
           <div className="flex items-center gap-3 mb-4">
             <Mail className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">Contact & Links</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t('settings.contactLinks')}</h2>
           </div>
 
           <div className="space-y-4">
@@ -302,12 +304,12 @@ export default function SettingsPage() {
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md">
               <Mail className="w-5 h-5 text-gray-600" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">Contact Me</p>
+                <p className="text-sm font-medium text-foreground">{t('settings.contactMe')}</p>
                 <a
-                  href="mailto:Lyrica2333@gmail.com"
+                  href={`mailto:${t('common.email')}`}
                   className="text-sm text-primary hover:underline"
                 >
-                  Lyrica2333@gmail.com
+                  {t('common.email')}
                 </a>
               </div>
             </div>
@@ -316,7 +318,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md">
               <Github className="w-5 h-5 text-gray-600" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">GitHub Repository</p>
+                <p className="text-sm font-medium text-foreground">{t('settings.githubRepo')}</p>
                 <a
                   href="https://github.com/kaminoguo/OfferI_Public"
                   target="_blank"
@@ -339,7 +341,7 @@ export default function SettingsPage() {
               </svg>
               <div className="flex-1">
                 <p className="text-sm font-medium text-foreground">Bilibili</p>
-                <p className="text-sm text-muted-foreground">Coming soon...</p>
+                <p className="text-sm text-muted-foreground">{t('settings.comingSoon')}</p>
               </div>
             </div>
 
@@ -348,7 +350,7 @@ export default function SettingsPage() {
               <Youtube className="w-5 h-5 text-gray-600" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-foreground">YouTube</p>
-                <p className="text-sm text-muted-foreground">Coming soon...</p>
+                <p className="text-sm text-muted-foreground">{t('settings.comingSoon')}</p>
               </div>
             </div>
           </div>

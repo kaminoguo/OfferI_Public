@@ -64,14 +64,14 @@ export default function FormModal({ isOpen, onClose, onSubmit }: FormModalProps)
             {/* Important Reminders */}
             <div className="mb-3 space-y-2">
               <div className="flex gap-2 items-start bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
-                <span className="text-blue-600 dark:text-blue-400 font-semibold shrink-0">💡</span>
+                <span className="text-blue-600 dark:text-blue-400 font-semibold shrink-0">!</span>
                 <p className="text-xs text-blue-700 dark:text-blue-300">
                   <span className="font-semibold">{t('form.reminder.focus.title')}</span> {t('form.reminder.focus.description')}
                 </p>
               </div>
 
               <div className="flex gap-2 items-start bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
-                <span className="text-amber-600 dark:text-amber-400 font-semibold shrink-0">⚡</span>
+                <span className="text-amber-600 dark:text-amber-400 font-semibold shrink-0">!</span>
                 <p className="text-xs text-amber-700 dark:text-amber-300">
                   <span className="font-semibold">{t('form.reminder.quality.title')}</span> {t('form.reminder.quality.description')}
                 </p>
