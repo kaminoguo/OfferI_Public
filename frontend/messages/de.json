@@ -60,7 +60,13 @@
     },
     "placeholder": "Schreiben Sie frei mit Ihren eigenen Worten...",
     "cancel": "Abbrechen",
-    "submit": "Weiter zur Zahlung"
+    "submit": "Weiter zur Zahlung",
+    "validation": {
+      "characters": "Zeichen",
+      "moreNeeded": "weitere benötigt",
+      "tooShort": "Bitte geben Sie mindestens 20 Zeichen mit Details zu Ihrer Schule, Notendurchschnitt, Praktika usw. an",
+      "meetsRequirement": "✓ Erfüllt die Mindestanforderung"
+    }
   },
   "progress": {
     "title": "Ihr Bericht wird erstellt...",

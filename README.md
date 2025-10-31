@@ -187,8 +187,7 @@ Edit `~/.codex/config.toml`:
 ```toml
 [mcp_servers.offeri]
 command = "/home/YOUR_USERNAME/.npm-global/bin/mcp-remote"
-args = ["https://api.offeri.org/mcp"]
-env = { "AUTHORIZATION" = "Bearer sk_live_YOUR_API_KEY_HERE" }
+args = ["https://api.offeri.org/mcp", "--header", "Authorization: Bearer sk_live_YOUR_API_KEY_HERE"]
 ```
 
 Note: Replace `/home/YOUR_USERNAME` with your actual home directory path.

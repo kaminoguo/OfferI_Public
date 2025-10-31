@@ -60,7 +60,13 @@
     },
     "placeholder": "自由に書いてください...",
     "cancel": "キャンセル",
-    "submit": "支払いに進む"
+    "submit": "支払いに進む",
+    "validation": {
+      "characters": "文字",
+      "moreNeeded": "さらに必要",
+      "tooShort": "学校、GPA、インターンシップなどの詳細情報を含む少なくとも20文字を提供してください",
+      "meetsRequirement": "✓ 最低要件を満たしています"
+    }
   },
   "progress": {
     "title": "レポートを生成中...",

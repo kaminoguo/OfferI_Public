@@ -60,7 +60,13 @@
     },
     "placeholder": "Écrivez librement avec vos propres mots...",
     "cancel": "Annuler",
-    "submit": "Continuer vers le Paiement"
+    "submit": "Continuer vers le Paiement",
+    "validation": {
+      "characters": "caractères",
+      "moreNeeded": "de plus nécessaires",
+      "tooShort": "Veuillez fournir au moins 20 caractères avec des détails sur votre école, GPA, stages, etc.",
+      "meetsRequirement": "✓ Répond à l'exigence minimale"
+    }
   },
   "progress": {
     "title": "Génération de votre rapport...",

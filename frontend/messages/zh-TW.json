@@ -60,7 +60,13 @@
     },
     "placeholder": "用您自己的話自由書寫...",
     "cancel": "取消",
-    "submit": "繼續支付"
+    "submit": "繼續支付",
+    "validation": {
+      "characters": "字元",
+      "moreNeeded": "還需要",
+      "tooShort": "請至少提供20字元，包括學校、GPA、實習等詳細資訊",
+      "meetsRequirement": "✓ 符合最低要求"
+    }
   },
   "progress": {
     "title": "正在生成您的報告...",

@@ -60,7 +60,13 @@
     },
     "placeholder": "Write freely in your own words...",
     "cancel": "Cancel",
-    "submit": "Continue to Payment"
+    "submit": "Continue to Payment",
+    "validation": {
+      "characters": "characters",
+      "moreNeeded": "more needed",
+      "tooShort": "Please provide at least 20 characters with details about your school, GPA, internships, etc.",
+      "meetsRequirement": "✓ Meets minimum requirement"
+    }
   },
   "progress": {
     "title": "Generating your report...",

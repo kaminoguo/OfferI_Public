@@ -101,21 +101,21 @@ export default function FormModal({ isOpen, onClose, onSubmit }: FormModalProps)
             {/* Character Count & Validation Message */}
             <div className="mt-2 flex items-center justify-between text-sm">
               <div className={`font-medium ${isValid ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                {charCount} / {MIN_LENGTH} characters
+                {charCount} / {MIN_LENGTH} {t('form.validation.characters')}
                 {!isValid && charCount > 0 && (
                   <span className="ml-2 text-xs">
-                    ({MIN_LENGTH - charCount} more needed)
+                    ({MIN_LENGTH - charCount} {t('form.validation.moreNeeded')})
                   </span>
                 )}
               </div>
               {!isValid && charCount > 0 && (
                 <span className="text-xs text-red-600 dark:text-red-400">
-                  Please provide at least {MIN_LENGTH} characters including school, GPA, internships, etc.
+                  {t('form.validation.tooShort')}
                 </span>
               )}
               {isValid && (
                 <span className="text-xs text-green-600 dark:text-green-400">
-                  ✓ Meets minimum requirement
+                  {t('form.validation.meetsRequirement')}
                 </span>
               )}
             </div>

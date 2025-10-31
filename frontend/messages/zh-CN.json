@@ -60,7 +60,13 @@
     },
     "placeholder": "用您自己的话自由书写...",
     "cancel": "取消",
-    "submit": "继续支付"
+    "submit": "继续支付",
+    "validation": {
+      "characters": "字符",
+      "moreNeeded": "还需要",
+      "tooShort": "请至少提供20字符，包括学校、GPA、实习等详细信息",
+      "meetsRequirement": "✓ 符合最低要求"
+    }
   },
   "progress": {
     "title": "正在生成您的报告...",

@@ -60,7 +60,13 @@
     },
     "placeholder": "자유롭게 작성하세요...",
     "cancel": "취소",
-    "submit": "결제 진행"
+    "submit": "결제 진행",
+    "validation": {
+      "characters": "자",
+      "moreNeeded": "더 필요",
+      "tooShort": "학교, GPA, 인턴십 등의 세부 정보를 포함하여 최소 20자를 제공하세요",
+      "meetsRequirement": "✓ 최소 요구 사항 충족"
+    }
   },
   "progress": {
     "title": "보고서 생성 중...",

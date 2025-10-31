@@ -60,7 +60,13 @@
     },
     "placeholder": "Escribe libremente con tus propias palabras...",
     "cancel": "Cancelar",
-    "submit": "Continuar al Pago"
+    "submit": "Continuar al Pago",
+    "validation": {
+      "characters": "caracteres",
+      "moreNeeded": "más necesarios",
+      "tooShort": "Por favor proporciona al menos 20 caracteres con detalles sobre tu escuela, GPA, pasantías, etc.",
+      "meetsRequirement": "✓ Cumple el requisito mínimo"
+    }
   },
   "progress": {
     "title": "Generando tu informe...",
