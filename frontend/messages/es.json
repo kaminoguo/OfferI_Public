@@ -4,124 +4,124 @@
     "email": "lyrica2333@gmail.com"
   },
   "welcome": {
-    "title": "Welcome to OfferI",
-    "subtitle": "AI-powered personalized study abroad consultant",
-    "startButton": "Start Consultation ($6)",
-    "flow": "Fill in your background → Pay $6 → Get your personalized report"
+    "title": "Bienvenido a OfferI",
+    "subtitle": "Consultor de estudios en el extranjero personalizado con IA",
+    "startButton": "Iniciar Consulta ($6)",
+    "flow": "Completa tu perfil → Paga $6 → Obtén tu informe personalizado"
   },
   "info": {
-    "title": "Important Information",
+    "title": "Información Importante",
     "autoQueue": {
-      "title": "Auto-queuing system:",
-      "description": "If the queue is full, your request will be automatically queued. You'll receive your PDF report once generation completes—no need to keep the page open."
+      "title": "Sistema de cola automática:",
+      "description": "Si la cola está llena, tu solicitud se agregará automáticamente. Recibirás tu informe PDF una vez que se complete la generación; no necesitas mantener la página abierta."
     },
     "retries": {
-      "title": "Unlimited free retries:",
-      "description": "If generation fails for any reason, you can retry for free without additional charges."
+      "title": "Reintentos gratuitos ilimitados:",
+      "description": "Si la generación falla por cualquier motivo, puedes reintentar gratis sin cargos adicionales."
     },
     "support": {
-      "title": "Need help?",
-      "description": "If you encounter any issues, please contact us with a screenshot at"
+      "title": "¿Necesitas ayuda?",
+      "description": "Si encuentras algún problema, por favor contáctanos con una captura de pantalla en"
     },
     "mvp": {
-      "title": "MVP Stage:",
-      "description": "This product is still in MVP stage, but we're already achieving good results. Your feedback helps us improve!"
+      "title": "Etapa MVP:",
+      "description": "Este producto aún está en etapa MVP, pero ya estamos logrando buenos resultados. ¡Tus comentarios nos ayudan a mejorar!"
     },
     "collaboration": {
-      "title": "Interested in collaboration?",
-      "description": "If you'd like to partner with us or provide support, please reach out at"
+      "title": "¿Interesado en colaborar?",
+      "description": "Si deseas asociarte con nosotros o brindar apoyo, por favor contáctanos en"
     }
   },
   "form": {
-    "title": "Tell us about your background",
-    "label": "Your background *",
+    "title": "Cuéntanos sobre tu perfil",
+    "label": "Tu perfil *",
     "description": {
-      "intro": "Please describe your background in detail. Include information such as:",
-      "academic": "Academic",
-      "academicDetails": "Current university/major, GPA, language test scores (TOEFL/IELTS/GRE)",
-      "experience": "Experience",
-      "experienceDetails": "Research projects, internships, competitions, awards, publications",
-      "entrepreneurship": "Entrepreneurship",
-      "entrepreneurshipDetails": "Startups founded, products launched, business ventures",
-      "goals": "Goals",
-      "goalsDetails": "Target country/region, career plans, development goals",
-      "other": "Other",
-      "otherDetails": "Anything else you think is relevant or worth highlighting"
+      "intro": "Por favor describe tu perfil en detalle. Incluye información como:",
+      "academic": "Académico",
+      "academicDetails": "Universidad/carrera actual, GPA, puntuaciones de exámenes de idiomas (TOEFL/IELTS/GRE)",
+      "experience": "Experiencia",
+      "experienceDetails": "Proyectos de investigación, pasantías, competencias, premios, publicaciones",
+      "entrepreneurship": "Emprendimiento",
+      "entrepreneurshipDetails": "Startups fundadas, productos lanzados, emprendimientos comerciales",
+      "goals": "Objetivos",
+      "goalsDetails": "País/región objetivo, planes de carrera, objetivos de desarrollo",
+      "other": "Otro",
+      "otherDetails": "Cualquier otra cosa que consideres relevante o digna de destacar"
     },
     "reminder": {
       "focus": {
-        "title": "For best results:",
-        "description": "Fill in only ONE target country/region at a time. This allows us to provide more focused and accurate recommendations."
+        "title": "Para obtener mejores resultados:",
+        "description": "Completa solo UN país/región objetivo a la vez. Esto nos permite proporcionar recomendaciones más enfocadas y precisas."
       },
       "quality": {
-        "title": "Quality matters:",
-        "description": "The quality of AI recommendations depends on the details you provide. If there's something special about your background that deserves attention, make sure to mention it!"
+        "title": "La calidad importa:",
+        "description": "La calidad de las recomendaciones de IA depende de los detalles que proporciones. ¡Si hay algo especial en tu perfil que merezca atención, asegúrate de mencionarlo!"
       }
     },
-    "placeholder": "Write freely in your own words...",
-    "cancel": "Cancel",
-    "submit": "Continue to Payment"
+    "placeholder": "Escribe libremente con tus propias palabras...",
+    "cancel": "Cancelar",
+    "submit": "Continuar al Pago"
   },
   "progress": {
-    "title": "Generating your report...",
-    "estimatedTime": "This may take 10-15 minutes"
+    "title": "Generando tu informe...",
+    "estimatedTime": "Esto puede tomar 10-15 minutos"
   },
   "result": {
-    "ready": "Your report is ready!",
-    "downloadPrompt": "Click the button below to download your personalized study abroad recommendation report",
-    "downloadButton": "Download PDF Report",
-    "newConsultation": "Start a new consultation"
+    "ready": "¡Tu informe está listo!",
+    "downloadPrompt": "Haz clic en el botón de abajo para descargar tu informe personalizado de recomendaciones de estudios en el extranjero",
+    "downloadButton": "Descargar Informe PDF",
+    "newConsultation": "Iniciar una nueva consulta"
   },
   "error": {
-    "title": "Something went wrong",
-    "pleaseSignIn": "Please sign in to use this service",
-    "generationFailed": "Report generation failed, please try again",
-    "paymentNotFound": "Payment not found or already used. Please make a new payment.",
-    "paymentVerificationFailed": "Payment verification failed. Please try again.",
-    "submissionFailed": "Submission failed, please try again later",
-    "downloadFailed": "Download failed, please try again",
-    "noPreviousSubmission": "No previous submission found",
-    "retryAvailable": "✓ You can retry for free (no additional charge)",
-    "retryButton": "Retry for Free",
-    "tryAgain": "Try Again"
+    "title": "Algo salió mal",
+    "pleaseSignIn": "Por favor inicia sesión para usar este servicio",
+    "generationFailed": "La generación del informe falló, por favor inténtalo de nuevo",
+    "paymentNotFound": "Pago no encontrado o ya utilizado. Por favor realiza un nuevo pago.",
+    "paymentVerificationFailed": "La verificación del pago falló. Por favor inténtalo de nuevo.",
+    "submissionFailed": "El envío falló, por favor inténtalo más tarde",
+    "downloadFailed": "La descarga falló, por favor inténtalo de nuevo",
+    "noPreviousSubmission": "No se encontró ningún envío anterior",
+    "retryAvailable": "Puedes reintentar gratis (sin cargo adicional)",
+    "retryButton": "Reintentar Gratis",
+    "tryAgain": "Intentar de Nuevo"
   },
   "sidebar": {
-    "history": "Consultation History",
-    "loading": "Loading...",
-    "signInPrompt": "Sign in to view your consultation history",
-    "noConsultations": "No consultations yet",
-    "pdfsAppear": "Your generated PDFs will appear here",
-    "consultation": "Consultation",
+    "history": "Historial de Consultas",
+    "loading": "Cargando...",
+    "signInPrompt": "Inicia sesión para ver tu historial de consultas",
+    "noConsultations": "Aún no hay consultas",
+    "pdfsAppear": "Tus PDFs generados aparecerán aquí",
+    "consultation": "Consulta",
     "pricing": "MCP API • Web $6",
-    "signOut": "Sign out",
-    "guestUser": "Guest User",
-    "signIn": "Sign in",
-    "signUp": "Sign up"
+    "signOut": "Cerrar sesión",
+    "guestUser": "Usuario Invitado",
+    "signIn": "Iniciar sesión",
+    "signUp": "Registrarse"
   },
   "settings": {
-    "title": "Settings",
-    "subtitle": "Manage your API keys and view usage statistics",
-    "loading": "Loading settings...",
-    "copiedToClipboard": "Copied to clipboard!",
-    "confirmRevoke": "Are you sure you want to revoke this API key?",
-    "keyCreated": "API Key Created!",
-    "saveKeyWarning": "Save this key now. You won't be able to see it again!",
-    "dismissKey": "I've saved it, dismiss",
-    "apiKeys": "API Keys",
-    "newKey": "New Key",
-    "keyName": "Key Name (optional)",
-    "keyNamePlaceholder": "e.g., Production API",
-    "creating": "Creating...",
-    "create": "Create",
-    "noKeys": "No API keys yet. Create one to get started!",
-    "superKey": "Super Key",
-    "revoked": "Revoked",
-    "created": "Created",
-    "lastUsed": "Last used",
-    "revokeKey": "Revoke key",
-    "contactLinks": "Contact & Links",
-    "contactMe": "Contact Me",
-    "githubRepo": "GitHub Repository",
-    "comingSoon": "Coming soon..."
+    "title": "Configuración",
+    "subtitle": "Administra tus claves API y visualiza estadísticas de uso",
+    "loading": "Cargando configuración...",
+    "copiedToClipboard": "¡Copiado al portapapeles!",
+    "confirmRevoke": "¿Estás seguro de que quieres revocar esta clave API?",
+    "keyCreated": "¡Clave API Creada!",
+    "saveKeyWarning": "Guarda esta clave ahora. ¡No podrás verla de nuevo!",
+    "dismissKey": "Ya la guardé, descartar",
+    "apiKeys": "Claves API",
+    "newKey": "Nueva Clave",
+    "keyName": "Nombre de la Clave (opcional)",
+    "keyNamePlaceholder": "ej., API de Producción",
+    "creating": "Creando...",
+    "create": "Crear",
+    "noKeys": "Aún no hay claves API. ¡Crea una para comenzar!",
+    "superKey": "Super Clave",
+    "revoked": "Revocada",
+    "created": "Creada",
+    "lastUsed": "Último uso",
+    "revokeKey": "Revocar clave",
+    "contactLinks": "Contacto y Enlaces",
+    "contactMe": "Contáctame",
+    "githubRepo": "Repositorio GitHub",
+    "comingSoon": "Próximamente..."
   }
 }

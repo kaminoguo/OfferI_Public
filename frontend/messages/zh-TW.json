@@ -4,124 +4,124 @@
     "email": "lyrica2333@gmail.com"
   },
   "welcome": {
-    "title": "Welcome to OfferI",
-    "subtitle": "AI-powered personalized study abroad consultant",
-    "startButton": "Start Consultation ($6)",
-    "flow": "Fill in your background → Pay $6 → Get your personalized report"
+    "title": "歡迎來到 OfferI",
+    "subtitle": "AI驅動的個人化留學顧問",
+    "startButton": "開始諮詢 ($6)",
+    "flow": "填寫背景 → 支付$6 → 獲取個人化報告"
   },
   "info": {
-    "title": "Important Information",
+    "title": "重要資訊",
     "autoQueue": {
-      "title": "Auto-queuing system:",
-      "description": "If the queue is full, your request will be automatically queued. You'll receive your PDF report once generation completes—no need to keep the page open."
+      "title": "自動排隊系統：",
+      "description": "如果隊列已滿，您的請求將自動排隊。生成完成後您將收到PDF報告 —— 無需保持頁面開啟。"
     },
     "retries": {
-      "title": "Unlimited free retries:",
-      "description": "If generation fails for any reason, you can retry for free without additional charges."
+      "title": "無限次免費重試：",
+      "description": "如果生成失敗，您可以免費重試，無需額外費用。"
     },
     "support": {
-      "title": "Need help?",
-      "description": "If you encounter any issues, please contact us with a screenshot at"
+      "title": "需要協助？",
+      "description": "如果遇到任何問題，請帶截圖聯絡我們："
     },
     "mvp": {
-      "title": "MVP Stage:",
-      "description": "This product is still in MVP stage, but we're already achieving good results. Your feedback helps us improve!"
+      "title": "MVP階段：",
+      "description": "本產品仍處於MVP階段，但已能取得良好效果。您的意見回饋將幫助我們改進！"
     },
     "collaboration": {
-      "title": "Interested in collaboration?",
-      "description": "If you'd like to partner with us or provide support, please reach out at"
+      "title": "有興趣合作？",
+      "description": "如果您想與我們合作或提供支援，請聯絡："
     }
   },
   "form": {
-    "title": "Tell us about your background",
-    "label": "Your background *",
+    "title": "告訴我們您的背景",
+    "label": "您的背景 *",
     "description": {
-      "intro": "Please describe your background in detail. Include information such as:",
-      "academic": "Academic",
-      "academicDetails": "Current university/major, GPA, language test scores (TOEFL/IELTS/GRE)",
-      "experience": "Experience",
-      "experienceDetails": "Research projects, internships, competitions, awards, publications",
-      "entrepreneurship": "Entrepreneurship",
-      "entrepreneurshipDetails": "Startups founded, products launched, business ventures",
-      "goals": "Goals",
-      "goalsDetails": "Target country/region, career plans, development goals",
-      "other": "Other",
-      "otherDetails": "Anything else you think is relevant or worth highlighting"
+      "intro": "請詳細描述您的背景。包括以下資訊：",
+      "academic": "學術背景",
+      "academicDetails": "目前大學/科系、GPA、語言考試成績（托福/雅思/GRE）",
+      "experience": "經歷",
+      "experienceDetails": "科研專案、實習、競賽、獲獎、論文發表",
+      "entrepreneurship": "創業",
+      "entrepreneurshipDetails": "創辦的新創公司、推出的產品、商業專案",
+      "goals": "目標",
+      "goalsDetails": "目標國家/地區、職業規劃、發展目標",
+      "other": "其他",
+      "otherDetails": "您認為相關或值得強調的其他內容"
     },
     "reminder": {
       "focus": {
-        "title": "For best results:",
-        "description": "Fill in only ONE target country/region at a time. This allows us to provide more focused and accurate recommendations."
+        "title": "為獲得最佳結果：",
+        "description": "一次只填寫一個目標國家/地區。這樣我們可以提供更專注和準確的推薦。"
       },
       "quality": {
-        "title": "Quality matters:",
-        "description": "The quality of AI recommendations depends on the details you provide. If there's something special about your background that deserves attention, make sure to mention it!"
+        "title": "品質很重要：",
+        "description": "AI推薦的品質取決於您提供的細節。如果您的背景中有值得特別注意的地方，請務必提及！"
       }
     },
-    "placeholder": "Write freely in your own words...",
-    "cancel": "Cancel",
-    "submit": "Continue to Payment"
+    "placeholder": "用您自己的話自由書寫...",
+    "cancel": "取消",
+    "submit": "繼續支付"
   },
   "progress": {
-    "title": "Generating your report...",
-    "estimatedTime": "This may take 10-15 minutes"
+    "title": "正在生成您的報告...",
+    "estimatedTime": "這可能需要10-15分鐘"
   },
   "result": {
-    "ready": "Your report is ready!",
-    "downloadPrompt": "Click the button below to download your personalized study abroad recommendation report",
-    "downloadButton": "Download PDF Report",
-    "newConsultation": "Start a new consultation"
+    "ready": "您的報告已準備好！",
+    "downloadPrompt": "點選下方按鈕下載您的個人化留學推薦報告",
+    "downloadButton": "下載PDF報告",
+    "newConsultation": "開始新的諮詢"
   },
   "error": {
-    "title": "Something went wrong",
-    "pleaseSignIn": "Please sign in to use this service",
-    "generationFailed": "Report generation failed, please try again",
-    "paymentNotFound": "Payment not found or already used. Please make a new payment.",
-    "paymentVerificationFailed": "Payment verification failed. Please try again.",
-    "submissionFailed": "Submission failed, please try again later",
-    "downloadFailed": "Download failed, please try again",
-    "noPreviousSubmission": "No previous submission found",
-    "retryAvailable": "✓ You can retry for free (no additional charge)",
-    "retryButton": "Retry for Free",
-    "tryAgain": "Try Again"
+    "title": "發生錯誤",
+    "pleaseSignIn": "請登入以使用此服務",
+    "generationFailed": "報告生成失敗，請重試",
+    "paymentNotFound": "未找到支付或已使用。請重新支付。",
+    "paymentVerificationFailed": "支付驗證失敗。請重試。",
+    "submissionFailed": "提交失敗，請稍後重試",
+    "downloadFailed": "下載失敗，請重試",
+    "noPreviousSubmission": "未找到之前的提交",
+    "retryAvailable": "您可以免費重試（無需額外費用）",
+    "retryButton": "免費重試",
+    "tryAgain": "重試"
   },
   "sidebar": {
-    "history": "Consultation History",
-    "loading": "Loading...",
-    "signInPrompt": "Sign in to view your consultation history",
-    "noConsultations": "No consultations yet",
-    "pdfsAppear": "Your generated PDFs will appear here",
-    "consultation": "Consultation",
-    "pricing": "MCP API • Web $6",
-    "signOut": "Sign out",
-    "guestUser": "Guest User",
-    "signIn": "Sign in",
-    "signUp": "Sign up"
+    "history": "諮詢歷史",
+    "loading": "載入中...",
+    "signInPrompt": "登入以查看您的諮詢歷史",
+    "noConsultations": "還沒有諮詢記錄",
+    "pdfsAppear": "您生成的PDF將顯示在這裡",
+    "consultation": "諮詢",
+    "pricing": "MCP API • 網頁 $6",
+    "signOut": "登出",
+    "guestUser": "訪客使用者",
+    "signIn": "登入",
+    "signUp": "註冊"
   },
   "settings": {
-    "title": "Settings",
-    "subtitle": "Manage your API keys and view usage statistics",
-    "loading": "Loading settings...",
-    "copiedToClipboard": "Copied to clipboard!",
-    "confirmRevoke": "Are you sure you want to revoke this API key?",
-    "keyCreated": "API Key Created!",
-    "saveKeyWarning": "Save this key now. You won't be able to see it again!",
-    "dismissKey": "I've saved it, dismiss",
-    "apiKeys": "API Keys",
-    "newKey": "New Key",
-    "keyName": "Key Name (optional)",
-    "keyNamePlaceholder": "e.g., Production API",
-    "creating": "Creating...",
-    "create": "Create",
-    "noKeys": "No API keys yet. Create one to get started!",
-    "superKey": "Super Key",
-    "revoked": "Revoked",
-    "created": "Created",
-    "lastUsed": "Last used",
-    "revokeKey": "Revoke key",
-    "contactLinks": "Contact & Links",
-    "contactMe": "Contact Me",
-    "githubRepo": "GitHub Repository",
-    "comingSoon": "Coming soon..."
+    "title": "設定",
+    "subtitle": "管理您的API金鑰和查看使用統計",
+    "loading": "載入設定中...",
+    "copiedToClipboard": "已複製到剪貼簿！",
+    "confirmRevoke": "確定要撤銷此API金鑰嗎？",
+    "keyCreated": "API金鑰已建立！",
+    "saveKeyWarning": "請立即儲存此金鑰。您之後將無法再次查看！",
+    "dismissKey": "我已儲存，關閉",
+    "apiKeys": "API金鑰",
+    "newKey": "新建金鑰",
+    "keyName": "金鑰名稱（選填）",
+    "keyNamePlaceholder": "例如：正式環境API",
+    "creating": "建立中...",
+    "create": "建立",
+    "noKeys": "還沒有API金鑰。建立一個開始使用！",
+    "superKey": "超級金鑰",
+    "revoked": "已撤銷",
+    "created": "建立於",
+    "lastUsed": "最後使用",
+    "revokeKey": "撤銷金鑰",
+    "contactLinks": "聯絡方式與連結",
+    "contactMe": "聯絡我",
+    "githubRepo": "GitHub儲存庫",
+    "comingSoon": "即將推出..."
   }
 }

@@ -6,7 +6,8 @@ from datetime import datetime
 
 import stripe
 from fastapi import APIRouter, HTTPException, Request, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Optional
 from sqlalchemy.orm import Session
 from loguru import logger
 
@@ -272,9 +273,19 @@ async def get_payment_history(user_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to get payment history: {str(e)}")
 
 
+class RetryRequest(BaseModel):
+    """Request body for manual retry with optional background update"""
+    new_background: Optional[str] = Field(
+        None,
+        min_length=20,
+        description="Updated background information (optional, minimum 20 characters)"
+    )
+
+
 @router.post("/retry/{job_id}")
 async def manual_retry_report(
     job_id: str,
+    request: Optional[RetryRequest] = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -283,10 +294,11 @@ async def manual_retry_report(
     This endpoint:
     1. Checks if the job failed (status = failed or retry_scheduled)
     2. Allows free retry if payment status is PENDING_RETRY
-    3. Re-enqueues the job for processing
-    4. Returns apologetic message
+    3. Optionally allows user to UPDATE their background input
+    4. Re-enqueues the job for processing
+    5. Returns apologetic message
 
-    Users can retry failed reports without paying again.
+    Users can retry failed reports without paying again and can provide better input.
     """
     try:
         from workers.queue import RedisQueue
@@ -321,6 +333,25 @@ async def manual_retry_report(
                     detail=f"该支付无法重试（当前状态: {payment.status}）"
                 )
 
+        # Handle background update if provided
+        background_updated = False
+        if request and request.new_background:
+            new_bg = request.new_background.strip()
+
+            # Validate new background (additional quality checks)
+            if len(new_bg) < 20:
+                raise HTTPException(
+                    status_code=400,
+                    detail="新的背景信息至少需要20字符。请提供学校、GPA、实习等详细信息"
+                )
+
+            # Update user_background in Redis
+            import json
+            updated_data = json.dumps({"background": new_bg}, ensure_ascii=False)
+            queue.client.hset(f"job:{job_id}", "user_background", updated_data)
+            background_updated = True
+            logger.info(f"Updated background for job {job_id} ({len(new_bg)} chars)")
+
         # Reset retry count for manual retry
         queue.client.hset(f"job:{job_id}", "retry_count", "0")
 
@@ -335,12 +366,17 @@ async def manual_retry_report(
         # Re-enqueue job
         queue.client.lpush("job_queue", job_id)
 
-        logger.info(f"Manual retry triggered for job {job_id} by user")
+        logger.info(f"Manual retry triggered for job {job_id} by user (background_updated={background_updated})")
+
+        message = "非常抱歉给您带来不便！我们已为您重新启动报告生成，本次重试完全免费。"
+        if background_updated:
+            message += " 您已更新了背景信息，报告质量应该会更好。"
 
         return {
             "status": "success",
             "job_id": job_id,
-            "message": "非常抱歉给您带来不便！我们已为您重新启动报告生成，本次重试完全免费。",
+            "background_updated": background_updated,
+            "message": message,
             "apology": {
                 "zh": "我们对之前的失败表示诚挚的歉意。您的报告正在重新生成，预计10-15分钟完成。",
                 "en": "We sincerely apologize for the previous failure. Your report is being regenerated and should be ready in 10-15 minutes."

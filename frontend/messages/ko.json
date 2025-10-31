@@ -4,124 +4,124 @@
     "email": "lyrica2333@gmail.com"
   },
   "welcome": {
-    "title": "Welcome to OfferI",
-    "subtitle": "AI-powered personalized study abroad consultant",
-    "startButton": "Start Consultation ($6)",
-    "flow": "Fill in your background → Pay $6 → Get your personalized report"
+    "title": "OfferI에 오신 것을 환영합니다",
+    "subtitle": "AI 기반 맞춤형 유학 컨설턴트",
+    "startButton": "상담 시작 ($6)",
+    "flow": "배경 작성 → $6 결제 → 맞춤형 보고서 받기"
   },
   "info": {
-    "title": "Important Information",
+    "title": "중요 정보",
     "autoQueue": {
-      "title": "Auto-queuing system:",
-      "description": "If the queue is full, your request will be automatically queued. You'll receive your PDF report once generation completes—no need to keep the page open."
+      "title": "자동 대기열 시스템:",
+      "description": "대기열이 가득 차면 요청이 자동으로 대기열에 추가됩니다. 생성이 완료되면 PDF 보고서를 받게 됩니다. 페이지를 열어둘 필요가 없습니다."
     },
     "retries": {
-      "title": "Unlimited free retries:",
-      "description": "If generation fails for any reason, you can retry for free without additional charges."
+      "title": "무제한 무료 재시도:",
+      "description": "생성에 실패한 경우 추가 요금 없이 무료로 재시도할 수 있습니다."
     },
     "support": {
-      "title": "Need help?",
-      "description": "If you encounter any issues, please contact us with a screenshot at"
+      "title": "도움이 필요하신가요?",
+      "description": "문제가 발생하면 스크린샷과 함께 문의해 주세요:"
     },
     "mvp": {
-      "title": "MVP Stage:",
-      "description": "This product is still in MVP stage, but we're already achieving good results. Your feedback helps us improve!"
+      "title": "MVP 단계:",
+      "description": "이 제품은 아직 MVP 단계이지만 이미 좋은 결과를 달성하고 있습니다. 여러분의 피드백이 개선에 도움이 됩니다!"
     },
     "collaboration": {
-      "title": "Interested in collaboration?",
-      "description": "If you'd like to partner with us or provide support, please reach out at"
+      "title": "협업에 관심이 있으신가요?",
+      "description": "파트너십을 맺거나 지원을 제공하고 싶으시다면 문의해 주세요:"
     }
   },
   "form": {
-    "title": "Tell us about your background",
-    "label": "Your background *",
+    "title": "귀하의 배경을 알려주세요",
+    "label": "귀하의 배경 *",
     "description": {
-      "intro": "Please describe your background in detail. Include information such as:",
-      "academic": "Academic",
-      "academicDetails": "Current university/major, GPA, language test scores (TOEFL/IELTS/GRE)",
-      "experience": "Experience",
-      "experienceDetails": "Research projects, internships, competitions, awards, publications",
-      "entrepreneurship": "Entrepreneurship",
-      "entrepreneurshipDetails": "Startups founded, products launched, business ventures",
-      "goals": "Goals",
-      "goalsDetails": "Target country/region, career plans, development goals",
-      "other": "Other",
-      "otherDetails": "Anything else you think is relevant or worth highlighting"
+      "intro": "배경을 자세히 설명해 주세요. 다음 정보를 포함하세요:",
+      "academic": "학업",
+      "academicDetails": "현재 대학/전공, GPA, 어학 시험 점수(TOEFL/IELTS/GRE)",
+      "experience": "경험",
+      "experienceDetails": "연구 프로젝트, 인턴십, 대회, 수상 경력, 논문 발표",
+      "entrepreneurship": "창업",
+      "entrepreneurshipDetails": "설립한 스타트업, 출시한 제품, 사업 벤처",
+      "goals": "목표",
+      "goalsDetails": "목표 국가/지역, 진로 계획, 개발 목표",
+      "other": "기타",
+      "otherDetails": "관련이 있거나 강조할 가치가 있다고 생각하는 기타 내용"
     },
     "reminder": {
       "focus": {
-        "title": "For best results:",
-        "description": "Fill in only ONE target country/region at a time. This allows us to provide more focused and accurate recommendations."
+        "title": "최상의 결과를 얻으려면:",
+        "description": "한 번에 하나의 목표 국가/지역만 작성하세요. 이를 통해 더 집중적이고 정확한 추천을 제공할 수 있습니다."
       },
       "quality": {
-        "title": "Quality matters:",
-        "description": "The quality of AI recommendations depends on the details you provide. If there's something special about your background that deserves attention, make sure to mention it!"
+        "title": "품질이 중요합니다:",
+        "description": "AI 추천의 품질은 제공하는 세부 정보에 따라 달라집니다. 배경에 특별히 주목해야 할 사항이 있다면 반드시 언급하세요!"
       }
     },
-    "placeholder": "Write freely in your own words...",
-    "cancel": "Cancel",
-    "submit": "Continue to Payment"
+    "placeholder": "자유롭게 작성하세요...",
+    "cancel": "취소",
+    "submit": "결제 진행"
   },
   "progress": {
-    "title": "Generating your report...",
-    "estimatedTime": "This may take 10-15 minutes"
+    "title": "보고서 생성 중...",
+    "estimatedTime": "10-15분 정도 소요될 수 있습니다"
   },
   "result": {
-    "ready": "Your report is ready!",
-    "downloadPrompt": "Click the button below to download your personalized study abroad recommendation report",
-    "downloadButton": "Download PDF Report",
-    "newConsultation": "Start a new consultation"
+    "ready": "보고서가 준비되었습니다!",
+    "downloadPrompt": "아래 버튼을 클릭하여 맞춤형 유학 추천 보고서를 다운로드하세요",
+    "downloadButton": "PDF 보고서 다운로드",
+    "newConsultation": "새 상담 시작"
   },
   "error": {
-    "title": "Something went wrong",
-    "pleaseSignIn": "Please sign in to use this service",
-    "generationFailed": "Report generation failed, please try again",
-    "paymentNotFound": "Payment not found or already used. Please make a new payment.",
-    "paymentVerificationFailed": "Payment verification failed. Please try again.",
-    "submissionFailed": "Submission failed, please try again later",
-    "downloadFailed": "Download failed, please try again",
-    "noPreviousSubmission": "No previous submission found",
-    "retryAvailable": "✓ You can retry for free (no additional charge)",
-    "retryButton": "Retry for Free",
-    "tryAgain": "Try Again"
+    "title": "문제가 발생했습니다",
+    "pleaseSignIn": "이 서비스를 사용하려면 로그인하세요",
+    "generationFailed": "보고서 생성에 실패했습니다. 다시 시도하세요",
+    "paymentNotFound": "결제를 찾을 수 없거나 이미 사용되었습니다. 새로 결제하세요.",
+    "paymentVerificationFailed": "결제 확인에 실패했습니다. 다시 시도하세요.",
+    "submissionFailed": "제출에 실패했습니다. 나중에 다시 시도하세요",
+    "downloadFailed": "다운로드에 실패했습니다. 다시 시도하세요",
+    "noPreviousSubmission": "이전 제출을 찾을 수 없습니다",
+    "retryAvailable": "무료로 재시도할 수 있습니다(추가 요금 없음)",
+    "retryButton": "무료로 재시도",
+    "tryAgain": "다시 시도"
   },
   "sidebar": {
-    "history": "Consultation History",
-    "loading": "Loading...",
-    "signInPrompt": "Sign in to view your consultation history",
-    "noConsultations": "No consultations yet",
-    "pdfsAppear": "Your generated PDFs will appear here",
-    "consultation": "Consultation",
-    "pricing": "MCP API • Web $6",
-    "signOut": "Sign out",
-    "guestUser": "Guest User",
-    "signIn": "Sign in",
-    "signUp": "Sign up"
+    "history": "상담 기록",
+    "loading": "로딩 중...",
+    "signInPrompt": "상담 기록을 보려면 로그인하세요",
+    "noConsultations": "아직 상담이 없습니다",
+    "pdfsAppear": "생성된 PDF가 여기에 표시됩니다",
+    "consultation": "상담",
+    "pricing": "MCP API • 웹 $6",
+    "signOut": "로그아웃",
+    "guestUser": "게스트 사용자",
+    "signIn": "로그인",
+    "signUp": "회원가입"
   },
   "settings": {
-    "title": "Settings",
-    "subtitle": "Manage your API keys and view usage statistics",
-    "loading": "Loading settings...",
-    "copiedToClipboard": "Copied to clipboard!",
-    "confirmRevoke": "Are you sure you want to revoke this API key?",
-    "keyCreated": "API Key Created!",
-    "saveKeyWarning": "Save this key now. You won't be able to see it again!",
-    "dismissKey": "I've saved it, dismiss",
-    "apiKeys": "API Keys",
-    "newKey": "New Key",
-    "keyName": "Key Name (optional)",
-    "keyNamePlaceholder": "e.g., Production API",
-    "creating": "Creating...",
-    "create": "Create",
-    "noKeys": "No API keys yet. Create one to get started!",
-    "superKey": "Super Key",
-    "revoked": "Revoked",
-    "created": "Created",
-    "lastUsed": "Last used",
-    "revokeKey": "Revoke key",
-    "contactLinks": "Contact & Links",
-    "contactMe": "Contact Me",
-    "githubRepo": "GitHub Repository",
-    "comingSoon": "Coming soon..."
+    "title": "설정",
+    "subtitle": "API 키를 관리하고 사용 통계 보기",
+    "loading": "설정 로딩 중...",
+    "copiedToClipboard": "클립보드에 복사되었습니다!",
+    "confirmRevoke": "이 API 키를 취소하시겠습니까?",
+    "keyCreated": "API 키가 생성되었습니다!",
+    "saveKeyWarning": "지금 이 키를 저장하세요. 나중에 다시 볼 수 없습니다!",
+    "dismissKey": "저장했습니다, 닫기",
+    "apiKeys": "API 키",
+    "newKey": "새 키",
+    "keyName": "키 이름(선택사항)",
+    "keyNamePlaceholder": "예: 프로덕션 API",
+    "creating": "생성 중...",
+    "create": "생성",
+    "noKeys": "아직 API 키가 없습니다. 하나 생성하여 시작하세요!",
+    "superKey": "슈퍼 키",
+    "revoked": "취소됨",
+    "created": "생성일",
+    "lastUsed": "마지막 사용",
+    "revokeKey": "키 취소",
+    "contactLinks": "연락처 및 링크",
+    "contactMe": "문의하기",
+    "githubRepo": "GitHub 저장소",
+    "comingSoon": "곧 출시..."
   }
 }

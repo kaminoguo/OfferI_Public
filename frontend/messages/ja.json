@@ -4,124 +4,124 @@
     "email": "lyrica2333@gmail.com"
   },
   "welcome": {
-    "title": "Welcome to OfferI",
-    "subtitle": "AI-powered personalized study abroad consultant",
-    "startButton": "Start Consultation ($6)",
-    "flow": "Fill in your background → Pay $6 → Get your personalized report"
+    "title": "OfferIへようこそ",
+    "subtitle": "AI搭載のパーソナライズ留学コンサルタント",
+    "startButton": "相談を開始 ($6)",
+    "flow": "経歴を記入 → $6支払い → パーソナライズレポートを取得"
   },
   "info": {
-    "title": "Important Information",
+    "title": "重要な情報",
     "autoQueue": {
-      "title": "Auto-queuing system:",
-      "description": "If the queue is full, your request will be automatically queued. You'll receive your PDF report once generation completes—no need to keep the page open."
+      "title": "自動キューイングシステム：",
+      "description": "キューが満杯の場合、リクエストは自動的にキューに入れられます。生成が完了すると、PDFレポートが届きます。ページを開いたままにする必要はありません。"
     },
     "retries": {
-      "title": "Unlimited free retries:",
-      "description": "If generation fails for any reason, you can retry for free without additional charges."
+      "title": "無制限の無料再試行：",
+      "description": "生成が失敗した場合、追加料金なしで無料で再試行できます。"
     },
     "support": {
-      "title": "Need help?",
-      "description": "If you encounter any issues, please contact us with a screenshot at"
+      "title": "サポートが必要ですか？",
+      "description": "問題が発生した場合は、スクリーンショット付きでお問い合わせください："
     },
     "mvp": {
-      "title": "MVP Stage:",
-      "description": "This product is still in MVP stage, but we're already achieving good results. Your feedback helps us improve!"
+      "title": "MVPステージ：",
+      "description": "本製品はまだMVPステージですが、すでに良好な結果を達成しています。あなたのフィードバックが改善に役立ちます！"
     },
     "collaboration": {
-      "title": "Interested in collaboration?",
-      "description": "If you'd like to partner with us or provide support, please reach out at"
+      "title": "コラボレーションに興味がありますか？",
+      "description": "パートナーシップやサポートをご希望の方は、お問い合わせください："
     }
   },
   "form": {
-    "title": "Tell us about your background",
-    "label": "Your background *",
+    "title": "あなたの経歴を教えてください",
+    "label": "あなたの経歴 *",
     "description": {
-      "intro": "Please describe your background in detail. Include information such as:",
-      "academic": "Academic",
-      "academicDetails": "Current university/major, GPA, language test scores (TOEFL/IELTS/GRE)",
-      "experience": "Experience",
-      "experienceDetails": "Research projects, internships, competitions, awards, publications",
-      "entrepreneurship": "Entrepreneurship",
-      "entrepreneurshipDetails": "Startups founded, products launched, business ventures",
-      "goals": "Goals",
-      "goalsDetails": "Target country/region, career plans, development goals",
-      "other": "Other",
-      "otherDetails": "Anything else you think is relevant or worth highlighting"
+      "intro": "経歴を詳しく記載してください。次の情報を含めてください：",
+      "academic": "学歴",
+      "academicDetails": "現在の大学/専攻、GPA、語学試験スコア（TOEFL/IELTS/GRE）",
+      "experience": "経験",
+      "experienceDetails": "研究プロジェクト、インターンシップ、コンテスト、受賞歴、論文発表",
+      "entrepreneurship": "起業",
+      "entrepreneurshipDetails": "設立したスタートアップ、リリースした製品、ビジネスベンチャー",
+      "goals": "目標",
+      "goalsDetails": "目標国/地域、キャリアプラン、開発目標",
+      "other": "その他",
+      "otherDetails": "関連性があると思われる、または強調する価値があると思われるその他の内容"
     },
     "reminder": {
       "focus": {
-        "title": "For best results:",
-        "description": "Fill in only ONE target country/region at a time. This allows us to provide more focused and accurate recommendations."
+        "title": "最良の結果を得るために：",
+        "description": "一度に1つの目標国/地域のみを記入してください。これにより、より焦点を絞った正確な推奨を提供できます。"
       },
       "quality": {
-        "title": "Quality matters:",
-        "description": "The quality of AI recommendations depends on the details you provide. If there's something special about your background that deserves attention, make sure to mention it!"
+        "title": "品質が重要：",
+        "description": "AIの推奨品質は、提供する詳細によって異なります。経歴に特に注意を払うべき点がある場合は、必ず言及してください！"
       }
     },
-    "placeholder": "Write freely in your own words...",
-    "cancel": "Cancel",
-    "submit": "Continue to Payment"
+    "placeholder": "自由に書いてください...",
+    "cancel": "キャンセル",
+    "submit": "支払いに進む"
   },
   "progress": {
-    "title": "Generating your report...",
-    "estimatedTime": "This may take 10-15 minutes"
+    "title": "レポートを生成中...",
+    "estimatedTime": "これには10〜15分かかる場合があります"
   },
   "result": {
-    "ready": "Your report is ready!",
-    "downloadPrompt": "Click the button below to download your personalized study abroad recommendation report",
-    "downloadButton": "Download PDF Report",
-    "newConsultation": "Start a new consultation"
+    "ready": "レポートの準備ができました！",
+    "downloadPrompt": "下のボタンをクリックして、パーソナライズ留学推奨レポートをダウンロードしてください",
+    "downloadButton": "PDFレポートをダウンロード",
+    "newConsultation": "新しい相談を開始"
   },
   "error": {
-    "title": "Something went wrong",
-    "pleaseSignIn": "Please sign in to use this service",
-    "generationFailed": "Report generation failed, please try again",
-    "paymentNotFound": "Payment not found or already used. Please make a new payment.",
-    "paymentVerificationFailed": "Payment verification failed. Please try again.",
-    "submissionFailed": "Submission failed, please try again later",
-    "downloadFailed": "Download failed, please try again",
-    "noPreviousSubmission": "No previous submission found",
-    "retryAvailable": "✓ You can retry for free (no additional charge)",
-    "retryButton": "Retry for Free",
-    "tryAgain": "Try Again"
+    "title": "問題が発生しました",
+    "pleaseSignIn": "このサービスを使用するにはサインインしてください",
+    "generationFailed": "レポートの生成に失敗しました。もう一度お試しください",
+    "paymentNotFound": "支払いが見つからないか、既に使用されています。新しい支払いを行ってください。",
+    "paymentVerificationFailed": "支払いの確認に失敗しました。もう一度お試しください。",
+    "submissionFailed": "送信に失敗しました。後でもう一度お試しください",
+    "downloadFailed": "ダウンロードに失敗しました。もう一度お試しください",
+    "noPreviousSubmission": "以前の送信が見つかりません",
+    "retryAvailable": "無料で再試行できます（追加料金なし）",
+    "retryButton": "無料で再試行",
+    "tryAgain": "もう一度試す"
   },
   "sidebar": {
-    "history": "Consultation History",
-    "loading": "Loading...",
-    "signInPrompt": "Sign in to view your consultation history",
-    "noConsultations": "No consultations yet",
-    "pdfsAppear": "Your generated PDFs will appear here",
-    "consultation": "Consultation",
+    "history": "相談履歴",
+    "loading": "読み込み中...",
+    "signInPrompt": "相談履歴を表示するにはサインインしてください",
+    "noConsultations": "まだ相談がありません",
+    "pdfsAppear": "生成されたPDFはここに表示されます",
+    "consultation": "相談",
     "pricing": "MCP API • Web $6",
-    "signOut": "Sign out",
-    "guestUser": "Guest User",
-    "signIn": "Sign in",
-    "signUp": "Sign up"
+    "signOut": "サインアウト",
+    "guestUser": "ゲストユーザー",
+    "signIn": "サインイン",
+    "signUp": "サインアップ"
   },
   "settings": {
-    "title": "Settings",
-    "subtitle": "Manage your API keys and view usage statistics",
-    "loading": "Loading settings...",
-    "copiedToClipboard": "Copied to clipboard!",
-    "confirmRevoke": "Are you sure you want to revoke this API key?",
-    "keyCreated": "API Key Created!",
-    "saveKeyWarning": "Save this key now. You won't be able to see it again!",
-    "dismissKey": "I've saved it, dismiss",
-    "apiKeys": "API Keys",
-    "newKey": "New Key",
-    "keyName": "Key Name (optional)",
-    "keyNamePlaceholder": "e.g., Production API",
-    "creating": "Creating...",
-    "create": "Create",
-    "noKeys": "No API keys yet. Create one to get started!",
-    "superKey": "Super Key",
-    "revoked": "Revoked",
-    "created": "Created",
-    "lastUsed": "Last used",
-    "revokeKey": "Revoke key",
-    "contactLinks": "Contact & Links",
-    "contactMe": "Contact Me",
-    "githubRepo": "GitHub Repository",
-    "comingSoon": "Coming soon..."
+    "title": "設定",
+    "subtitle": "APIキーを管理し、使用統計を表示",
+    "loading": "設定を読み込み中...",
+    "copiedToClipboard": "クリップボードにコピーしました！",
+    "confirmRevoke": "このAPIキーを取り消してもよろしいですか？",
+    "keyCreated": "APIキーが作成されました！",
+    "saveKeyWarning": "今すぐこのキーを保存してください。後で再度表示することはできません！",
+    "dismissKey": "保存しました、閉じる",
+    "apiKeys": "APIキー",
+    "newKey": "新しいキー",
+    "keyName": "キー名（オプション）",
+    "keyNamePlaceholder": "例：本番環境API",
+    "creating": "作成中...",
+    "create": "作成",
+    "noKeys": "まだAPIキーがありません。作成して始めましょう！",
+    "superKey": "スーパーキー",
+    "revoked": "取り消し済み",
+    "created": "作成日",
+    "lastUsed": "最終使用日",
+    "revokeKey": "キーを取り消す",
+    "contactLinks": "連絡先とリンク",
+    "contactMe": "お問い合わせ",
+    "githubRepo": "GitHubリポジトリ",
+    "comingSoon": "近日公開..."
   }
 }

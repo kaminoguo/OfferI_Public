@@ -16,8 +16,19 @@ export default function FormModal({ isOpen, onClose, onSubmit }: FormModalProps)
 
   if (!isOpen) return null;
 
+  // Validation constants
+  const MIN_LENGTH = 20;
+  const charCount = background.trim().length;
+  const isValid = charCount >= MIN_LENGTH;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Double-check validation before submit
+    if (!isValid) {
+      return;
+    }
+
     onSubmit({ background });
     setBackground(''); // Clear after submit
   };
@@ -86,6 +97,28 @@ export default function FormModal({ isOpen, onClose, onSubmit }: FormModalProps)
               placeholder={t('form.placeholder')}
               required
             />
+
+            {/* Character Count & Validation Message */}
+            <div className="mt-2 flex items-center justify-between text-sm">
+              <div className={`font-medium ${isValid ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {charCount} / {MIN_LENGTH} characters
+                {!isValid && charCount > 0 && (
+                  <span className="ml-2 text-xs">
+                    ({MIN_LENGTH - charCount} more needed)
+                  </span>
+                )}
+              </div>
+              {!isValid && charCount > 0 && (
+                <span className="text-xs text-red-600 dark:text-red-400">
+                  Please provide at least {MIN_LENGTH} characters including school, GPA, internships, etc.
+                </span>
+              )}
+              {isValid && (
+                <span className="text-xs text-green-600 dark:text-green-400">
+                  ✓ Meets minimum requirement
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Buttons */}
@@ -99,7 +132,7 @@ export default function FormModal({ isOpen, onClose, onSubmit }: FormModalProps)
             </button>
             <button
               type="submit"
-              disabled={!background.trim()}
+              disabled={!isValid}
               className="flex-1 px-6 py-3 bg-primary text-white rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('form.submit')}

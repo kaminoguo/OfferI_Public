@@ -22,7 +22,8 @@ class UserBackground(BaseModel):
     """
     background: str = Field(
         ...,
-        description="Complete user background as free-form text (中英文均可)"
+        min_length=20,
+        description="Complete user background as free-form text (minimum 20 characters, 中英文均可)"
     )
     user_id: Optional[str] = Field(
         None,
