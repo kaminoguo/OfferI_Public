@@ -6,7 +6,9 @@
 
 *Personalized master's program recommendations using Claude Code and MCP*
 
-[🌐 Website](https://offeri.org) · [📺 Bilibili](#) · [🎬 YouTube](#) · [Issues](https://github.com/kaminoguo/OfferI_Public/issues)
+[![Website](https://img.shields.io/badge/Website-offeri.org-4A90E2?style=flat-square&logo=google-chrome&logoColor=white)](https://offeri.org)
+[![Bilibili](https://img.shields.io/badge/Bilibili-视频演示-00A1D6?style=flat-square&logo=bilibili&logoColor=white)](#)
+[![YouTube](https://img.shields.io/badge/YouTube-Demo-FF0000?style=flat-square&logo=youtube&logoColor=white)](#)
 
 </div>
 
@@ -87,10 +89,11 @@ Using vendor-official tools means we benefit from their improvements without add
 - Worker Pool (concurrent processing)
 
 **AI/LLM**
-- Claude Code CLI (Headless mode)
-- Claude Pro OAuth authentication
-- MCP (Model Context Protocol)
-- Single-stage pipeline (Claude Sonnet 4.5)
+- **MCP Server**: Direct SQL query access (zero hallucination)
+- **LLM Provider**: Claude Sonnet 4.5 (Anthropic)
+- **Orchestration**: Headless CLI automation (multi-vendor support)
+- **Authentication**: OAuth 2.0 + API key management
+- **Pipeline**: Single-stage consultation workflow (10-15 min generation)
 
 **Infrastructure**
 - Docker + Docker Compose
