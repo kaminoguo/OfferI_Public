@@ -34,38 +34,94 @@
   },
   "form": {
     "title": "Parlez-nous de votre parcours",
-    "label": "Votre parcours *",
-    "description": {
-      "intro": "Veuillez décrire votre parcours en détail. Incluez des informations telles que:",
-      "academic": "Académique",
-      "academicDetails": "Université/spécialité actuelle, GPA, scores aux tests de langue (TOEFL/IELTS/GRE)",
-      "experience": "Expérience",
-      "experienceDetails": "Projets de recherche, stages, compétitions, récompenses, publications",
-      "entrepreneurship": "Entrepreneuriat",
-      "entrepreneurshipDetails": "Startups fondées, produits lancés, entreprises commerciales",
-      "goals": "Objectifs",
-      "goalsDetails": "Pays/région cible, plans de carrière, objectifs de développement",
-      "other": "Autre",
-      "otherDetails": "Tout ce que vous considérez comme pertinent ou digne d'être souligné"
+    "sections": {
+      "basic": "Informations Académiques de Base",
+      "target": "Objectifs d'Application",
+      "experience": "Parcours et Expérience",
+      "additional": "Informations Supplémentaires"
     },
-    "reminder": {
-      "focus": {
-        "title": "Pour de meilleurs résultats:",
-        "description": "Remplissez UN SEUL pays/région cible à la fois. Cela nous permet de fournir des recommandations plus ciblées et précises."
+    "countryGroups": {
+      "popularcountries": "Pays Populaires",
+      "othercountries": "Autres Pays"
+    },
+    "fields": {
+      "school": {
+        "label": "Université Actuelle",
+        "placeholder": "ex., Sorbonne Université, Stanford University"
       },
-      "quality": {
-        "title": "La qualité compte:",
-        "description": "La qualité des recommandations de l'IA dépend des détails que vous fournissez. S'il y a quelque chose de spécial dans votre parcours qui mérite attention, assurez-vous de le mentionner!"
+      "schoolTier": {
+        "label": "Classement Universitaire",
+        "placeholder": "ex., Grande École, US Top 30, UK G5, Russell Group, QS Top 100"
+      },
+      "major": {
+        "label": "Spécialité",
+        "placeholder": "ex., Informatique, Administration des Affaires"
+      },
+      "gpa": {
+        "label": "GPA (échelle 4.0)",
+        "placeholder": "ex., 3.50"
+      },
+      "targetCountry": {
+        "label": "Pays/Région Cible",
+        "placeholder": "Sélectionnez le pays cible"
+      },
+      "regionPreference": {
+        "label": "Préférence Régionale (Optionnel)",
+        "placeholder": "ex., uniquement San Francisco Bay Area, New York, Londres"
+      },
+      "internships": {
+        "label": "Expérience de Stage (Optionnel)",
+        "placeholder": "ex., Stage PM chez Google 6 mois, Microsoft SWE été 2024..."
+      },
+      "research": {
+        "label": "Expérience de Recherche (Optionnel)",
+        "placeholder": "Incluez projets de recherche, publications, articles..."
+      },
+      "projects": {
+        "label": "Expérience de Projet (Optionnel)",
+        "placeholder": "ex., 4 projets GitHub avec 100+ étoiles chacun..."
+      },
+      "competitions": {
+        "label": "Compétitions et Récompenses (Optionnel)",
+        "placeholder": "ex., Médaille d'Or ACM ICPC, 1ère place Hackathon..."
+      },
+      "careerGoals": {
+        "label": "Objectifs de Carrière (Optionnel)",
+        "placeholder": "ex., Devenir Product Manager, transition vers Tech PM, créer ma propre entreprise..."
+      },
+      "languageScores": {
+        "label": "Scores aux Tests de Langue (Optionnel)",
+        "placeholder": "ex., TOEFL 110, IELTS 7.5, GRE 330"
+      },
+      "gpaRank": {
+        "label": "Classement GPA (Optionnel)",
+        "placeholder": "ex., Top 5%, Top 10%"
+      },
+      "recommendations": {
+        "label": "Lettres de Recommandation (Optionnel)",
+        "placeholder": "ex., Professeur de Stanford, Manager de Google..."
+      },
+      "other1": {
+        "label": "Autres Informations 1 (Optionnel)",
+        "placeholder": "ex., Expérience professionnelle à temps plein, entrepreneuriat..."
+      },
+      "other2": {
+        "label": "Autres Informations 2 (Optionnel)",
+        "placeholder": "Autres réalisations ou expériences..."
+      },
+      "other3": {
+        "label": "Autres Informations 3 (Optionnel)",
+        "placeholder": "Détails supplémentaires..."
       }
     },
-    "placeholder": "Écrivez librement avec vos propres mots...",
+    "required": "Requis",
+    "optional": "Optionnel",
     "cancel": "Annuler",
     "submit": "Continuer vers le Paiement",
     "validation": {
-      "characters": "caractères",
-      "moreNeeded": "de plus nécessaires",
-      "tooShort": "Veuillez fournir au moins 20 caractères avec des détails sur votre école, GPA, stages, etc.",
-      "meetsRequirement": "✓ Répond à l'exigence minimale"
+      "gpaRange": "Le GPA doit être entre 0.00 et 4.00",
+      "fillRequired": "Veuillez remplir tous les champs requis",
+      "selectCountry": "Veuillez sélectionner un pays cible"
     }
   },
   "progress": {

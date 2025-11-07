@@ -34,38 +34,94 @@
   },
   "form": {
     "title": "Cuéntanos sobre tu perfil",
-    "label": "Tu perfil *",
-    "description": {
-      "intro": "Por favor describe tu perfil en detalle. Incluye información como:",
-      "academic": "Académico",
-      "academicDetails": "Universidad/carrera actual, GPA, puntuaciones de exámenes de idiomas (TOEFL/IELTS/GRE)",
-      "experience": "Experiencia",
-      "experienceDetails": "Proyectos de investigación, pasantías, competencias, premios, publicaciones",
-      "entrepreneurship": "Emprendimiento",
-      "entrepreneurshipDetails": "Startups fundadas, productos lanzados, emprendimientos comerciales",
-      "goals": "Objetivos",
-      "goalsDetails": "País/región objetivo, planes de carrera, objetivos de desarrollo",
-      "other": "Otro",
-      "otherDetails": "Cualquier otra cosa que consideres relevante o digna de destacar"
+    "sections": {
+      "basic": "Información Académica Básica",
+      "target": "Objetivos de Aplicación",
+      "experience": "Antecedentes y Experiencia",
+      "additional": "Información Adicional"
     },
-    "reminder": {
-      "focus": {
-        "title": "Para obtener mejores resultados:",
-        "description": "Completa solo UN país/región objetivo a la vez. Esto nos permite proporcionar recomendaciones más enfocadas y precisas."
+    "countryGroups": {
+      "popularcountries": "Países Populares",
+      "othercountries": "Otros Países"
+    },
+    "fields": {
+      "school": {
+        "label": "Universidad Actual",
+        "placeholder": "ej., Universidad de Barcelona, Stanford University"
       },
-      "quality": {
-        "title": "La calidad importa:",
-        "description": "La calidad de las recomendaciones de IA depende de los detalles que proporciones. ¡Si hay algo especial en tu perfil que merezca atención, asegúrate de mencionarlo!"
+      "schoolTier": {
+        "label": "Ranking Universitario",
+        "placeholder": "ej., Top 5 España, US Top 30, UK G5, Russell Group, QS Top 100"
+      },
+      "major": {
+        "label": "Carrera",
+        "placeholder": "ej., Ciencias de la Computación, Administración de Empresas"
+      },
+      "gpa": {
+        "label": "GPA (escala 4.0)",
+        "placeholder": "ej., 3.50"
+      },
+      "targetCountry": {
+        "label": "País/Región Objetivo",
+        "placeholder": "Seleccione el país objetivo"
+      },
+      "regionPreference": {
+        "label": "Preferencia Regional (Opcional)",
+        "placeholder": "ej., solo Área de la Bahía de San Francisco, Nueva York, Londres"
+      },
+      "internships": {
+        "label": "Experiencia de Pasantías (Opcional)",
+        "placeholder": "ej., Pasante PM en Google 6 meses, Microsoft SWE verano 2024..."
+      },
+      "research": {
+        "label": "Experiencia de Investigación (Opcional)",
+        "placeholder": "Incluye proyectos de investigación, publicaciones, papers..."
+      },
+      "projects": {
+        "label": "Experiencia en Proyectos (Opcional)",
+        "placeholder": "ej., 4 proyectos de GitHub con 100+ estrellas cada uno..."
+      },
+      "competitions": {
+        "label": "Competencias y Premios (Opcional)",
+        "placeholder": "ej., Medalla de Oro ACM ICPC, 1er lugar en Hackathon..."
+      },
+      "careerGoals": {
+        "label": "Objetivos Profesionales (Opcional)",
+        "placeholder": "ej., Convertirme en Product Manager, transición a Tech PM, iniciar mi propia empresa..."
+      },
+      "languageScores": {
+        "label": "Puntuaciones de Exámenes de Idiomas (Opcional)",
+        "placeholder": "ej., TOEFL 110, IELTS 7.5, GRE 330"
+      },
+      "gpaRank": {
+        "label": "Ranking de GPA (Opcional)",
+        "placeholder": "ej., Top 5%, Top 10%"
+      },
+      "recommendations": {
+        "label": "Cartas de Recomendación (Opcional)",
+        "placeholder": "ej., Profesor de Stanford, Manager de Google..."
+      },
+      "other1": {
+        "label": "Otra Información 1 (Opcional)",
+        "placeholder": "ej., Experiencia laboral a tiempo completo, emprendimiento..."
+      },
+      "other2": {
+        "label": "Otra Información 2 (Opcional)",
+        "placeholder": "Otros logros o experiencias..."
+      },
+      "other3": {
+        "label": "Otra Información 3 (Opcional)",
+        "placeholder": "Detalles adicionales..."
       }
     },
-    "placeholder": "Escribe libremente con tus propias palabras...",
+    "required": "Requerido",
+    "optional": "Opcional",
     "cancel": "Cancelar",
     "submit": "Continuar al Pago",
     "validation": {
-      "characters": "caracteres",
-      "moreNeeded": "más necesarios",
-      "tooShort": "Por favor proporciona al menos 20 caracteres con detalles sobre tu escuela, GPA, pasantías, etc.",
-      "meetsRequirement": "✓ Cumple el requisito mínimo"
+      "gpaRange": "El GPA debe estar entre 0.00 y 4.00",
+      "fillRequired": "Por favor complete todos los campos requeridos",
+      "selectCountry": "Por favor seleccione un país objetivo"
     }
   },
   "progress": {

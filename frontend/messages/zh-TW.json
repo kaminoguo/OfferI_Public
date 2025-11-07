@@ -34,38 +34,94 @@
   },
   "form": {
     "title": "告訴我們您的背景",
-    "label": "您的背景 *",
-    "description": {
-      "intro": "請詳細描述您的背景。包括以下資訊：",
-      "academic": "學術背景",
-      "academicDetails": "目前大學/科系、GPA、語言考試成績（托福/雅思/GRE）",
-      "experience": "經歷",
-      "experienceDetails": "科研專案、實習、競賽、獲獎、論文發表",
-      "entrepreneurship": "創業",
-      "entrepreneurshipDetails": "創辦的新創公司、推出的產品、商業專案",
-      "goals": "目標",
-      "goalsDetails": "目標國家/地區、職業規劃、發展目標",
-      "other": "其他",
-      "otherDetails": "您認為相關或值得強調的其他內容"
+    "sections": {
+      "basic": "基本學術資訊",
+      "target": "申請目標",
+      "experience": "背景經歷",
+      "additional": "補充資訊"
     },
-    "reminder": {
-      "focus": {
-        "title": "為獲得最佳結果：",
-        "description": "一次只填寫一個目標國家/地區。這樣我們可以提供更專注和準確的推薦。"
+    "countryGroups": {
+      "popularcountries": "熱門國家",
+      "othercountries": "其他國家"
+    },
+    "fields": {
+      "school": {
+        "label": "出身院校",
+        "placeholder": "如：國立臺灣大學、香港大學、史丹佛大學"
       },
-      "quality": {
-        "title": "品質很重要：",
-        "description": "AI推薦的品質取決於您提供的細節。如果您的背景中有值得特別注意的地方，請務必提及！"
+      "schoolTier": {
+        "label": "院校定位",
+        "placeholder": "如：臺灣頂大/港三/美Top 30/英G5/Russell Group/QS前100"
+      },
+      "major": {
+        "label": "專業",
+        "placeholder": "如：資訊工程、企業管理"
+      },
+      "gpa": {
+        "label": "GPA（4分制）",
+        "placeholder": "如：3.50"
+      },
+      "targetCountry": {
+        "label": "目標國家/地區",
+        "placeholder": "選擇目標國家"
+      },
+      "regionPreference": {
+        "label": "地區偏好（選填）",
+        "placeholder": "如：只考慮灣區、紐約、倫敦等特定城市"
+      },
+      "internships": {
+        "label": "實習經歷（選填）",
+        "placeholder": "如：Google PM實習6個月、微軟SWE 2024暑期..."
+      },
+      "research": {
+        "label": "科研經歷（選填）",
+        "placeholder": "包括研究專案、論文發表等..."
+      },
+      "projects": {
+        "label": "專案經歷（選填）",
+        "placeholder": "如：4個GitHub專案各100+星..."
+      },
+      "competitions": {
+        "label": "競賽獲獎（選填）",
+        "placeholder": "如：ACM金牌、黑客松第一名..."
+      },
+      "careerGoals": {
+        "label": "職業規劃（選填）",
+        "placeholder": "如：成為產品經理、轉型Tech PM、創業..."
+      },
+      "languageScores": {
+        "label": "語言成績（選填）",
+        "placeholder": "如：托福110、雅思7.5、GRE 330"
+      },
+      "gpaRank": {
+        "label": "GPA排名（選填）",
+        "placeholder": "如：前5%、前10%"
+      },
+      "recommendations": {
+        "label": "推薦信（選填）",
+        "placeholder": "如：史丹佛教授推薦信、Google經理推薦..."
+      },
+      "other1": {
+        "label": "其他資訊1（選填）",
+        "placeholder": "如：全職工作經驗、創業經歷..."
+      },
+      "other2": {
+        "label": "其他資訊2（選填）",
+        "placeholder": "其他成就或經歷..."
+      },
+      "other3": {
+        "label": "其他資訊3（選填）",
+        "placeholder": "補充細節..."
       }
     },
-    "placeholder": "用您自己的話自由書寫...",
+    "required": "必填",
+    "optional": "選填",
     "cancel": "取消",
     "submit": "繼續支付",
     "validation": {
-      "characters": "字元",
-      "moreNeeded": "還需要",
-      "tooShort": "請至少提供20字元，包括學校、GPA、實習等詳細資訊",
-      "meetsRequirement": "✓ 符合最低要求"
+      "gpaRange": "GPA必須在0.00到4.00之間",
+      "fillRequired": "請填寫所有必填欄位",
+      "selectCountry": "請選擇目標國家"
     }
   },
   "progress": {

@@ -34,38 +34,94 @@
   },
   "form": {
     "title": "Tell us about your background",
-    "label": "Your background *",
-    "description": {
-      "intro": "Please describe your background in detail. Include information such as:",
-      "academic": "Academic",
-      "academicDetails": "Current university/major, GPA, language test scores (TOEFL/IELTS/GRE)",
-      "experience": "Experience",
-      "experienceDetails": "Research projects, internships, competitions, awards, publications",
-      "entrepreneurship": "Entrepreneurship",
-      "entrepreneurshipDetails": "Startups founded, products launched, business ventures",
-      "goals": "Goals",
-      "goalsDetails": "Target country/region, career plans, development goals",
-      "other": "Other",
-      "otherDetails": "Anything else you think is relevant or worth highlighting"
+    "sections": {
+      "basic": "Basic Academic Information",
+      "target": "Application Goals",
+      "experience": "Background & Experience",
+      "additional": "Additional Information"
     },
-    "reminder": {
-      "focus": {
-        "title": "For best results:",
-        "description": "Fill in only ONE target country/region at a time. This allows us to provide more focused and accurate recommendations."
+    "countryGroups": {
+      "popularcountries": "Popular Countries",
+      "othercountries": "Other Countries"
+    },
+    "fields": {
+      "school": {
+        "label": "Current University",
+        "placeholder": "e.g., Peking University, Stanford University"
       },
-      "quality": {
-        "title": "Quality matters:",
-        "description": "The quality of AI recommendations depends on the details you provide. If there's something special about your background that deserves attention, make sure to mention it!"
+      "schoolTier": {
+        "label": "University Tier/Ranking",
+        "placeholder": "e.g., C9/Top 5 China, US Top 30, UK G5, Russell Group, QS Top 100"
+      },
+      "major": {
+        "label": "Major",
+        "placeholder": "e.g., Computer Science, Business Administration"
+      },
+      "gpa": {
+        "label": "GPA (4.0 scale)",
+        "placeholder": "e.g., 3.50"
+      },
+      "targetCountry": {
+        "label": "Target Country/Region",
+        "placeholder": "Select target country"
+      },
+      "regionPreference": {
+        "label": "Regional Preference (Optional)",
+        "placeholder": "e.g., San Francisco Bay Area, New York, London only"
+      },
+      "internships": {
+        "label": "Internship Experience (Optional)",
+        "placeholder": "e.g., Google PM intern 6 months, Microsoft SWE summer 2024..."
+      },
+      "research": {
+        "label": "Research Experience (Optional)",
+        "placeholder": "Include research projects, publications, papers..."
+      },
+      "projects": {
+        "label": "Project Experience (Optional)",
+        "placeholder": "e.g., 4 GitHub projects with 100+ stars each..."
+      },
+      "competitions": {
+        "label": "Competition & Awards (Optional)",
+        "placeholder": "e.g., ACM ICPC Gold Medal, Hackathon 1st place..."
+      },
+      "careerGoals": {
+        "label": "Career Goals (Optional)",
+        "placeholder": "e.g., Become a Product Manager, transition to Tech PM, start my own company..."
+      },
+      "languageScores": {
+        "label": "Language Test Scores (Optional)",
+        "placeholder": "e.g., TOEFL 110, IELTS 7.5, GRE 330"
+      },
+      "gpaRank": {
+        "label": "GPA Ranking (Optional)",
+        "placeholder": "e.g., Top 5%, Top 10%"
+      },
+      "recommendations": {
+        "label": "Letters of Recommendation (Optional)",
+        "placeholder": "e.g., Professor from Stanford, Manager from Google..."
+      },
+      "other1": {
+        "label": "Other Information 1 (Optional)",
+        "placeholder": "e.g., Full-time work experience, entrepreneurship..."
+      },
+      "other2": {
+        "label": "Other Information 2 (Optional)",
+        "placeholder": "Any other achievements or experiences..."
+      },
+      "other3": {
+        "label": "Other Information 3 (Optional)",
+        "placeholder": "Additional details..."
       }
     },
-    "placeholder": "Write freely in your own words...",
+    "required": "Required",
+    "optional": "Optional",
     "cancel": "Cancel",
     "submit": "Continue to Payment",
     "validation": {
-      "characters": "characters",
-      "moreNeeded": "more needed",
-      "tooShort": "Please provide at least 20 characters with details about your school, GPA, internships, etc.",
-      "meetsRequirement": "✓ Meets minimum requirement"
+      "gpaRange": "GPA must be between 0.00 and 4.00",
+      "fillRequired": "Please fill in all required fields",
+      "selectCountry": "Please select a target country"
     }
   },
   "progress": {

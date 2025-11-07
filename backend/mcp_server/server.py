@@ -1,26 +1,34 @@
 #!/usr/bin/env python3
 """
-OfferI MCP Server - Workflow Orchestration Version 1.08
+OfferI MCP Server - Workflow Orchestration Version 1.09
 
-Architecture: Token-based workflow enforcement with strict batch processing
+Architecture: Token-based workflow with classification-based filtering
 - Each workflow tool returns a token required by the next tool
-- Tools 3-5 form a batch cycle: process ONE batch → next batch
-- LLM cannot skip steps or accumulate batches (enforced via tokens)
+- Simplified single-pass processing (removed batch logic)
+- Classification-based early filtering to reduce web search costs
+- LLM knowledge-first approach with conditional web searches
 
-Major Changes (v1.08):
-- Tool 5: Refined to per-program search with skip optimization
-  * Search granularity: ONE search PER PROGRAM (not per university)
-  * Query pattern: "[University] [Program Name] target audience ideal candidates background requirements"
-  * Results per program: 3-8 (small focused searches)
-  * Skip optimization: LLM can skip search if it already knows the program's target audience
-    - Mark "skipped": true and provide "known_info" instead
-    - Reduces unnecessary searches for well-known programs
-  * Parameter structure:
-    - "program_searches": {prog_id: {"program_name": "...", "search": {...}}}
-    - Tracks searches and skips per program
-  * Cost: Variable based on LLM's knowledge (more skips = lower cost)
+Major Changes (v1.09):
+- Tool 3: Classification-based filtering (NO MORE BATCH PROCESSING)
+  * LLM gets all classifications from selected universities
+  * LLM chooses relevant classifications based on student background
+  * Only retrieves programs from selected classifications
+  * All universities processed in single call (removed 5-university batch limit)
+  * Dramatically reduces program count before name screening
+- Tool 5: Simplified to single-round validation
+  * Merged Round 3 (career-clarity filtering) + Round 4 (web search) into ONE round
+  * LLM uses its own knowledge first
+  * Only searches web if uncertain about specific program
+  * Conditional web search reduces API costs
+- Tool 7: Redesigned with focused Exa searches
+  * DELETED: Exa searches for tuition, timeline, costs, deadlines
+  * NEW: 2 targeted Exa searches per program:
+    - Search 1: Curriculum/program structure/features (6-8 results)
+    - Search 2: Career outcomes/student experience (6-8 results)
+  * LLM can skip searches if it has sufficient knowledge
+  * Focus: Program features + Student experience + Suitability analysis
 
-Previous Changes (v1.07):
+Previous Changes (v1.08):
 - Tool 5: Complete redesign of validation logic (validate_programs_with_exa → validate_programs_with_web)
   * Removed: Two-stage web search (Stage 1: admission cases, Stage 2: program quality)
   * New: Four-round filtering workflow
@@ -84,7 +92,7 @@ from datetime import datetime
 from fastmcp import FastMCP
 
 # Version
-__version__ = "1.08"
+__version__ = "1.09"
 
 # Database path
 DB_PATH = os.getenv("DB_PATH", "/app/mcp/programs.db")
@@ -213,43 +221,73 @@ def _get_available_countries() -> List[Dict[str, Any]]:
     
     return [{"country": row["country_standardized"], "count": row["count"]} for row in results]
 
-def _search_programs(university_name: str) -> List[Dict[str, Any]]:
-    """Internal: Get all programs for a university"""
+def _get_classifications_for_universities(university_names: List[str]) -> Dict[str, int]:
+    """Internal: Get all unique classifications from multiple universities with program counts"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    cursor.execute("""
-        SELECT program_id, program_name
+
+    placeholders = ','.join('?' * len(university_names))
+    patterns = [f"%{uni}%" for uni in university_names]
+
+    cursor.execute(f"""
+        SELECT classification, COUNT(*) as count
         FROM programs
-        WHERE LOWER(university_name) LIKE LOWER(?)
-        ORDER BY program_name
-    """, [f"%{university_name}%"])
+        WHERE ({' OR '.join(['LOWER(university_name) LIKE LOWER(?)' for _ in university_names])})
+        AND classification IS NOT NULL
+        GROUP BY classification
+        ORDER BY count DESC
+    """, patterns)
     results = cursor.fetchall()
     conn.close()
-    
-    return [{"id": row["program_id"], "name": row["program_name"]} for row in results]
+
+    return {row["classification"]: row["count"] for row in results}
+
+def _search_programs(university_name: str, classification_filters: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    """Internal: Get programs for a university, optionally filtered by classifications"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    query = """
+        SELECT program_id, program_name, classification
+        FROM programs
+        WHERE LOWER(university_name) LIKE LOWER(?)
+    """
+    params = [f"%{university_name}%"]
+
+    if classification_filters:
+        placeholders = ','.join('?' * len(classification_filters))
+        query += f" AND classification IN ({placeholders})"
+        params.extend(classification_filters)
+
+    query += " ORDER BY program_name"
+
+    cursor.execute(query, params)
+    results = cursor.fetchall()
+    conn.close()
+
+    return [{"id": row["program_id"], "name": row["program_name"], "classification": row["classification"]} for row in results]
 
 def _get_program_details_batch(program_ids: List[int]) -> List[dict]:
     """Internal: Get essential details for multiple programs"""
     if not program_ids:
         return []
-    
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     placeholders = ','.join('?' * len(program_ids))
     query = f"""
         SELECT program_id, program_name, university_name,
                country_standardized, city, degree_type,
-               duration_months, study_mode
+               duration_months, study_mode, classification
         FROM programs
         WHERE program_id IN ({placeholders})
     """
-    
+
     cursor.execute(query, program_ids)
     results = cursor.fetchall()
     conn.close()
-    
+
     programs = []
     for row in results:
         program = {
@@ -259,15 +297,16 @@ def _get_program_details_batch(program_ids: List[int]) -> List[dict]:
             "country_standardized": row["country_standardized"],
             "city": row["city"],
             "degree_type": row["degree_type"],
-            "duration_months": row["duration_months"]
+            "duration_months": row["duration_months"],
+            "classification": row["classification"]
         }
-        
+
         study_mode = row["study_mode"]
         if study_mode and "part" in study_mode.lower():
             program["is_part_time"] = True
-        
+
         programs.append(program)
-    
+
     return [clean_null_values(p) for p in programs]
 
 
@@ -755,49 +794,46 @@ Next: Call get_university_programs(universities, exploration_token) with your se
 @mcp.tool
 async def get_university_programs(
     universities: List[str],
-    exploration_token: str,
-    all_selected_universities: Optional[List[str]] = None,
-    previous_programs_token: Optional[str] = None
+    selected_classifications: List[str],
+    exploration_token: str
 ) -> dict:
     """
-    Step 3: Get ALL programs for EACH selected university
+    Step 3: Get programs filtered by classifications (NO BATCH PROCESSING)
+
+    🏷️ WORKFLOW:
+    1. LLM receives list of universities from explore_universities()
+    2. LLM calls THIS tool to get all available classifications for those universities
+    3. LLM reviews classifications and chooses relevant ones based on student background
+    4. LLM calls this tool AGAIN with selected_classifications to retrieve filtered programs
+    5. Proceed to TWO-PASS name screening (shortlist_programs_by_name)
 
     Args:
-        universities: List of university names for THIS batch (max 5)
+        universities: List of ALL selected university names (no limit)
+        selected_classifications: List of classification names to filter by
+            - Pass empty list [] on FIRST call to get available classifications
+            - Pass selected classifications on SECOND call to get filtered programs
         exploration_token: From explore_universities()
-        all_selected_universities: REQUIRED on first batch - complete list of ALL universities you plan to process
-        previous_programs_token: For 2nd+ batches - token from previous get_university_programs() call
 
     Returns:
-        programs_token + all programs grouped by university
+        - First call (selected_classifications=[]): Available classifications with counts
+        - Second call (with classifications): programs_token + filtered programs
 
-    🔄 BATCH WORKFLOW (for >5 universities):
+    Example workflow:
+        # Call 1: Get classifications
+        result1 = get_university_programs(
+            universities=["CMU", "Stanford", "MIT"],
+            selected_classifications=[],  # Empty = get classifications
+            exploration_token="..."
+        )
+        # Returns: {"Computer Science & IT": 450, "Management": 200, ...}
 
-    Example: You selected 12 universities total
-
-    Batch 1 (first call):
-    get_university_programs(
-        universities=["CMU", "Stanford", "MIT", "Berkeley", "Cornell"],  # First 5
-        exploration_token="...",
-        all_selected_universities=["CMU", "Stanford", "MIT", "Berkeley", "Cornell",
-                                   "UW", "GT", "UMich", "UCI", "Syracuse", "UT Austin", "UMD"]  # ALL 12
-    )
-
-    Batch 2 (second call):
-    get_university_programs(
-        universities=["UW", "GT", "UMich", "UCI", "Syracuse"],  # Next 5
-        exploration_token="...",
-        previous_programs_token="programs_xxx"  # From batch 1
-    )
-
-    Batch 3 (final):
-    get_university_programs(
-        universities=["UT Austin", "UMD"],  # Remaining 2
-        exploration_token="...",
-        previous_programs_token="programs_yyy"  # From batch 2
-    )
-
-    Note: System will guide you on batch processing if needed
+        # Call 2: Get programs with selected classifications
+        result2 = get_university_programs(
+            universities=["CMU", "Stanford", "MIT"],
+            selected_classifications=["Computer Science & IT", "Electrical Engineering"],
+            exploration_token="..."
+        )
+        # Returns: programs_token + filtered programs
     """
     exploration_data = validate_token(exploration_token, "exploration")
     career_clarity = exploration_data.get("career_clarity", "medium")
@@ -805,161 +841,112 @@ async def get_university_programs(
     if not universities or not isinstance(universities, list):
         raise ValueError("You must provide a list of university names")
 
-    # Determine total selected universities list
-    total_selected_unis = None
-    cumulative_programs = {}
-    cumulative_unis_processed = []
+    if not isinstance(selected_classifications, list):
+        raise ValueError("selected_classifications must be a list (use [] to get available classifications)")
 
-    if previous_programs_token:
-        # Batch 2+: inherit from previous batch
-        previous_data = validate_token(previous_programs_token, "programs")
-        total_selected_unis = previous_data.get("total_selected_universities")
-        cumulative_programs = previous_data.get("cumulative_all_programs", {})
-        cumulative_unis_processed = previous_data.get("cumulative_universities_processed", [])
+    # FIRST CALL: Return available classifications
+    if len(selected_classifications) == 0:
+        classifications = _get_classifications_for_universities(universities)
 
-        if not total_selected_unis:
-            raise ValueError(
-                "Previous programs_token is missing total_selected_universities.\n"
-                "This shouldn't happen - please report this error."
-            )
-    else:
-        # Batch 1: must provide all_selected_universities
-        if not all_selected_universities:
-            raise ValueError(
-                "⚠️ FIRST BATCH REQUIREMENT:\n\n"
-                "On the first call to get_university_programs(), you MUST provide 'all_selected_universities' parameter.\n\n"
-                "This should be the COMPLETE list of ALL universities you plan to process (not just the first 5).\n\n"
-                "Example:\n"
-                "get_university_programs(\n"
-                "    universities=['CMU', 'Stanford', 'MIT', 'Berkeley', 'Cornell'],  # First batch (5)\n"
-                "    exploration_token='...',\n"
-                "    all_selected_universities=['CMU', 'Stanford', 'MIT', 'Berkeley', 'Cornell',\n"
-                "                               'UW', 'GT', 'UMich', 'UCI', 'Syracuse', 'UT Austin', 'UMD']  # ALL 12\n"
-                ")"
-            )
+        return {
+            "available_classifications": classifications,
+            "total_classifications": len(classifications),
+            "total_programs": sum(classifications.values()),
+            "instructions": f"""
+📊 CLASSIFICATION ANALYSIS COMPLETE
 
-        if not isinstance(all_selected_universities, list):
-            raise ValueError("all_selected_universities must be a list")
+Found {len(classifications)} unique classifications across {len(universities)} universities:
 
-        total_selected_unis = all_selected_universities
+{chr(10).join([f"  • {name}: {count} programs" for name, count in list(classifications.items())[:15]])}
+{"  ... and more" if len(classifications) > 15 else ""}
 
-    # Validate current batch universities are in total list
-    invalid_unis = [uni for uni in universities if uni not in total_selected_unis]
-    if invalid_unis:
-        raise ValueError(
-            f"Invalid universities in current batch: {invalid_unis}\n\n"
-            f"These universities are not in your all_selected_universities list.\n"
-            f"Total selected: {total_selected_unis}"
-        )
+🎯 YOUR TASK: Select relevant classifications based on student background
 
-    # Check for duplicates
-    already_processed = set(cumulative_unis_processed)
-    duplicates = set(universities) & already_processed
-    if duplicates:
-        raise ValueError(
-            f"Universities already processed in previous batch: {duplicates}\n\n"
-            f"Previously processed: {cumulative_unis_processed}\n"
-            f"Remaining to process: {sorted(set(total_selected_unis) - already_processed)}"
-        )
+SELECTION STRATEGY:
+1. PRIMARY classifications: Direct match with student's major/field
+   Example: CS student → ["Computer Science & IT", "Electrical & Electronics Engineering"]
+   Example: Business student → ["Management & Administration", "Finance, Banking & Insurance"]
+   Example: Liberal Arts → ["Literature & Linguistics", "Philosophy, Theology & Media"]
 
-    # Enforce batch size limit to avoid token overflow
-    if len(universities) > 5:
-        # Provide helpful batch processing guidance
-        total = len(universities)
-        batches = (total + 4) // 5  # Ceiling division
-        first_batch = universities[:5]
-        remaining = universities[5:]
+2. SECONDARY classifications: Related/complementary fields
+   Example: CS student might also consider ["Mathematics", "Statistics"]
+   Example: Research-oriented might include research-heavy interdisciplinary fields
 
-        suggestion = f"Batch 1: {first_batch}\n"
-        if len(remaining) <= 5:
-            suggestion += f"Batch 2: {remaining}"
-        else:
-            suggestion += f"Batch 2-{batches}: Process {len(remaining)} remaining universities in groups of 5"
+3. AVOID: Obviously irrelevant fields
+   Example: CS student should NOT select ["Music & Performing Arts", "Veterinary"]
 
-        raise ValueError(
-            f"⚠️ Batch Size Limit: You provided {total} universities, but this tool handles max 5 per call.\n\n"
-            f"💡 Solution: Process in {batches} batches of ≤5 universities each.\n\n"
-            f"Suggested batching:\n{suggestion}\n\n"
-            f"After each batch, accumulate the programs_tokens before proceeding to screening."
-        )
+⚠️ IMPORTANT: Be inclusive but sensible
+- Research students: Include research-focused classifications
+- Career students: Include professional/applied classifications
+- Liberal Arts: Don't limit to humanities - interdisciplinary programs matter
 
+📋 NEXT STEP:
+Call get_university_programs() AGAIN with your selected classifications:
+
+get_university_programs(
+    universities={universities},
+    selected_classifications=["Classification 1", "Classification 2", ...],
+    exploration_token="{exploration_token}"
+)
+            """,
+            "next_step": "Review classifications and call this tool again with selected_classifications"
+        }
+
+    # SECOND CALL: Return filtered programs
     all_programs = {}
     total_programs = 0
+    classification_stats = {}
 
     for uni in universities:
-        programs = _search_programs(uni)
+        programs = _search_programs(uni, classification_filters=selected_classifications)
         if programs:
             all_programs[uni] = programs
             total_programs += len(programs)
 
-    # Accumulate with previous batches
-    cumulative_all_programs = {**cumulative_programs, **all_programs}
-    cumulative_universities_processed = cumulative_unis_processed + universities
-    cumulative_total_programs = sum(len(progs) for progs in cumulative_all_programs.values())
-
-    # Check if all universities have been processed
-    remaining_unis = set(total_selected_unis) - set(cumulative_universities_processed)
-    is_complete = len(remaining_unis) == 0
+            # Track classification distribution
+            for prog in programs:
+                class_name = prog.get("classification", "Unknown")
+                classification_stats[class_name] = classification_stats.get(class_name, 0) + 1
 
     token = generate_token("programs", {
         "universities": universities,
         "all_programs": all_programs,
         "total_programs": total_programs,
         "career_clarity": career_clarity,
-        "total_selected_universities": total_selected_unis,
-        "cumulative_universities_processed": cumulative_universities_processed,
-        "cumulative_all_programs": cumulative_all_programs,
-        "is_complete": is_complete
+        "selected_classifications": selected_classifications,
+        "classification_statistics": classification_stats
     })
-
-    completion_status = "✅ ALL BATCHES COMPLETE" if is_complete else f"⏳ IN PROGRESS - {len(remaining_unis)} universities remaining"
 
     return {
         "programs_token": token,
         "programs_by_university": all_programs,
         "total_programs": total_programs,
         "universities_count": len(all_programs),
-        "batch_number": len(cumulative_universities_processed) // 5 + (1 if len(cumulative_universities_processed) % 5 else 0),
-        "total_selected_universities": len(total_selected_unis),
-        "cumulative_universities_processed": len(cumulative_universities_processed),
-        "remaining_universities": list(remaining_unis),
-        "is_complete": is_complete,
-        "completion_status": completion_status,
+        "selected_classifications": selected_classifications,
+        "classification_statistics": classification_stats,
         "instructions": f"""
-✅ Batch complete! Progress: {len(cumulative_universities_processed)}/{len(total_selected_unis)} universities processed.
+✅ CLASSIFICATION FILTERING COMPLETE
 
-{completion_status}
+📊 RESULTS:
+- Universities: {len(universities)}
+- Selected classifications: {len(selected_classifications)}
+- Total programs retrieved: {total_programs}
 
-{f'''📋 NEXT BATCH REQUIRED:
-- Call get_university_programs() again with remaining {len(remaining_unis)} universities
-- Include previous_programs_token="{token}"
-- Remaining: {sorted(remaining_unis)}
-''' if not is_complete else '''✅ ALL UNIVERSITIES PROCESSED!
-- Proceed to TWO-PASS screening (shortlist_programs_by_name)
-- Use the programs_token from this response'''}
+🏷️  CLASSIFICATION DISTRIBUTION:
+{chr(10).join([f"  • {name}: {count} programs" for name, count in sorted(classification_stats.items(), key=lambda x: x[1], reverse=True)])}
 
-⚠️ BATCH PROCESSING GUIDANCE:
-- This tool can handle 5 universities per call (to avoid 25k token response limit)
-- After all batches complete, proceed to TWO-PASS screening across ALL programs
-
-CRITICAL: Perform TWO-PASS screening to ensure quality and reduce web search load.
+📋 NEXT STEP: TWO-PASS NAME SCREENING
 
 PASS 1 - Remove Obvious Mismatches (排除法):
-- Review ALL program names carefully across all batches
-- Remove programs that are OBVIOUSLY unrelated to student's field/interests
-- Examples of obvious mismatches: Architecture for CS student, Pure Arts for Engineering student,
-  Biology for Business student, Humanities for Tech student
-- Only remove programs that are clearly in completely different domains
-- Philosophy: 宁少不多 (remove clear mismatches, but don't be overly aggressive)
+- Review program NAMES carefully
+- Remove programs with misleading names even if classification seems right
+- Example: Remove "Art Technology" if student wants pure CS (even if classified as CS)
+- Philosophy: 宁少不多 (fewer but better matches)
 
 PASS 2 - Select Relevant Programs (选择法):
-- Review remaining programs from Pass 1
-- Positively SELECT programs that match student's background and interests
-- Consider: Student's major, internships, career goals, skills
-- Include borderline cases (they will be validated in next steps)
-- Goal: From the remaining pool, select programs with reasonable fit
-
-Submit ONLY the final shortlist after both passes to shortlist_programs_by_name().
+- From remaining programs, positively SELECT those matching student profile
+- Consider: Specific interests, career goals, research vs coursework preference
+- Include borderline cases (will be validated in next step)
 
 Call shortlist_programs_by_name(shortlisted_by_university, programs_token)
         """,
@@ -973,23 +960,16 @@ async def shortlist_programs_by_name(
     programs_token: str
 ) -> dict:
     """
-    Step 4: Shortlist programs by name analysis (BATCH PROCESSING)
+    Step 4: Shortlist programs by name analysis (PASS 2 ONLY)
 
-    ⚠️ WORKFLOW: Process ONE batch at a time
-    - This tool processes programs from ONE get_university_programs() call
-    - After shortlisting, immediately proceed to validate_programs_with_web() for THIS batch
-    - Then move to next batch: Tool 3 → Tool 4 → Tool 5 → repeat
-    - System tracks total selected universities to ensure ALL batches complete before scoring
+    This is PASS 2 of TWO-PASS screening (classifications already filtered in Step 3):
+    - PASS 1 (Tool 3): Classification filtering
+    - PASS 2 (THIS TOOL): Name-based selection
 
-    🔄 BATCH TRACKING (v1.14):
-    - Tool 3 records total_selected_universities on first call
-    - This list propagates through all tokens (programs → shortlist → validation)
-    - Tool 5 checks if ALL universities validated before marking is_complete=True
-    - Tool 6 enforces is_complete=True before allowing scoring/ranking
-
-    TWO-PASS SCREENING (for this batch):
-    PASS 1 - Remove Obvious Mismatches (排除法): Eliminate programs in completely different domains
-    PASS 2 - Select Relevant Programs (选择法): From remaining programs, positively select those matching student profile
+    YOUR TASK: Review program NAMES and select those matching student profile
+    - Remove misleading program names even if classification seems right
+    - Select programs that align with specific interests, career goals
+    - Include borderline cases (will be validated in Step 5)
 
     Args:
         shortlisted_by_university: Dict mapping university name to list of program IDs
@@ -998,14 +978,13 @@ async def shortlist_programs_by_name(
                 "Stanford": [234, 567],
                 ...
             }
-        programs_token: From get_university_programs() for THIS batch
+        programs_token: From get_university_programs()
 
     Returns:
-        shortlist_token + statistics + instructions for immediate Tool 5 call
+        shortlist_token + statistics + instructions for Step 5
     """
     programs_data = validate_token(programs_token, "programs")
     career_clarity = programs_data.get("career_clarity", "medium")
-    total_selected_unis = programs_data.get("total_selected_universities", [])
 
     if not shortlisted_by_university or not isinstance(shortlisted_by_university, dict):
         raise ValueError("You must provide shortlisted_by_university as a dict")
@@ -1019,55 +998,35 @@ async def shortlist_programs_by_name(
         "universities": list(shortlisted_by_university.keys()),
         "shortlisted_by_university": shortlisted_by_university,
         "total_shortlisted": total_shortlisted,
-        "career_clarity": career_clarity,
-        "total_selected_universities": total_selected_unis
+        "career_clarity": career_clarity
     })
-    
-    university_names = list(shortlisted_by_university.keys())
 
     return {
         "shortlist_token": token,
         "shortlisted_by_university": shortlisted_by_university,
         "total_shortlisted": total_shortlisted,
         "universities_count": len(shortlisted_by_university),
-        "university_names_for_validation": university_names,
         "instructions": f"""
-✅ BATCH SHORTLIST COMPLETE: {total_shortlisted} programs from {len(shortlisted_by_university)} universities
+✅ NAME SCREENING COMPLETE: {total_shortlisted} programs from {len(shortlisted_by_university)} universities
 
-⚠️ IMMEDIATE NEXT STEP: Perform THIRD-ROUND filtering, then web search, then proceed to Tool 5
+📋 NEXT STEP: Single-round validation with conditional web search
 
-📋 THIRD-ROUND FILTERING (严格筛选):
-Based on career_clarity and student background, aggressively filter programs:
+YOUR TASK: For each program, use YOUR OWN KNOWLEDGE first:
+1. Evaluate program features (curriculum, focus, teaching style)
+2. Identify target student profile (what background does this program seek?)
+3. Match against student's background and goals
 
-If career_clarity = "high" (目标清晰):
-→ STRICTLY remove programs that DON'T match student's stated career direction
-→ Only keep programs DIRECTLY aligned with career goals
-→ Example: Student targets research → Remove professional/industry-focused programs
-→ Be aggressive: 宁缺毋滥 (better to have fewer perfect matches)
+ONLY SEARCH IF UNCERTAIN:
+- If you don't know the program well → Search web for program details
+- Query: "[University] [Program Name] target audience curriculum student experience"
+- If you DO know the program → Skip search, use your knowledge
 
-If career_clarity = "low" (看重学校牌子):
-→ Remove programs from lower-tier universities
-→ Keep only top-reputation schools
-→ Less strict on program fit, more strict on university reputation
+FINAL DECISION: Keep or remove based on:
+- Program-student fit
+- Target audience match
+- Career/research goal alignment
 
-If career_clarity = "medium":
-→ Balanced filtering: remove obvious mismatches but keep borderline cases
-→ Consider both program fit AND university reputation
-
-After third-round filtering for ALL universities in this batch:
-→ For EACH remaining program, perform ONE web search
-→ Query pattern: "[University] [Program Name] target audience ideal candidates background requirements"
-→ Focus: What kind of students is THIS SPECIFIC PROGRAM looking for?
-
-⚠️ OPTIMIZATION: Skip search if you already know the program well
-- If your knowledge base has clear information about this program's target audience
-- You can mark it as "skipped": true and provide "known_info" instead
-- Only search if you're uncertain about the target audience
-
-→ Then perform FOURTH-ROUND (final) filtering based on search results and known info
-
-Call validate_programs_with_web(program_validations, shortlist_token)
-DO NOT wait for other batches. Process one batch at a time: Tool 3 → Tool 4 → Tool 5 → repeat.
+Call validate_programs_with_web(web_validations, shortlist_token)
         """,
         "next_step": "Call validate_programs_with_web(web_validations, shortlist_token)"
     }
@@ -1075,143 +1034,68 @@ DO NOT wait for other batches. Process one batch at a time: Tool 3 → Tool 4 �
 
 @mcp.tool
 async def validate_programs_with_web(
-    web_validations: Dict[str, dict],
+    validated_programs: Dict[str, List[int]],
     shortlist_token: str,
-    previous_validation_token: Optional[str] = None
+    optional_web_searches: Optional[Dict[str, dict]] = None
 ) -> dict:
     """
-    Step 5: Four-round filtering workflow with target audience validation
+    Step 5: Single-round validation with conditional web search
 
-    🔄 BATCH PROCESSING (Coordinated with Tool 4):
-    - Each Tool 4 call creates a shortlist_token for one batch
-    - Call THIS tool immediately after Tool 4 to validate that batch
-    - Use previous_validation_token to chain multiple batches
-    - System enforces ALL universities validated before proceeding to Tool 6
+    🎯 SIMPLIFIED WORKFLOW (v1.09):
+    Merged Round 3 (career-clarity filtering) + Round 4 (web search) into ONE round.
 
-    📋 FOUR-ROUND FILTERING WORKFLOW (per batch):
-
-    Round 3 - Career-Clarity-Based Strict Filtering:
-    YOU must perform this filtering BEFORE calling this tool.
-
-    If career_clarity = "high" (目标清晰):
-    - STRICTLY remove programs that DON'T match student's stated career direction
-    - Only keep programs DIRECTLY aligned with career goals
-    - Philosophy: 宁缺毋滥 (better fewer perfect matches than many mediocre ones)
-
-    If career_clarity = "low" (看重学校牌子):
-    - Remove programs from lower-tier universities
-    - Keep only top-reputation schools
-    - Less strict on program fit, more strict on university reputation
-
-    If career_clarity = "medium":
-    - Balanced: remove obvious mismatches, keep borderline cases
-    - Consider both fit AND reputation
-
-    Web Search - Per-Program Target Audience Validation:
-    After Round 3 filtering, for EACH remaining program:
-    - Query pattern: "[University] [Program Name] target audience ideal candidates background requirements"
-    - Purpose: Understand what kind of students THIS SPECIFIC PROGRAM is looking for
-    - Results: 3-8 recommended per program (small focused searches)
-    - Use your built-in web search capability
-
-    ⚠️ OPTIMIZATION: Skip search if you already know the program
-    - If your knowledge base has clear info about this program's target audience
-    - Mark as "skipped": true and provide "known_info" instead of search results
-    - Only search if you're uncertain
-
-    Round 4 - Final Filtering:
-    YOU must perform this filtering based on search results and known info.
-    - Match user background against each program's target audience
-    - Remove programs seeking very different candidate profiles
-    - Keep programs that match user's strengths
+    YOUR TASK:
+    1. Review shortlisted programs using your own knowledge FIRST
+    2. Consider career clarity from consultation:
+       - career_clarity = "high": Strictly match career direction, remove misaligned programs
+       - career_clarity = "low": Prioritize university reputation over program fit
+       - career_clarity = "medium": Balance both fit and reputation
+    3. For programs where you're UNCERTAIN about fit/target audience, optionally search web
+    4. Return final validated program IDs per university
 
     Args:
-        web_validations: Dict mapping university name to validation data
-            Keys must be from shortlist_programs_by_name (you can validate a subset)
-
-            ✨ v1.11 Simplified Structure (reduced required fields from 5 → 2):
-
+        validated_programs: Dict mapping university name to final program IDs
             Example: {
-                "University Name": {
-                    "third_round_program_ids": [123, 456, 789],  # Required: After Round 3 career-based filtering
-                    "program_searches": {
-                        "123": {  # program_id as string (JSON requirement)
-                            "program_name": "MISM",  # ✅ OPTIONAL: Auto-filled from database if omitted
-                            "search": {
-                                "skipped": false,  # ✅ REQUIRED
-                                "query": "CMU MISM target audience ideal candidates...",  # ✅ REQUIRED (if not skipped)
-                                "num_results": 5,  # ✅ OPTIONAL: Auto-defaults to 5 (range 3-8)
-                                "findings": "..."  # Your search results
-                            }
-                        },
-                        "456": {
-                            "program_name": "MSCS",  # ✅ OPTIONAL
-                            "search": {
-                                "skipped": true,  # ✅ REQUIRED
-                                "known_info": "Targets students with strong CS background..."  # ✅ OPTIONAL: Auto-generated if omitted
-                            }
-                        }
-                    },
-                    "final_program_ids": [123, 456]  # Required: After Round 4 final filtering
-                },
+                "CMU": [123, 456],
+                "Stanford": [789, 234],
                 ...
             }
 
-            📝 Field Summary:
-            - program_name: Optional (auto-filled from database)
-            - skipped: Required (boolean)
-            - query: Required if skipped=false
-            - num_results: Optional (defaults to 5)
-            - known_info: Optional if skipped=true (auto-generated)
+        shortlist_token: From shortlist_programs_by_name()
 
-            ⚠️ Error Reporting: All validation errors returned at once (batch mode)
+        optional_web_searches: OPTIONAL dict with web searches for programs you're uncertain about
+            Example: {
+                "CMU MISM (123)": {
+                    "query": "CMU MISM target audience ideal candidates background",
+                    "num_results": 5,
+                    "findings": "Based on web search: Program targets...",
+                    "reasoning": "Searched because unclear if business background required"
+                },
+                "Stanford MSCS (789)": {
+                    "skipped": true,
+                    "known_info": "Standard CS MS program, targets strong CS undergrads",
+                    "reasoning": "Well-known program, no search needed"
+                }
+            }
 
-        shortlist_token: From shortlist_programs_by_name() for THIS batch
-        previous_validation_token: From previous validate_programs_with_web() call (if not first batch)
+            ⚠️ ONLY include programs where you need external validation
+            - Skip search if you know the program well
+            - Query pattern: "[University] [Program Name] target audience ideal candidates"
+            - num_results: 3-8 (defaults to 5)
 
     Returns:
-        validation_token + batch completion status + next_step instructions
+        validation_token + statistics + next_step instructions
     """
     shortlist_data = validate_token(shortlist_token, "shortlist")
     career_clarity = shortlist_data.get("career_clarity", "medium")
+    expected_unis = shortlist_data["universities"]
 
-    if not web_validations or not isinstance(web_validations, dict):
-        raise ValueError("You must provide web_validations as a dict")
+    if not validated_programs or not isinstance(validated_programs, dict):
+        raise ValueError("You must provide validated_programs as a dict")
 
-    # v1.14: Use total_selected_universities instead of current batch universities
-    # This fixes the bug where LLM could finish with just one batch
-    expected_unis = shortlist_data.get("total_selected_universities", shortlist_data["universities"])
-
-    # Fallback for backwards compatibility (if old tokens don't have total_selected_universities)
-    if not expected_unis:
-        expected_unis = shortlist_data["universities"]
-
-    # Get previously validated universities (for batch processing)
-    previously_validated = set()
-    previous_program_ids = []
-    previous_validations = {}
-    previous_career_clarity = career_clarity  # Default to current
-
-    if previous_validation_token:
-        previous_data = validate_token(previous_validation_token, "validation")
-        previously_validated = set(previous_data.get("validated_universities", []))
-        previous_program_ids = previous_data.get("final_program_ids", [])
-        previous_validations = previous_data.get("web_validations", {})
-        previous_career_clarity = previous_data.get("career_clarity", career_clarity)
-
-    # Check for duplicate validations
-    current_unis = set(web_validations.keys())
-    duplicates = current_unis & previously_validated
-    if duplicates:
-        raise ValueError(
-            f"Universities already validated in previous batch: {duplicates}\n\n"
-            f"You cannot validate the same university twice.\n"
-            f"Previously validated: {sorted(previously_validated)}\n"
-            f"Universities you can still validate: {sorted(set(expected_unis) - previously_validated)}"
-        )
-
-    # BATCH PROCESSING: Only validate that provided universities are valid
-    invalid_unis = [uni for uni in web_validations.keys() if uni not in expected_unis]
+    # Validate university names
+    current_unis = set(validated_programs.keys())
+    invalid_unis = [uni for uni in current_unis if uni not in expected_unis]
     if invalid_unis:
         raise ValueError(
             f"Invalid university names: {invalid_unis}\n\n"
@@ -1220,170 +1104,55 @@ async def validate_programs_with_web(
             f"Tip: Copy exact names from shortlist_programs_by_name response."
         )
 
-    # Validate each university's four-round filtering
-    # v1.11: Collect all errors instead of failing immediately (batch error reporting)
+    # Collect all final program IDs and validate
     all_final_ids = []
-    total_searches = 0
-    total_skipped = 0
     errors = []
 
-    # Get all program IDs to fetch names from database
-    all_prog_ids = set()
-    for validation in web_validations.values():
-        third_round_ids = validation.get("third_round_program_ids", [])
-        all_prog_ids.update(third_round_ids)
-
-    # Fetch program names from database for auto-fill
-    program_info_map = {}
-    if all_prog_ids:
-        program_details = _get_program_details_batch(list(all_prog_ids))
-        program_info_map = {p["program_id"]: p["program_name"] for p in program_details}
-
-    for uni, validation in web_validations.items():
-        if not isinstance(validation, dict):
-            errors.append(f"• {uni}: validation must be a dict")
+    for uni, program_ids in validated_programs.items():
+        if not isinstance(program_ids, list):
+            errors.append(f"• {uni}: program_ids must be a list")
             continue
 
-        # Validate Round 3 - Career-based filtering results
-        if "third_round_program_ids" not in validation:
-            errors.append(f"• {uni}: missing 'third_round_program_ids' (after career-clarity-based filtering)")
+        if len(program_ids) == 0:
+            errors.append(f"• {uni}: empty program list (must select at least one program)")
             continue
 
-        third_round_ids = validation["third_round_program_ids"]
-        if not isinstance(third_round_ids, list):
-            errors.append(f"• {uni}: third_round_program_ids must be a list")
-            continue
+        all_final_ids.extend(program_ids)
 
-        # Validate per-program searches
-        if "program_searches" not in validation:
-            errors.append(f"• {uni}: missing 'program_searches' (per-program target audience validation)")
-            continue
-
-        program_searches = validation["program_searches"]
-        if not isinstance(program_searches, dict):
-            errors.append(f"• {uni}: program_searches must be a dict")
-            continue
-
-        # Check each program in third_round has a search entry
-        for prog_id in third_round_ids:
-            # Convert to string because JSON object keys are always strings
-            prog_id_str = str(prog_id)
-            if prog_id_str not in program_searches:
-                errors.append(f"• {uni}: program {prog_id} passed Round 3 but has no search entry in program_searches")
-                continue
-
-            prog_search = program_searches[prog_id_str]
-            if not isinstance(prog_search, dict):
-                errors.append(f"• {uni}: program {prog_id} search entry must be a dict")
-                continue
-
-            # v1.11: Auto-fill program_name from database if not provided
-            if "program_name" not in prog_search or not prog_search["program_name"]:
-                prog_name = program_info_map.get(prog_id, f"Program {prog_id}")
-                prog_search["program_name"] = prog_name
-
-            if "search" not in prog_search:
-                errors.append(f"• {uni}: program {prog_id} missing 'search' field")
-                continue
-
-            search = prog_search["search"]
-            if not isinstance(search, dict):
-                errors.append(f"• {uni}: program {prog_id} search must be a dict")
-                continue
-
-            if "skipped" not in search:
-                errors.append(f"• {uni}: program {prog_id} search missing 'skipped' field")
-                continue
-
-            if search["skipped"]:
-                # v1.11: Auto-generate known_info if not provided
-                if "known_info" not in search or not search["known_info"]:
-                    prog_name = prog_search.get("program_name", f"Program {prog_id}")
-                    search["known_info"] = f"Program validated based on general knowledge of {prog_name}"
-                total_skipped += 1
-            else:
-                # Actual search - must have query
-                if "query" not in search:
-                    errors.append(f"• {uni}: program {prog_id} search missing 'query' field (required when not skipped)")
-                    continue
-
-                # v1.11: Auto-default num_results to 5 if not provided
-                if "num_results" not in search:
-                    search["num_results"] = 5
-                elif not (3 <= search["num_results"] <= 8):
-                    errors.append(f"• {uni}: program {prog_id} search num_results must be 3-8 (you provided {search['num_results']})")
-                    continue
-
-                total_searches += 1
-
-        # Validate Round 4 - Final filtering results
-        if "final_program_ids" not in validation:
-            errors.append(f"• {uni}: missing 'final_program_ids' (after Round 4 final filtering)")
-            continue
-
-        final_ids = validation["final_program_ids"]
-        if not isinstance(final_ids, list):
-            errors.append(f"• {uni}: final_program_ids must be a list")
-            continue
-
-        all_final_ids.extend(final_ids)
-
-    # If any errors were collected, raise them all at once
     if errors:
         error_msg = f"Found {len(errors)} validation error(s):\n\n" + "\n".join(errors)
         error_msg += "\n\n💡 Tip: Fix all errors listed above and retry."
         raise ValueError(error_msg)
 
     if len(all_final_ids) == 0:
-        raise ValueError("No programs passed validation. Did you filter too aggressively?")
+        raise ValueError("No programs validated. You must select at least one program per university.")
 
-    # Accumulate validated universities and program IDs
-    cumulative_validated = list(previously_validated) + list(current_unis)
-    cumulative_program_ids = previous_program_ids + all_final_ids
-    cumulative_validations = {**previous_validations, **web_validations}
-
-    # Check completion status
-    remaining_unis = set(expected_unis) - set(cumulative_validated)
-    is_complete = len(remaining_unis) == 0
+    # Count web searches if provided
+    total_searches = 0
+    total_skipped = 0
+    if optional_web_searches:
+        for search_data in optional_web_searches.values():
+            if search_data.get("skipped", False):
+                total_skipped += 1
+            else:
+                total_searches += 1
 
     token = generate_token("validation", {
-        "validated_universities": cumulative_validated,
-        "total_universities_validated": len(cumulative_validated),
-        "expected_universities": expected_unis,
-        "remaining_universities": list(remaining_unis),
-        "is_complete": is_complete,
-        "web_searches_completed": total_searches,
-        "final_program_ids": cumulative_program_ids,
-        "web_validations": cumulative_validations,
+        "validated_universities": list(current_unis),
+        "final_program_ids": all_final_ids,
+        "validated_programs": validated_programs,
+        "web_searches": optional_web_searches or {},
         "career_clarity": career_clarity
     })
 
-    completion_status = "✅ COMPLETE - All universities validated!" if is_complete else f"⏳ IN PROGRESS - {len(remaining_unis)} universities remaining"
-
     return {
         "validation_token": token,
-        "batch_universities_validated": len(web_validations),
-        "total_universities_validated": len(cumulative_validated),
-        "expected_total": len(expected_unis),
-        "remaining_universities": list(remaining_unis),
-        "is_complete": is_complete,
-        "completion_status": completion_status,
-        "total_web_searches": total_searches,
-        "total_skipped_searches": total_skipped,
-        "batch_programs_count": len(all_final_ids),
-        "cumulative_programs_count": len(cumulative_program_ids),
-        "message": f"✅ Batch validated {len(web_validations)} universities with {total_searches} web searches ({total_skipped} programs skipped using known info)\n{completion_status}",
-        "instructions": f"""
-This batch is validated. Progress: {len(cumulative_validated)}/{len(expected_unis)} universities complete.
-
-{"📋 NEXT BATCH REQUIRED:" if not is_complete else "✅ ALL UNIVERSITIES VALIDATED!"}
-{f'''- Call validate_programs_with_web() again with remaining universities
-- Include previous_validation_token="{token}"
-- Remaining: {remaining_unis}''' if not is_complete else "- Proceed to score_and_rank_programs(validation_token)"}
-
-⚠️ IMPORTANT: You CANNOT proceed to scoring until is_complete=True
-        """,
-        "next_step": "Validate remaining universities" if not is_complete else "Call score_and_rank_programs(validation_token)"
+        "universities_validated": len(validated_programs),
+        "total_programs_validated": len(all_final_ids),
+        "web_searches_performed": total_searches,
+        "programs_validated_with_knowledge": total_skipped,
+        "message": f"✅ Validated {len(all_final_ids)} programs from {len(validated_programs)} universities\n({total_searches} web searches, {total_skipped} validated with own knowledge)",
+        "next_step": "Call score_and_rank_programs(validation_token)"
     }
 
 
@@ -1395,7 +1164,7 @@ async def score_and_rank_programs(
     Step 6: Score and rank all validated programs
 
     Args:
-        validation_token: From validate_programs_with_exa()
+        validation_token: From validate_programs_with_web()
 
     Returns:
         ranking_token + top programs + required Exa search count for detailed research
@@ -1403,23 +1172,8 @@ async def score_and_rank_programs(
     validation_data = validate_token(validation_token, "validation")
     career_clarity = validation_data.get("career_clarity", "medium")
 
-    # Enforce completion requirement
-    if not validation_data.get("is_complete", False):
-        remaining = validation_data.get("remaining_universities", [])
-        validated = validation_data.get("validated_universities", [])
-        expected = validation_data.get("expected_universities", [])
-        raise ValueError(
-            f"❌ VALIDATION INCOMPLETE!\n\n"
-            f"You have NOT validated all universities from your shortlist.\n\n"
-            f"Progress: {len(validated)}/{len(expected)} universities\n"
-            f"Validated: {validated}\n"
-            f"Remaining: {remaining}\n\n"
-            f"You MUST call validate_programs_with_exa() again for remaining universities.\n"
-            f"Include previous_validation_token to continue tracking progress."
-        )
-
     final_ids = validation_data["final_program_ids"]
-    universities_count = validation_data["total_universities_validated"]
+    universities_count = len(validation_data.get("validated_universities", []))
 
     # Get program details
     programs = _get_program_details_batch(final_ids)
@@ -1466,12 +1220,12 @@ async def score_and_rank_programs(
         report_format = "TOP_20"
         detailed_count = 10  # Tier 1: Full Exa research
         concise_count = 10   # Tier 2: Concise summaries (LLM knowledge allowed)
-        required_searches = 30  # Tier 1 only: 10 programs × 3 searches = 30
+        required_searches = 20  # Tier 1 only: 10 programs × 2 searches = 20 (v1.09)
     else:
         report_format = "TOP_10"
         detailed_count = 5   # Tier 1: Full Exa research
         concise_count = 0    # No Tier 2 for small selection
-        required_searches = 15  # 5 programs × 3 searches = 15
+        required_searches = 10  # 5 programs × 2 searches = 10 (v1.09)
 
     top_programs = programs[:detailed_count + concise_count]
 
@@ -1502,93 +1256,79 @@ Report format: {report_format}
 - Tier 1 (detailed): {detailed_count} programs
 - Tier 2 (concise): {concise_count} programs
 
-📋 TWO-TIER RESEARCH WORKFLOW:
+📋 TWO-TIER RESEARCH WORKFLOW (v1.09):
 
 TIER 1 (Detailed Research) - {detailed_count} programs:
-- MUST perform 3 Exa searches per program (tuition/features/deadline)
-- MUST provide full 6-dimension analysis
+- Perform 2 Exa searches per program (curriculum + career outcomes)
+- Focus on program features, student experience, and suitability analysis
+- NO searches for tuition/timeline/costs (those change frequently)
 - Total: {required_searches} Exa searches required
 
 TIER 2 (Concise Summary) - {concise_count} programs:
 - NO Exa searches required (use your knowledge base up to Jan 2025)
 - Provide concise summary with 3 fields:
-  * quick_facts: Basic info (tuition range, duration, format)
+  * quick_facts: Basic info (duration, format, study mode)
   * fit_reasoning: Why recommend for this student
-  * application_notes: Key application points
+  * application_notes: Key application requirements
 - Source: mark as "llm_knowledge"
 
 🎯 Tier 1 Search Strategy:
-1. FIRST: Try Exa MCP (mcp__exa__web_search_exa) for each search
-2. IF Exa returns no useful results: Use your own knowledge
-3. ALWAYS fill "findings" field with detailed content (min 50 chars)
+1. FIRST: Check if you already know the program well
+2. IF uncertain: Use Exa MCP (mcp__exa__web_search_exa)
+3. IF Exa returns no useful results: Use your own knowledge
+4. ALWAYS fill "findings" field with detailed content (min 50 chars)
 
-For EACH of the top {detailed_count} programs (Tier 1), do EXACTLY 3 Exa searches:
+For EACH of the top {detailed_count} programs (Tier 1), do EXACTLY 2 Exa searches:
 
-🔍 Search 1: Tuition & Living Cost (4 results required)
-Query: "[University] [Program] tuition fees living cost total expense 2025"
+🔍 Search 1: Curriculum & Program Structure (6-8 results)
+Query: "[University] [Program] curriculum courses structure faculty specializations"
 
 Recommended Exa MCP Parameters:
 mcp__exa__web_search_exa(
     query="<constructed query>",
-    numResults=4,
+    numResults=7,
     useAutoprompt=true,
     searchType="auto",
-    startPublishedDate="2025-01-01",  # MUST be 2025 for current tuition!
-    includeDomains=["<university_domain>.edu"],  # ⚠️ Use specific university domain
-    useHighlights=true,               # ⚠️ CRITICAL: Reduce tokens
-    highlightNumSentences=5,
-    highlightPerUrl=4
-)
-
-Then fill findings field:
-- If Exa found info: "findings": "Based on Exa search: Tuition $X, living $Y, total ~$Z..."
-- If Exa failed: "findings": "Exa returned no results. Based on general knowledge: Typical range $X-Y..."
-
-🔍 Search 2: Program Features & Career Outlook (8 results required)
-Query: "[University] [Program] curriculum faculty career outcomes alumni reviews"
-
-Exa MCP Parameters:
-mcp__exa__web_search_exa(
-    query="<constructed query>",
-    numResults=8,
-    useAutoprompt=true,
-    searchType="auto",
-    useHighlights=true,               # ⚠️ CRITICAL: Reduce tokens
+    includeDomains=["<university_domain>"],  # Use university domain for authoritative info
+    useHighlights=true,               # CRITICAL: Reduce tokens
     highlightNumSentences=8,
     highlightPerUrl=6
-    # NO includeDomains - need both official info and real student reviews!
 )
 
 Then fill findings field:
-- If Exa found info: "findings": "Based on Exa search: Core courses include X, Y. 95% employment rate..."
-- If Exa failed: "findings": "Exa returned limited results. Based on general knowledge: Program focuses on..."
+- If Exa found info: "findings": "Based on Exa search: Core courses include X, Y, Z. Specializations in..."
+- If Exa failed OR you know the program: "findings": "Based on general knowledge: Program covers..."
 
-🔍 Search 3: Application Deadlines & Requirements (4 results required)
-Query: "[University] [Program] admissions deadline [month keywords] [year]"
-      ⚠️ Use SPECIFIC keywords: include deadline months and application year
-      Example: "Carnegie Mellon MISM admissions deadline December January 2026"
+🔍 Search 2: Career Outcomes & Student Experience (6-8 results)
+Query: "[University] [Program] career outcomes employment alumni student experience reviews"
 
 Recommended Exa MCP Parameters:
 mcp__exa__web_search_exa(
     query="<constructed query>",
-    numResults=4,
+    numResults=7,
     useAutoprompt=true,
     searchType="auto",
-    startPublishedDate="2025-01-01",  # MUST be 2025 for current deadlines!
-    includeDomains=["<university_domain>.edu"],  # ⚠️ Use specific university domain
-    useHighlights=true,               # ⚠️ CRITICAL: Reduce tokens
-    highlightNumSentences=5,
-    highlightPerUrl=3
+    # NO includeDomains - need diverse sources (official stats + student reviews + career reports)
+    useHighlights=true,               # CRITICAL: Reduce tokens
+    highlightNumSentences=8,
+    highlightPerUrl=6
 )
 
 Then fill findings field:
-- If Exa found info: "findings": "Based on Exa search: Round 1 deadline Jan 5, Round 2 Mar 15..."
-- If Exa failed: "findings": "Exa found no specific dates. Based on general knowledge: Typically early January..."
+- If Exa found info: "findings": "Based on Exa search: 95% employment rate, avg salary $X, top employers..."
+- If Exa failed OR you know the program: "findings": "Based on general knowledge: Strong career outcomes..."
 
-Total: 4 + 8 + 4 = 16 results per program ({detailed_count} programs × 16 = {required_searches} searches)
+⚠️ CONDITIONAL SEARCHING (v1.09 key feature):
+- SKIP search if you have sufficient knowledge about the program
+- Mark as source="llm_knowledge" when using your knowledge
+- Mark as source="exa" when using Exa search results
+- This reduces costs while maintaining quality
+
+Total: {required_searches} Exa searches maximum ({detailed_count} programs × 2 searches)
+Actual searches may be fewer if you know programs well!
 
 Work systematically:
-1. Complete all Tier 1 programs (3 searches each): Program #1 → #2 → ... → #{detailed_count}
+1. Complete all Tier 1 programs (0-2 searches each): Program #1 → #2 → ... → #{detailed_count}
 2. Then provide Tier 2 concise summaries (knowledge-based): Program #{detailed_count+1} → ... → #{detailed_count + concise_count}
 3. Call generate_final_report(detailed_research, ranking_token, concise_research)
         """,
@@ -1603,65 +1343,65 @@ async def generate_final_report(
     concise_program_research: Optional[List[dict]] = None
 ) -> dict:
     """
-    Step 7: Generate comprehensive two-tier report (v1.15)
+    Step 7: Generate comprehensive two-tier report (v1.09)
+
+    Focus: Program features, student experience, and suitability analysis
+    NO searches for tuition/timeline/costs (those change frequently and are not program-specific)
 
     Args:
-        detailed_program_research: Tier 1 programs with full Exa research
+        detailed_program_research: Tier 1 programs with 2 Exa searches each
             Each: {
                 "program_id": 123,
                 "exa_searches": [
                     {
-                        "query": "CMU MISM tuition fees living cost 2025",
-                        "num_results": 4,
-                        "findings": "Based on Exa search: Total cost ~$85k (tuition $70k + living $15k)...",
+                        "query": "CMU MISM curriculum courses structure faculty",
+                        "num_results": 7,
+                        "findings": "Based on Exa search: Core courses include analytics, business intelligence...",
                         "source": "exa"  # Optional: "exa" or "llm_knowledge"
                     },
                     {
-                        "query": "CMU MISM curriculum faculty career outcomes",
-                        "num_results": 8,
-                        "findings": "Based on Exa search: Strong analytics focus, 95% employment rate...",
+                        "query": "CMU MISM career outcomes employment alumni experience",
+                        "num_results": 7,
+                        "findings": "Based on Exa search: 95% employment rate, avg salary $120k, top employers...",
                         "source": "exa"
-                    },
-                    {
-                        "query": "CMU MISM admissions deadline January 2026",
-                        "num_results": 4,
-                        "findings": "Could not find via Exa. Based on general knowledge: Typically Jan 5...",
-                        "source": "llm_knowledge"  # Use when Exa fails
                     }
                 ],
-                "dimensions": {
-                    "location_environment": {...},
-                    "career_prospects": {...},
-                    "program_intensity": {...},
-                    "unique_features": [...],
-                    "application_timeline": {...},
-                    "total_cost": {...}
+                "analysis": {
+                    "program_features": "Description of unique program characteristics, curriculum structure, faculty expertise...",
+                    "student_experience": "What it's like to study in this program, learning format, intensity, culture...",
+                    "suitability_analysis": "Why this program matches the student's background, goals, and profile..."
                 }
             }
 
         ⚠️ CRITICAL: "findings" field is REQUIRED and MUST be non-empty (min 50 chars)
-        - First try Exa MCP search (mcp__exa__web_search_exa)
-        - If Exa returns no useful results, use your own knowledge and mark source="llm_knowledge"
+        - FIRST: Check if you know the program well
+        - IF uncertain: Use Exa MCP search (mcp__exa__web_search_exa)
+        - IF Exa returns no useful results: Use your own knowledge and mark source="llm_knowledge"
         - NEVER submit empty findings or skip this field
+
+        ⚠️ CONDITIONAL SEARCHING (v1.09):
+        - You can skip searches for well-known programs
+        - Mark source="llm_knowledge" when using your knowledge
+        - This reduces costs while maintaining quality
 
         concise_program_research: Tier 2 programs with concise summaries (TOP_20 format only)
             Each: {
                 "program_id": 456,
                 "summary": {
-                    "quick_facts": "1-year MS, ~$60k total cost, STEM-designated, evening classes available",
-                    "fit_reasoning": "Strong PM training with tech emphasis, matches Google PM experience. Industry partnerships for capstone projects.",
-                    "application_notes": "Round 1 deadline typically Jan 5, requires PM portfolio or work samples, GRE optional, 3.0+ GPA recommended"
+                    "quick_facts": "1-year MS, STEM-designated, full-time/part-time options",
+                    "fit_reasoning": "Strong PM training with tech emphasis, matches Google PM experience. Industry partnerships.",
+                    "application_notes": "Typical deadlines Jan-Mar, requires statement of purpose, GRE optional, 3.0+ GPA recommended"
                 },
                 "source": "llm_knowledge"
             }
 
-        ⚠️ TIER 2 REQUIREMENTS (v1.15):
+        ⚠️ TIER 2 REQUIREMENTS:
         - Required when report_format="TOP_20" (≥7 universities selected)
         - NO Exa searches needed - use your knowledge base
         - Each field in summary must be ≥30 characters
-        - quick_facts: Basic program facts (cost, duration, format)
+        - quick_facts: Basic program facts (duration, format, study mode)
         - fit_reasoning: Why suitable for this student's profile
-        - application_notes: Key application requirements and deadlines
+        - application_notes: Key application requirements (NO specific dates)
 
         ranking_token: From score_and_rank_programs()
 
@@ -1705,29 +1445,27 @@ async def generate_final_report(
         
         if not program_id:
             raise ValueError(f"Research #{i+1}: missing program_id")
-        
-        if len(exa_searches) != 3:
-            raise ValueError(f"Program {program_id}: must have EXACTLY 3 Exa searches. You provided {len(exa_searches)}.")
 
-        # Validate each search with specific result count requirements
-        expected_results = [4, 8, 4]
-        search_names = ["Tuition & Cost", "Program Features & Career", "Application Deadline"]
+        if len(exa_searches) != 2:
+            raise ValueError(f"Program {program_id}: must have EXACTLY 2 Exa searches (v1.09). You provided {len(exa_searches)}.")
+
+        # Validate each search with flexible result count (6-8 results)
+        search_names = ["Curriculum & Structure", "Career Outcomes & Experience"]
 
         for j, search in enumerate(exa_searches):
             if not isinstance(search, dict):
                 raise ValueError(f"Program {program_id}, Search #{j+1} ({search_names[j]}): must be a dict")
 
-            # Validate num_results
+            # Validate num_results (flexible 6-8 range)
             if "num_results" not in search:
                 raise ValueError(f"Program {program_id}, Search #{j+1} ({search_names[j]}): missing 'num_results' field")
 
-            expected = expected_results[j]
             actual = search["num_results"]
 
-            if actual != expected:
+            if not (6 <= actual <= 8):
                 raise ValueError(
                     f"Program {program_id}, Search #{j+1} ({search_names[j]}): "
-                    f"must have EXACTLY {expected} results. You provided {actual}"
+                    f"num_results must be 6-8. You provided {actual}"
                 )
 
             # NEW: Validate findings field (CRITICAL for preventing Exa bypass)
@@ -1760,18 +1498,31 @@ async def generate_final_report(
                     )
 
             total_searches += 1
-        
-        required_dims = ["location_environment", "career_prospects", "program_intensity", 
-                        "unique_features", "application_timeline", "total_cost"]
-        missing_dims = [dim for dim in required_dims if dim not in dimensions]
-        if missing_dims:
-            raise ValueError(f"Program {program_id}: missing dimensions: {missing_dims}")
-        
+
+        # v1.09: Validate new analysis structure (3 sections instead of 6 dimensions)
+        analysis = research.get("analysis", {})
+        if not isinstance(analysis, dict):
+            raise ValueError(f"Program {program_id}: 'analysis' must be a dict")
+
+        required_sections = ["program_features", "student_experience", "suitability_analysis"]
+        missing_sections = [sec for sec in required_sections if sec not in analysis]
+        if missing_sections:
+            raise ValueError(f"Program {program_id}: missing analysis sections: {missing_sections}")
+
+        # Validate each section has substantial content
+        for section in required_sections:
+            content = analysis[section]
+            if not isinstance(content, str) or len(content.strip()) < 100:
+                raise ValueError(
+                    f"Program {program_id}: '{section}' must be a string with at least 100 characters. "
+                    f"You provided {len(content.strip()) if isinstance(content, str) else 0} chars."
+                )
+
         validation_results.append({
             "program_id": program_id,
             "tier": 1,
             "exa_searches_count": len(exa_searches),
-            "dimensions_complete": True
+            "analysis_complete": True
         })
 
     # v1.15: Validate Tier 2 (concise) programs - RELAXED validation
@@ -1808,27 +1559,33 @@ async def generate_final_report(
                 "summary_complete": True
             })
 
-    if total_searches != required_searches:
-        raise ValueError(f"Expected {required_searches} total Exa searches for Tier 1, but you provided {total_searches}")
-    
+    # v1.09: Flexible validation - allow fewer searches if LLM used own knowledge
+    if total_searches > required_searches:
+        raise ValueError(f"Too many Exa searches: Expected maximum {required_searches}, but you provided {total_searches}")
+
     return {
         "report_generated": True,
         "report_format": report_format,
         "tier1_programs": detailed_count,
-        "tier2_programs": concise_count,  # v1.15: Fixed to use concise_count
+        "tier2_programs": concise_count,
         "total_exa_searches_validated": total_searches,
         "validation": validation_results,
         "message": f"""
 ✅ All validations passed! Generate the comprehensive report now.
 
-Report structure (v1.15):
-- TIER 1: {detailed_count} programs with full 6-dimension profiles (Exa-researched)
+Report structure (v1.09):
+- TIER 1: {detailed_count} programs with 3-section analysis (program features, student experience, suitability)
 - TIER 2: {concise_count} programs with concise summaries (knowledge-based)
 - Final section: Application strategy
 
-Output in user's language (Chinese if they wrote in Chinese).
+Output in user's language (Chinese if they wrote in Chinese, English if English).
 
-Include specific details from Exa searches for Tier 1 programs (tuition, deadlines, features).
+Focus on:
+1. Program features: Unique characteristics, curriculum, faculty, specializations
+2. Student experience: Learning format, intensity, culture, day-to-day experience
+3. Suitability: Why this program matches the student's background, goals, and profile
+
+DO NOT include tuition/timeline/costs (those change frequently and are not program-specific).
         """
     }
 

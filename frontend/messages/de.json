@@ -34,38 +34,94 @@
   },
   "form": {
     "title": "Erzählen Sie uns von Ihrem Hintergrund",
-    "label": "Ihr Hintergrund *",
-    "description": {
-      "intro": "Bitte beschreiben Sie Ihren Hintergrund ausführlich. Geben Sie Informationen wie folgende an:",
-      "academic": "Akademisch",
-      "academicDetails": "Aktuelle Universität/Studiengang, Notendurchschnitt, Sprachtest-Ergebnisse (TOEFL/IELTS/GRE)",
-      "experience": "Erfahrung",
-      "experienceDetails": "Forschungsprojekte, Praktika, Wettbewerbe, Auszeichnungen, Veröffentlichungen",
-      "entrepreneurship": "Unternehmertum",
-      "entrepreneurshipDetails": "Gegründete Startups, eingeführte Produkte, Geschäftsvorhaben",
-      "goals": "Ziele",
-      "goalsDetails": "Zielland/-region, Karrierepläne, Entwicklungsziele",
-      "other": "Sonstiges",
-      "otherDetails": "Alles andere, was Sie für relevant oder erwähnenswert halten"
+    "sections": {
+      "basic": "Akademische Grundinformationen",
+      "target": "Bewerbungsziele",
+      "experience": "Hintergrund und Erfahrung",
+      "additional": "Zusätzliche Informationen"
     },
-    "reminder": {
-      "focus": {
-        "title": "Für beste Ergebnisse:",
-        "description": "Geben Sie jeweils nur EIN Zielland/-region an. Dies ermöglicht uns gezieltere und präzisere Empfehlungen."
+    "countryGroups": {
+      "popularcountries": "Beliebte Länder",
+      "othercountries": "Andere Länder"
+    },
+    "fields": {
+      "school": {
+        "label": "Aktuelle Universität",
+        "placeholder": "z.B., Ludwig-Maximilians-Universität München, Stanford University"
       },
-      "quality": {
-        "title": "Qualität zählt:",
-        "description": "Die Qualität der KI-Empfehlungen hängt von den Details ab, die Sie bereitstellen. Wenn es etwas Besonderes in Ihrem Hintergrund gibt, das Aufmerksamkeit verdient, stellen Sie sicher, dass Sie es erwähnen!"
+      "schoolTier": {
+        "label": "Universitätsranking",
+        "placeholder": "z.B., TU9/Elite-Uni, US Top 30, UK G5, Russell Group, QS Top 100"
+      },
+      "major": {
+        "label": "Studiengang",
+        "placeholder": "z.B., Informatik, Betriebswirtschaftslehre"
+      },
+      "gpa": {
+        "label": "GPA (4.0-Skala)",
+        "placeholder": "z.B., 3.50"
+      },
+      "targetCountry": {
+        "label": "Zielland/-region",
+        "placeholder": "Wählen Sie das Zielland aus"
+      },
+      "regionPreference": {
+        "label": "Regionalpräferenz (Optional)",
+        "placeholder": "z.B., nur San Francisco Bay Area, New York, London"
+      },
+      "internships": {
+        "label": "Praktikumserfahrung (Optional)",
+        "placeholder": "z.B., Google PM Praktikum 6 Monate, Microsoft SWE Sommer 2024..."
+      },
+      "research": {
+        "label": "Forschungserfahrung (Optional)",
+        "placeholder": "Einschließlich Forschungsprojekte, Veröffentlichungen, Papers..."
+      },
+      "projects": {
+        "label": "Projekterfahrung (Optional)",
+        "placeholder": "z.B., 4 GitHub-Projekte mit jeweils 100+ Sternen..."
+      },
+      "competitions": {
+        "label": "Wettbewerbe und Auszeichnungen (Optional)",
+        "placeholder": "z.B., ACM ICPC Goldmedaille, Hackathon 1. Platz..."
+      },
+      "careerGoals": {
+        "label": "Karriereziele (Optional)",
+        "placeholder": "z.B., Product Manager werden, Wechsel zu Tech PM, eigenes Unternehmen gründen..."
+      },
+      "languageScores": {
+        "label": "Sprachtest-Ergebnisse (Optional)",
+        "placeholder": "z.B., TOEFL 110, IELTS 7.5, GRE 330"
+      },
+      "gpaRank": {
+        "label": "GPA-Rang (Optional)",
+        "placeholder": "z.B., Top 5%, Top 10%"
+      },
+      "recommendations": {
+        "label": "Empfehlungsschreiben (Optional)",
+        "placeholder": "z.B., Professor von Stanford, Manager von Google..."
+      },
+      "other1": {
+        "label": "Weitere Informationen 1 (Optional)",
+        "placeholder": "z.B., Vollzeit-Berufserfahrung, Unternehmertum..."
+      },
+      "other2": {
+        "label": "Weitere Informationen 2 (Optional)",
+        "placeholder": "Weitere Erfolge oder Erfahrungen..."
+      },
+      "other3": {
+        "label": "Weitere Informationen 3 (Optional)",
+        "placeholder": "Zusätzliche Details..."
       }
     },
-    "placeholder": "Schreiben Sie frei mit Ihren eigenen Worten...",
+    "required": "Erforderlich",
+    "optional": "Optional",
     "cancel": "Abbrechen",
     "submit": "Weiter zur Zahlung",
     "validation": {
-      "characters": "Zeichen",
-      "moreNeeded": "weitere benötigt",
-      "tooShort": "Bitte geben Sie mindestens 20 Zeichen mit Details zu Ihrer Schule, Notendurchschnitt, Praktika usw. an",
-      "meetsRequirement": "✓ Erfüllt die Mindestanforderung"
+      "gpaRange": "Der GPA muss zwischen 0.00 und 4.00 liegen",
+      "fillRequired": "Bitte füllen Sie alle erforderlichen Felder aus",
+      "selectCountry": "Bitte wählen Sie ein Zielland aus"
     }
   },
   "progress": {

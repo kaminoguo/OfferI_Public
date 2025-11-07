@@ -34,38 +34,94 @@
   },
   "form": {
     "title": "あなたの経歴を教えてください",
-    "label": "あなたの経歴 *",
-    "description": {
-      "intro": "経歴を詳しく記載してください。次の情報を含めてください：",
-      "academic": "学歴",
-      "academicDetails": "現在の大学/専攻、GPA、語学試験スコア（TOEFL/IELTS/GRE）",
-      "experience": "経験",
-      "experienceDetails": "研究プロジェクト、インターンシップ、コンテスト、受賞歴、論文発表",
-      "entrepreneurship": "起業",
-      "entrepreneurshipDetails": "設立したスタートアップ、リリースした製品、ビジネスベンチャー",
-      "goals": "目標",
-      "goalsDetails": "目標国/地域、キャリアプラン、開発目標",
-      "other": "その他",
-      "otherDetails": "関連性があると思われる、または強調する価値があると思われるその他の内容"
+    "sections": {
+      "basic": "基本学術情報",
+      "target": "出願目標",
+      "experience": "経歴・経験",
+      "additional": "補足情報"
     },
-    "reminder": {
-      "focus": {
-        "title": "最良の結果を得るために：",
-        "description": "一度に1つの目標国/地域のみを記入してください。これにより、より焦点を絞った正確な推奨を提供できます。"
+    "countryGroups": {
+      "popularcountries": "人気の国",
+      "othercountries": "その他の国"
+    },
+    "fields": {
+      "school": {
+        "label": "出身大学",
+        "placeholder": "例：東京大学、スタンフォード大学"
       },
-      "quality": {
-        "title": "品質が重要：",
-        "description": "AIの推奨品質は、提供する詳細によって異なります。経歴に特に注意を払うべき点がある場合は、必ず言及してください！"
+      "schoolTier": {
+        "label": "大学ランク",
+        "placeholder": "例：旧帝大/早慶/米Top 30/英G5/Russell Group/QS上位100"
+      },
+      "major": {
+        "label": "専攻",
+        "placeholder": "例：コンピュータサイエンス、経営学"
+      },
+      "gpa": {
+        "label": "GPA（4点満点）",
+        "placeholder": "例：3.50"
+      },
+      "targetCountry": {
+        "label": "志望国・地域",
+        "placeholder": "志望国を選択してください"
+      },
+      "regionPreference": {
+        "label": "地域の希望（任意）",
+        "placeholder": "例：サンフランシスコベイエリア、ニューヨーク、ロンドンのみ"
+      },
+      "internships": {
+        "label": "インターンシップ経験（任意）",
+        "placeholder": "例：Google PMインターン6ヶ月、Microsoft SWE 2024夏季..."
+      },
+      "research": {
+        "label": "研究経験（任意）",
+        "placeholder": "研究プロジェクト、論文発表などを含む..."
+      },
+      "projects": {
+        "label": "プロジェクト経験（任意）",
+        "placeholder": "例：GitHubプロジェクト4件各100以上のスター..."
+      },
+      "competitions": {
+        "label": "コンテスト・受賞歴（任意）",
+        "placeholder": "例：ACM ICPC金メダル、ハッカソン1位..."
+      },
+      "careerGoals": {
+        "label": "キャリア目標（任意）",
+        "placeholder": "例：プロダクトマネージャーになる、Tech PMに転向、起業..."
+      },
+      "languageScores": {
+        "label": "語学試験スコア（任意）",
+        "placeholder": "例：TOEFL 110、IELTS 7.5、GRE 330"
+      },
+      "gpaRank": {
+        "label": "GPAランク（任意）",
+        "placeholder": "例：上位5%、上位10%"
+      },
+      "recommendations": {
+        "label": "推薦状（任意）",
+        "placeholder": "例：スタンフォード大学教授、Google マネージャーからの推薦..."
+      },
+      "other1": {
+        "label": "その他の情報1（任意）",
+        "placeholder": "例：フルタイム勤務経験、起業経験..."
+      },
+      "other2": {
+        "label": "その他の情報2（任意）",
+        "placeholder": "その他の実績や経験..."
+      },
+      "other3": {
+        "label": "その他の情報3（任意）",
+        "placeholder": "追加の詳細..."
       }
     },
-    "placeholder": "自由に書いてください...",
+    "required": "必須",
+    "optional": "任意",
     "cancel": "キャンセル",
-    "submit": "支払いに進む",
+    "submit": "支払いへ進む",
     "validation": {
-      "characters": "文字",
-      "moreNeeded": "さらに必要",
-      "tooShort": "学校、GPA、インターンシップなどの詳細情報を含む少なくとも20文字を提供してください",
-      "meetsRequirement": "✓ 最低要件を満たしています"
+      "gpaRange": "GPAは0.00から4.00の間である必要があります",
+      "fillRequired": "すべての必須項目を入力してください",
+      "selectCountry": "志望国を選択してください"
     }
   },
   "progress": {

@@ -34,38 +34,94 @@
   },
   "form": {
     "title": "귀하의 배경을 알려주세요",
-    "label": "귀하의 배경 *",
-    "description": {
-      "intro": "배경을 자세히 설명해 주세요. 다음 정보를 포함하세요:",
-      "academic": "학업",
-      "academicDetails": "현재 대학/전공, GPA, 어학 시험 점수(TOEFL/IELTS/GRE)",
-      "experience": "경험",
-      "experienceDetails": "연구 프로젝트, 인턴십, 대회, 수상 경력, 논문 발표",
-      "entrepreneurship": "창업",
-      "entrepreneurshipDetails": "설립한 스타트업, 출시한 제품, 사업 벤처",
-      "goals": "목표",
-      "goalsDetails": "목표 국가/지역, 진로 계획, 개발 목표",
-      "other": "기타",
-      "otherDetails": "관련이 있거나 강조할 가치가 있다고 생각하는 기타 내용"
+    "sections": {
+      "basic": "기본 학업 정보",
+      "target": "지원 목표",
+      "experience": "배경 및 경력",
+      "additional": "추가 정보"
     },
-    "reminder": {
-      "focus": {
-        "title": "최상의 결과를 얻으려면:",
-        "description": "한 번에 하나의 목표 국가/지역만 작성하세요. 이를 통해 더 집중적이고 정확한 추천을 제공할 수 있습니다."
+    "countryGroups": {
+      "popularcountries": "인기 국가",
+      "othercountries": "기타 국가"
+    },
+    "fields": {
+      "school": {
+        "label": "출신 대학",
+        "placeholder": "예: 서울대학교, 스탠포드 대학교"
       },
-      "quality": {
-        "title": "품질이 중요합니다:",
-        "description": "AI 추천의 품질은 제공하는 세부 정보에 따라 달라집니다. 배경에 특별히 주목해야 할 사항이 있다면 반드시 언급하세요!"
+      "schoolTier": {
+        "label": "대학 순위",
+        "placeholder": "예: SKY/미국 Top 30/영국 G5/Russell Group/QS 상위 100"
+      },
+      "major": {
+        "label": "전공",
+        "placeholder": "예: 컴퓨터공학, 경영학"
+      },
+      "gpa": {
+        "label": "GPA (4.0 만점)",
+        "placeholder": "예: 3.50"
+      },
+      "targetCountry": {
+        "label": "목표 국가/지역",
+        "placeholder": "목표 국가를 선택하세요"
+      },
+      "regionPreference": {
+        "label": "지역 선호 (선택사항)",
+        "placeholder": "예: 샌프란시스코 베이 에리어, 뉴욕, 런던만 고려"
+      },
+      "internships": {
+        "label": "인턴십 경험 (선택사항)",
+        "placeholder": "예: Google PM 인턴 6개월, Microsoft SWE 2024 여름..."
+      },
+      "research": {
+        "label": "연구 경험 (선택사항)",
+        "placeholder": "연구 프로젝트, 논문 발표 등 포함..."
+      },
+      "projects": {
+        "label": "프로젝트 경험 (선택사항)",
+        "placeholder": "예: GitHub 프로젝트 4개 각 100+ 스타..."
+      },
+      "competitions": {
+        "label": "대회 및 수상 (선택사항)",
+        "placeholder": "예: ACM ICPC 금메달, 해커톤 1등..."
+      },
+      "careerGoals": {
+        "label": "커리어 목표 (선택사항)",
+        "placeholder": "예: 프로덕트 매니저 되기, Tech PM 전환, 창업..."
+      },
+      "languageScores": {
+        "label": "어학 시험 점수 (선택사항)",
+        "placeholder": "예: TOEFL 110, IELTS 7.5, GRE 330"
+      },
+      "gpaRank": {
+        "label": "GPA 순위 (선택사항)",
+        "placeholder": "예: 상위 5%, 상위 10%"
+      },
+      "recommendations": {
+        "label": "추천서 (선택사항)",
+        "placeholder": "예: 스탠포드 교수님, Google 매니저 추천..."
+      },
+      "other1": {
+        "label": "기타 정보 1 (선택사항)",
+        "placeholder": "예: 정규직 경력, 창업 경험..."
+      },
+      "other2": {
+        "label": "기타 정보 2 (선택사항)",
+        "placeholder": "기타 성과나 경험..."
+      },
+      "other3": {
+        "label": "기타 정보 3 (선택사항)",
+        "placeholder": "추가 세부사항..."
       }
     },
-    "placeholder": "자유롭게 작성하세요...",
+    "required": "필수",
+    "optional": "선택사항",
     "cancel": "취소",
     "submit": "결제 진행",
     "validation": {
-      "characters": "자",
-      "moreNeeded": "더 필요",
-      "tooShort": "학교, GPA, 인턴십 등의 세부 정보를 포함하여 최소 20자를 제공하세요",
-      "meetsRequirement": "✓ 최소 요구 사항 충족"
+      "gpaRange": "GPA는 0.00에서 4.00 사이여야 합니다",
+      "fillRequired": "모든 필수 항목을 입력해주세요",
+      "selectCountry": "목표 국가를 선택해주세요"
     }
   },
   "progress": {
