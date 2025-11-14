@@ -111,6 +111,25 @@ __version__ = "1.09.1"
 # Database path
 DB_PATH = os.getenv("DB_PATH", "/app/mcp/programs.db")
 
+# Classification mapping (15 categories)
+CLASSIFICATIONS = {
+    1: "Health Sciences & Medicine",
+    2: "Business & Management",
+    3: "Engineering",
+    4: "Social Sciences",
+    5: "Education",
+    6: "Humanities & Languages",
+    7: "Arts Media & Design",
+    8: "Computing & Data Science",
+    9: "Physical & Mathematical Sciences",
+    10: "Law & Public Policy",
+    11: "Life Sciences",
+    12: "Finance & Economics",
+    13: "Architecture & Planning",
+    14: "Environment & Sustainability",
+    15: "Interdisciplinary Studies"
+}
+
 # In-memory token store (for validation)
 _active_tokens = {}
 
@@ -118,33 +137,51 @@ _active_tokens = {}
 mcp = FastMCP(
     name="OfferI Study Abroad",
     instructions="""
-    Study abroad program consultation MCP server with 93,716 programs worldwide.
-    Current date: October 2025
+    Study abroad program consultation MCP server with 44,352 programs worldwide.
+    Current date: November 2025
 
-    WORKFLOW ENFORCEMENT:
-    This server uses token-based workflow orchestration with batch processing:
+    WORKFLOW ENFORCEMENT (SIMPLIFIED v2.0):
+    This server uses token-based workflow orchestration:
 
-    1. start_consultation() - LLM analyzes background FIRST, then optional 0-3 web searches (max 25 results each)
-    2. explore_universities() - Get all universities in target country
+    1. start_and_select_universities() - TWO-CALL WORKFLOW
+       Call 1: Get all universities in target country
+       Call 2: Submit selected universities (0-3 optional web searches)
+       → Returns: selection_token
 
-    3-5. BATCH LOOP (process one batch at a time):
-       3. get_university_programs() - Get programs for 5 universities (one batch)
-       4. shortlist_programs_by_name() - Two-pass screening for THIS batch
-       5. validate_programs_with_exa() - Two-stage web search validation for THIS batch
-       → Repeat 3-5 for next batch until all universities processed
+    2. select_classifications() - TWO-CALL WORKFLOW
+       Call 1: View all 15 classification categories
+       Call 2: Submit selected classifications
+       → Returns: classifications_token
 
-    6. score_and_rank_programs() - Score and rank all validated programs (after ALL batches complete)
-    7. generate_final_report() - Generate comprehensive report with detailed research
+    3. get_filtered_programs() - Get programs with OR logic filtering
+       → Includes programs where PRIMARY or SECONDARY classification matches
+       → Returns: programs_token
 
-    BATCH PROCESSING:
-    - Tools 3-5 form a cycle: process ONE batch → move to next batch
-    - Tool 5 uses previous_validation_token to chain batches
-    - Tool 6 only callable when is_complete=True (all batches validated)
+    4. shortlist_programs_by_name() - Name-based screening
+       → Returns: shortlist_token
+
+    5. deep_validation() - Comprehensive validation (allows 3-5 web searches in basic tier)
+       → Validates: student profile match, curriculum fit, career outcomes
+       → Returns: validation_token
+
+    6. generate_final_report() - Basic report with LLM knowledge
+       → Dynamic program count (10-20 for ≤7 universities, 20-30 for >7)
+       → No explicit tier labels (reach/match/safety)
+       → Returns: report_token + upgrade prompt
+
+    KEY CHANGES FROM v1.09:
+    - Removed: tier_assessment, career_clarity scoring, score_and_rank_programs
+    - Removed: batch processing (all universities processed at once)
+    - Added: OR logic for classification filtering (primary + secondary)
+    - Added: Two-call pattern for university and classification selection
+    - Simplified: Single-pass workflow, no tier judgments
+
+    CLASSIFICATION OR LOGIC:
+    Programs are matched if EITHER primary OR secondary classification matches selected categories.
+    Example: "Business Analytics" (Business + Computing) appears when selecting either classification.
 
     LANGUAGE POLICY:
     Output language MUST match user's input language.
-
-    CRITICAL: Database tuition data is unreliable. Always get tuition from Exa searches.
     """
 )
 
@@ -257,21 +294,23 @@ def _get_classifications_for_universities(university_names: List[str]) -> Dict[s
     return {row["classification"]: row["count"] for row in results}
 
 def _search_programs(university_name: str, classification_filters: Optional[List[str]] = None) -> List[Dict[str, Any]]:
-    """Internal: Get programs for a university, optionally filtered by classifications"""
+    """Internal: Get programs for a university, optionally filtered by classifications (OR logic for primary and secondary)"""
     conn = get_db_connection()
     cursor = conn.cursor()
 
     query = """
-        SELECT program_id, program_name, classification
+        SELECT program_id, program_name, classification, secondary_classification
         FROM programs
         WHERE LOWER(university_name) LIKE LOWER(?)
     """
     params = [f"%{university_name}%"]
 
     if classification_filters:
+        # OR logic: match if EITHER classification OR secondary_classification matches
         placeholders = ','.join('?' * len(classification_filters))
-        query += f" AND classification IN ({placeholders})"
+        query += f" AND (classification IN ({placeholders}) OR secondary_classification IN ({placeholders}))"
         params.extend(classification_filters)
+        params.extend(classification_filters)  # Add filters twice for both conditions
 
     query += " ORDER BY program_name"
 
@@ -279,7 +318,12 @@ def _search_programs(university_name: str, classification_filters: Optional[List
     results = cursor.fetchall()
     conn.close()
 
-    return [{"id": row["program_id"], "name": row["program_name"], "classification": row["classification"]} for row in results]
+    return [{
+        "id": row["program_id"],
+        "name": row["program_name"],
+        "classification": row["classification"],
+        "secondary_classification": row["secondary_classification"]
+    } for row in results]
 
 def _get_program_details_batch(program_ids: List[int]) -> List[dict]:
     """Internal: Get essential details for multiple programs"""
@@ -537,6 +581,454 @@ def _estimate_university_reputation(uni_name_lower: str) -> float:
 # ═══════════════════════════════════════════════════════════════
 # WORKFLOW ORCHESTRATION TOOLS
 # ═══════════════════════════════════════════════════════════════
+
+@mcp.tool
+async def start_and_select_universities(
+    background: str,
+    country: str,
+    selected_universities: Optional[List[str]] = None,
+    optional_web_searches: Optional[List[dict]] = None
+) -> dict:
+    """
+    Step 1: Start consultation and select universities (Merged Step 1+2)
+
+    PURPOSE: LLM analyzes student background and selects appropriate universities from target country.
+    No tier judgment required - LLM naturally selects universities across different levels.
+
+    TWO-CALL WORKFLOW:
+
+    CALL 1 (Exploration):
+    - Pass: background, country
+    - Returns: All universities in that country
+    - LLM reviews list and decides which universities to select
+
+    CALL 2 (Selection):
+    - Pass: background, country, selected_universities, optional_web_searches
+    - Returns: selection_token for next step
+
+    Args:
+        background: Student background (GPA, university, major, internships, projects, goals, etc.)
+        country: Target country ("USA", "UK", "Hong Kong (SAR)", etc.)
+        selected_universities: List of university names (empty/None for Call 1, filled for Call 2)
+        optional_web_searches: 0-3 web searches to verify university tiers/fit if uncertain (Call 2 only)
+            Each: {"query": "...", "num_results": <1-25>, "key_findings": "..."}
+
+    Returns:
+        Call 1: All universities list
+        Call 2: selection_token + selected universities + instructions for next step
+    """
+    # ═══════════════════════════════════════════════════════════════
+    # QUOTA VALIDATION
+    # ═══════════════════════════════════════════════════════════════
+    import psycopg2
+    from fastmcp.server.dependencies import get_http_headers
+
+    FREE_CONSULTATION_LIMIT = 5
+
+    # Get API key from headers
+    api_key = ""
+    try:
+        headers = get_http_headers()
+        auth_header = headers.get("authorization", "")
+        if auth_header.startswith("Bearer "):
+            api_key = auth_header[7:]
+    except:
+        api_key = os.getenv("SSE_API_KEY", "")
+
+    if not api_key or not api_key.startswith("sk_"):
+        raise ValueError("❌ Invalid or missing API key. Please provide a valid API key in Authorization header.")
+
+    # Check quota in database
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv("POSTGRES_HOST", "localhost"),
+            port=os.getenv("POSTGRES_PORT", "5432"),
+            dbname=os.getenv("POSTGRES_DB", "offeri"),
+            user=os.getenv("POSTGRES_USER", "offeri_user"),
+            password=os.getenv("POSTGRES_PASSWORD", "")
+        )
+        cursor = conn.cursor()
+        now = datetime.utcnow()
+
+        # Get user_id and check if super key
+        cursor.execute("""
+            SELECT user_id, is_super_key, is_active
+            FROM api_keys
+            WHERE id = %s
+        """, (api_key,))
+        result = cursor.fetchone()
+
+        if not result:
+            conn.close()
+            raise ValueError(f"❌ API key not found or invalid: {api_key[:20]}...")
+
+        user_id, is_super_key, is_active = result
+
+        if not is_active:
+            conn.close()
+            raise ValueError(f"❌ API key has been revoked. Please generate a new key at https://offeri.org/dashboard")
+
+        # Super keys have unlimited access
+        if not is_super_key:
+            # Check current month usage
+            usage_id = f"{user_id}_{now.year}_{now.month}"
+            cursor.execute("""
+                SELECT usage_count FROM mcp_usage
+                WHERE id = %s
+            """, (usage_id,))
+            usage_result = cursor.fetchone()
+
+            current_usage = usage_result[0] if usage_result else 0
+
+            if current_usage >= FREE_CONSULTATION_LIMIT:
+                conn.close()
+                raise ValueError(
+                    f"❌ MONTHLY QUOTA EXCEEDED\n\n"
+                    f"You've used all {FREE_CONSULTATION_LIMIT} free consultations this month ({now.year}-{now.month:02d}).\n\n"
+                    f"📊 Usage: {current_usage}/{FREE_CONSULTATION_LIMIT}\n"
+                    f"📅 Resets: {now.year}-{(now.month % 12) + 1:02d}-01\n\n"
+                    f"💡 Options:\n"
+                    f"  1. Wait for monthly reset (1st of next month)\n"
+                    f"  2. Contact us for unlimited Super API keys: support@offeri.org\n"
+                )
+
+        conn.close()
+
+    except ValueError:
+        raise
+    except Exception as e:
+        print(f"⚠️ Quota check failed (database error): {e}")
+        pass
+
+    # ═══════════════════════════════════════════════════════════════
+    # END QUOTA VALIDATION
+    # ═══════════════════════════════════════════════════════════════
+
+    # Validate inputs
+    if not background or not isinstance(background, str):
+        raise ValueError("background is required and must be a string")
+
+    if not country or not isinstance(country, str):
+        raise ValueError("country is required and must be a string")
+
+    # Get all universities in country
+    all_universities = _list_universities(country)
+
+    if not all_universities:
+        available = _get_available_countries()
+        countries_str = ", ".join([f"{c['country']} ({c['count']})" for c in available[:10]])
+        raise ValueError(f"Country '{country}' not found. Available: {countries_str}")
+
+    # CALL 1: Return all universities (exploration phase)
+    if not selected_universities:
+        return {
+            "all_universities": all_universities,
+            "total_universities": len(all_universities),
+            "country": country,
+            "instructions": f"""
+📍 COUNTRY: {country}
+📊 TOTAL UNIVERSITIES: {len(all_universities)}
+
+All universities in {country}:
+{chr(10).join([f"  • {uni}" for uni in all_universities[:50]])}
+{"  ... and more" if len(all_universities) > 50 else ""}
+
+🎯 YOUR TASK: Select universities based on student background
+
+SELECTION STRATEGY:
+1. Analyze student profile (GPA, background, goals)
+2. Select universities naturally across different levels (don't label reach/match/safety)
+3. Be comprehensive - include universities that fit student's profile
+4. Optional: Perform 0-3 web searches if uncertain about university tiers
+
+NEXT STEP:
+Call start_and_select_universities() AGAIN with:
+- Same background and country
+- selected_universities: [list of chosen university names]
+- optional_web_searches: [...] (if you need to verify)
+            """,
+            "next_step": "Call start_and_select_universities() again with selected_universities"
+        }
+
+    # CALL 2: Process selection and generate token
+    if not isinstance(selected_universities, list) or len(selected_universities) == 0:
+        raise ValueError("selected_universities must be a non-empty list for Call 2")
+
+    # Validate optional searches
+    search_count = 0
+    if optional_web_searches:
+        if not isinstance(optional_web_searches, list):
+            raise ValueError("optional_web_searches must be a list")
+
+        if len(optional_web_searches) > 3:
+            raise ValueError(f"Maximum 3 web searches allowed. You provided {len(optional_web_searches)}.")
+
+        for i, search in enumerate(optional_web_searches):
+            if not isinstance(search, dict) or "query" not in search or "num_results" not in search:
+                raise ValueError(f"Search #{i+1} must be a dict with 'query' and 'num_results' fields")
+
+            num_results = search["num_results"]
+            if not isinstance(num_results, int) or num_results < 1 or num_results > 25:
+                raise ValueError(f"Search #{i+1}: num_results must be 1-25. You provided {num_results}")
+
+        search_count = len(optional_web_searches)
+
+    # Validate selected universities
+    invalid_universities = [uni for uni in selected_universities if uni not in all_universities]
+    if invalid_universities:
+        raise ValueError(f"Invalid universities: {invalid_universities[:5]}... Please select from the provided list.")
+
+    token = generate_token("selection", {
+        "background": background,
+        "country": country,
+        "all_universities": all_universities,
+        "selected_universities": selected_universities,
+        "web_searches_completed": search_count,
+        "web_searches_data": optional_web_searches or []
+    })
+
+    return {
+        "selection_token": token,
+        "selected_universities": selected_universities,
+        "university_count": len(selected_universities),
+        "country": country,
+        "web_searches_completed": search_count,
+        "instructions": f"""
+✅ University selection complete. {'Used knowledge base only.' if search_count == 0 else f'Validated with {search_count} web search(es).'}
+
+📊 SELECTION RESULTS:
+- Country: {country}
+- Selected universities: {len(selected_universities)}
+- Total available: {len(all_universities)}
+
+Universities selected:
+{chr(10).join([f"  • {uni}" for uni in selected_universities[:20]])}
+{"  ... and more" if len(selected_universities) > 20 else ""}
+
+📋 NEXT STEP: Select relevant classifications
+
+Call select_classifications(selection_token) to view all 15 classification categories and choose relevant ones based on student background.
+        """,
+        "next_step": "Call select_classifications(selection_token)"
+    }
+
+
+@mcp.tool
+async def select_classifications(
+    selection_token: str,
+    selected_classifications: Optional[List[str]] = None
+) -> dict:
+    """
+    Step 2: Select relevant classifications for program filtering
+
+    PURPOSE: Display all 15 classifications and let LLM choose relevant ones based on student background.
+    No database query needed - directly shows all classification categories.
+
+    TWO-CALL WORKFLOW:
+
+    CALL 1 (Exploration):
+    - Pass: selection_token
+    - Returns: All 15 classification categories with descriptions
+    - LLM reviews and selects relevant classifications
+
+    CALL 2 (Selection):
+    - Pass: selection_token, selected_classifications
+    - Returns: classifications_token for next step
+
+    Args:
+        selection_token: From start_and_select_universities()
+        selected_classifications: List of classification names (empty/None for Call 1, filled for Call 2)
+
+    Returns:
+        Call 1: All 15 classifications with descriptions
+        Call 2: classifications_token + selected classifications + instructions
+    """
+    # Validate token
+    selection_data = validate_token(selection_token, "selection")
+    background = selection_data.get("background", "")
+    selected_universities = selection_data.get("selected_universities", [])
+
+    # CALL 1: Return all classifications
+    if not selected_classifications:
+        classification_list = [
+            {"id": 1, "name": "Health Sciences & Medicine", "description": "Healthcare, nursing, public health, biomedical sciences"},
+            {"id": 2, "name": "Business & Management", "description": "Business administration, management, entrepreneurship, marketing"},
+            {"id": 3, "name": "Engineering", "description": "All engineering disciplines (mechanical, civil, electrical, etc.)"},
+            {"id": 4, "name": "Social Sciences", "description": "Psychology, sociology, anthropology, political science, international relations"},
+            {"id": 5, "name": "Education", "description": "Teaching, educational leadership, curriculum development"},
+            {"id": 6, "name": "Humanities & Languages", "description": "Literature, linguistics, history, philosophy, languages"},
+            {"id": 7, "name": "Arts Media & Design", "description": "Visual arts, performing arts, media, design, communication"},
+            {"id": 8, "name": "Computing & Data Science", "description": "Computer science, software engineering, data science, AI/ML"},
+            {"id": 9, "name": "Physical & Mathematical Sciences", "description": "Mathematics, statistics, physics, chemistry, astronomy"},
+            {"id": 10, "name": "Law & Public Policy", "description": "Law, legal studies, public administration, policy analysis"},
+            {"id": 11, "name": "Life Sciences", "description": "Biology, biotechnology, genetics, neuroscience, biochemistry"},
+            {"id": 12, "name": "Finance & Economics", "description": "Finance, economics, accounting, financial engineering"},
+            {"id": 13, "name": "Architecture & Planning", "description": "Architecture, urban planning, landscape architecture"},
+            {"id": 14, "name": "Environment & Sustainability", "description": "Environmental science, sustainability, conservation, climate"},
+            {"id": 15, "name": "Interdisciplinary Studies", "description": "Cross-disciplinary programs, liberal studies, general research"}
+        ]
+
+        return {
+            "all_classifications": classification_list,
+            "total_classifications": 15,
+            "instructions": f"""
+📚 ALL 15 CLASSIFICATION CATEGORIES
+
+{chr(10).join([f"  {c['id']:2d}. {c['name']:40s} - {c['description']}" for c in classification_list])}
+
+🎯 YOUR TASK: Select relevant classifications based on student background
+
+SELECTION STRATEGY:
+1. PRIMARY: Direct match with student's major/field/career goals
+2. SECONDARY: Related/complementary fields student might consider
+3. Be inclusive but sensible - avoid obviously irrelevant fields
+
+💡 EXAMPLES:
+- CS student → ["Computing & Data Science", "Engineering", "Physical & Mathematical Sciences"]
+- Business student → ["Business & Management", "Finance & Economics", "Computing & Data Science"]
+- Biology student → ["Life Sciences", "Health Sciences & Medicine", "Environment & Sustainability"]
+
+NEXT STEP:
+Call select_classifications() AGAIN with:
+- Same selection_token
+- selected_classifications: [list of chosen classification names]
+            """,
+            "next_step": "Call select_classifications() again with selected_classifications"
+        }
+
+    # CALL 2: Process selection and generate token
+    if not isinstance(selected_classifications, list) or len(selected_classifications) == 0:
+        raise ValueError("selected_classifications must be a non-empty list for Call 2")
+
+    # Validate classification names
+    valid_names = list(CLASSIFICATIONS.values())
+    invalid_classifications = [c for c in selected_classifications if c not in valid_names]
+    if invalid_classifications:
+        raise ValueError(f"Invalid classifications: {invalid_classifications}. Must match exact names from the list.")
+
+    token = generate_token("classifications", {
+        "background": background,
+        "selected_universities": selected_universities,
+        "selected_classifications": selected_classifications,
+        "classification_count": len(selected_classifications)
+    })
+
+    return {
+        "classifications_token": token,
+        "selected_classifications": selected_classifications,
+        "classification_count": len(selected_classifications),
+        "instructions": f"""
+✅ Classification selection complete.
+
+📊 SELECTION RESULTS:
+- Selected classifications: {len(selected_classifications)}
+- Classifications: {', '.join(selected_classifications[:5])}{"..." if len(selected_classifications) > 5 else ""}
+
+📋 NEXT STEP: Get filtered programs
+
+Call get_filtered_programs(classifications_token) to retrieve all programs matching:
+- Selected universities ({len(selected_universities)})
+- Selected classifications ({len(selected_classifications)})
+- Using OR logic (programs with primary OR secondary classification match)
+        """,
+        "next_step": "Call get_filtered_programs(classifications_token)"
+    }
+
+
+@mcp.tool
+async def get_filtered_programs(
+    classifications_token: str
+) -> dict:
+    """
+    Step 3: Get programs filtered by selected classifications (with OR logic)
+
+    PURPOSE: Retrieve all programs from selected universities that match selected classifications.
+    Uses OR logic: program is included if EITHER primary or secondary classification matches.
+
+    Args:
+        classifications_token: From select_classifications()
+
+    Returns:
+        programs_token + programs by university + total count + instructions for next step
+    """
+    # Validate token
+    classifications_data = validate_token(classifications_token, "classifications")
+    background = classifications_data.get("background", "")
+    selected_universities = classifications_data.get("selected_universities", [])
+    selected_classifications = classifications_data.get("selected_classifications", [])
+
+    if not selected_universities:
+        raise ValueError("No universities found in token. Please call select_classifications() first.")
+
+    if not selected_classifications:
+        raise ValueError("No classifications found in token. Please call select_classifications() first.")
+
+    # Get programs for each university using OR logic
+    all_programs = {}
+    total_programs = 0
+    classification_stats = {}
+
+    for uni in selected_universities:
+        programs = _search_programs(uni, classification_filters=selected_classifications)
+        if programs:
+            all_programs[uni] = programs
+            total_programs += len(programs)
+
+            # Track both primary and secondary classification distribution
+            for prog in programs:
+                primary = prog.get("classification")
+                secondary = prog.get("secondary_classification")
+
+                if primary:
+                    classification_stats[primary] = classification_stats.get(primary, 0) + 1
+                if secondary:
+                    classification_stats[secondary] = classification_stats.get(secondary, 0) + 1
+
+    token = generate_token("programs", {
+        "background": background,
+        "universities": selected_universities,
+        "all_programs": all_programs,
+        "total_programs": total_programs,
+        "selected_classifications": selected_classifications,
+        "classification_statistics": classification_stats
+    })
+
+    return {
+        "programs_token": token,
+        "programs_by_university": all_programs,
+        "total_programs": total_programs,
+        "universities_count": len(all_programs),
+        "selected_classifications": selected_classifications,
+        "classification_statistics": classification_stats,
+        "instructions": f"""
+✅ CLASSIFICATION FILTERING COMPLETE (OR LOGIC APPLIED)
+
+📊 RESULTS:
+- Universities: {len(selected_universities)}
+- Selected classifications: {len(selected_classifications)}
+- Total programs retrieved: {total_programs}
+- OR Logic: Programs included if PRIMARY or SECONDARY classification matches
+
+🏷️  CLASSIFICATION DISTRIBUTION (Primary + Secondary):
+{chr(10).join([f"  • {name}: {count} programs" for name, count in sorted(classification_stats.items(), key=lambda x: x[1], reverse=True)[:10]])}
+{"  ... and more" if len(classification_stats) > 10 else ""}
+
+📋 NEXT STEP: NAME-BASED SCREENING
+
+YOUR TASK: Review program NAMES and remove irrelevant ones
+
+STRATEGY:
+- Remove programs with misleading names (even if classification matches)
+- Keep programs that align with student's specific interests and goals
+- Include borderline cases (will be validated in next step)
+- Philosophy: 宁少不多 (fewer but better matches)
+
+Call shortlist_programs_by_name(shortlisted_by_university, programs_token)
+where shortlisted_by_university = {{"University Name": [program_id1, program_id2, ...], ...}}
+        """,
+        "next_step": "Call shortlist_programs_by_name(shortlisted_by_university, programs_token)"
+    }
+
 
 @mcp.tool
 async def start_consultation(
