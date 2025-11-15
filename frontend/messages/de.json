@@ -185,5 +185,53 @@
     "contactMe": "Kontaktieren Sie mich",
     "githubRepo": "GitHub-Repository",
     "comingSoon": "Demnächst verfügbar..."
+  },
+  "payment": {
+    "tiers": {
+      "basic": {
+        "name": "Basis-Beratung",
+        "price": "$9",
+        "shortPrice": "$9",
+        "description": "KI-gestützte Studienberatung mit grundlegenden Empfehlungen",
+        "features": {
+          "analysis": "KI-gestützte personalisierte Analyse Ihres Hintergrunds",
+          "searches": "3-5 gezielte Web-Suchen",
+          "recommendations": "10-15 Programmempfehlungen",
+          "pdf": "Professioneller PDF-Bericht zum Download",
+          "retry": "Kostenlose Wiederholung bei Generierungsfehler"
+        }
+      },
+      "advanced": {
+        "name": "Erweiterte Beratung",
+        "price": "$49.99",
+        "shortPrice": "$49.99",
+        "description": "Umfassende Tiefenanalyse mit Exa AI-Tiefenforschung",
+        "features": {
+          "basicIncluded": "Alle Funktionen der Basis-Version enthalten",
+          "exaResearch": "Exa-Tiefenforschung für 20-30 Programme (40+ Suchen)",
+          "programDetails": "Detaillierte Programmmerkmale und Studentenerfahrungsanalyse",
+          "suitability": "Passgenauigkeitsanalyse für jede Empfehlung",
+          "careers": "Beschäftigungsdaten und Karriereentwicklungsanalyse"
+        }
+      },
+      "update": {
+        "name": "Upgrade-Service",
+        "price": "$39.99",
+        "shortPrice": "$39.99",
+        "description": "Upgrade Ihres Basis-Berichts zur erweiterten Version",
+        "features": {
+          "basicIncluded": "Alle Funktionen der Basis-Version enthalten",
+          "exaResearch": "Exa-Tiefenforschung für 20-30 Programme (40+ Suchen)",
+          "programDetails": "Detaillierte Programmmerkmale und Studentenerfahrungsanalyse",
+          "suitability": "Passgenauigkeitsanalyse für jede Empfehlung",
+          "careers": "Beschäftigungsdaten und Karriereentwicklungsanalyse"
+        }
+      }
+    },
+    "selectTier": "Paket auswählen",
+    "payButton": "{price} bezahlen und fortfahren",
+    "processing": "Weiterleitung zur Zahlung...",
+    "securedBy": "Sichere Zahlung · Unterstützt von Stripe",
+    "signInRequired": "Bitte melden Sie sich an, um fortzufahren"
   }
 }

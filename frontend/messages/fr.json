@@ -185,5 +185,53 @@
     "contactMe": "Me Contacter",
     "githubRepo": "Dépôt GitHub",
     "comingSoon": "Bientôt disponible..."
+  },
+  "payment": {
+    "tiers": {
+      "basic": {
+        "name": "Consultation Basique",
+        "price": "$9",
+        "shortPrice": "$9",
+        "description": "Consultation d'études à l'étranger alimentée par l'IA avec recommandations de base",
+        "features": {
+          "analysis": "Analyse personnalisée de votre parcours par l'IA",
+          "searches": "3-5 recherches web ciblées",
+          "recommendations": "10-15 recommandations de programmes",
+          "pdf": "Rapport PDF professionnel à télécharger",
+          "retry": "Nouvelle tentative gratuite en cas d'échec"
+        }
+      },
+      "advanced": {
+        "name": "Consultation Avancée",
+        "price": "$49.99",
+        "shortPrice": "$49.99",
+        "description": "Analyse approfondie complète avec recherche Exa AI",
+        "features": {
+          "basicIncluded": "Toutes les fonctionnalités de la version basique incluses",
+          "exaResearch": "Recherche approfondie Exa pour 20-30 programmes (40+ recherches)",
+          "programDetails": "Analyse détaillée des caractéristiques et expériences étudiantes",
+          "suitability": "Analyse d'adéquation pour chaque recommandation",
+          "careers": "Données d'emploi et analyse de développement de carrière"
+        }
+      },
+      "update": {
+        "name": "Service de Mise à Niveau",
+        "price": "$39.99",
+        "shortPrice": "$39.99",
+        "description": "Mettez à niveau votre rapport basique vers la version avancée",
+        "features": {
+          "basicIncluded": "Toutes les fonctionnalités de la version basique incluses",
+          "exaResearch": "Recherche approfondie Exa pour 20-30 programmes (40+ recherches)",
+          "programDetails": "Analyse détaillée des caractéristiques et expériences étudiantes",
+          "suitability": "Analyse d'adéquation pour chaque recommandation",
+          "careers": "Données d'emploi et analyse de développement de carrière"
+        }
+      }
+    },
+    "selectTier": "Choisir une formule",
+    "payButton": "Payer {price} et continuer",
+    "processing": "Redirection vers le paiement...",
+    "securedBy": "Paiement sécurisé · Propulsé par Stripe",
+    "signInRequired": "Veuillez vous connecter pour continuer"
   }
 }

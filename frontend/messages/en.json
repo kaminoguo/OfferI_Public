@@ -185,5 +185,53 @@
     "contactMe": "Contact Me",
     "githubRepo": "GitHub Repository",
     "comingSoon": "Coming soon..."
+  },
+  "payment": {
+    "tiers": {
+      "basic": {
+        "name": "Basic Consultation",
+        "price": "$9",
+        "shortPrice": "$9",
+        "description": "AI-powered study abroad consultation with basic recommendations",
+        "features": {
+          "analysis": "AI-powered personalized analysis of your background",
+          "searches": "3-5 targeted web searches",
+          "recommendations": "10-15 program recommendations",
+          "pdf": "Professional PDF report download",
+          "retry": "Free retry if generation fails"
+        }
+      },
+      "advanced": {
+        "name": "Advanced Consultation",
+        "price": "$49.99",
+        "shortPrice": "$49.99",
+        "description": "Comprehensive in-depth analysis with Exa AI deep research",
+        "features": {
+          "basicIncluded": "All features from Basic tier included",
+          "exaResearch": "Exa deep research for 20-30 programs (40+ searches)",
+          "programDetails": "Detailed program features and student experience analysis",
+          "suitability": "Suitability analysis for each recommendation",
+          "careers": "Employment data and career development analysis"
+        }
+      },
+      "update": {
+        "name": "Upgrade Service",
+        "price": "$39.99",
+        "shortPrice": "$39.99",
+        "description": "Upgrade your basic report to advanced tier",
+        "features": {
+          "basicIncluded": "All features from Basic tier included",
+          "exaResearch": "Exa deep research for 20-30 programs (40+ searches)",
+          "programDetails": "Detailed program features and student experience analysis",
+          "suitability": "Suitability analysis for each recommendation",
+          "careers": "Employment data and career development analysis"
+        }
+      }
+    },
+    "selectTier": "Select Tier",
+    "payButton": "Pay {price} and Continue",
+    "processing": "Redirecting to payment...",
+    "securedBy": "Secured Payment · Powered by Stripe",
+    "signInRequired": "Please sign in to continue"
   }
 }

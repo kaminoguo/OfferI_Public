@@ -185,5 +185,53 @@
     "contactMe": "문의하기",
     "githubRepo": "GitHub 저장소",
     "comingSoon": "곧 출시..."
+  },
+  "payment": {
+    "tiers": {
+      "basic": {
+        "name": "기본 상담",
+        "price": "$9",
+        "shortPrice": "$9",
+        "description": "AI 기반 유학 상담 및 기본 추천",
+        "features": {
+          "analysis": "AI 맞춤형 배경 분석",
+          "searches": "3-5회 정밀 웹 검색",
+          "recommendations": "10-15개 프로그램 추천",
+          "pdf": "전문 PDF 보고서 다운로드",
+          "retry": "생성 실패 시 무료 재시도"
+        }
+      },
+      "advanced": {
+        "name": "고급 상담",
+        "price": "$49.99",
+        "shortPrice": "$49.99",
+        "description": "Exa AI 심층 연구를 통한 전면적 분석",
+        "features": {
+          "basicIncluded": "기본 버전의 모든 기능 포함",
+          "exaResearch": "20-30개 프로그램에 대한 Exa 심층 연구 (40회 이상 검색)",
+          "programDetails": "상세한 프로그램 특징 및 학생 경험 분석",
+          "suitability": "각 추천 프로그램의 적합도 분석",
+          "careers": "취업 데이터 및 경력 개발 분석"
+        }
+      },
+      "update": {
+        "name": "업그레이드 서비스",
+        "price": "$39.99",
+        "shortPrice": "$39.99",
+        "description": "기본 보고서를 고급 버전으로 업그레이드",
+        "features": {
+          "basicIncluded": "기본 버전의 모든 기능 포함",
+          "exaResearch": "20-30개 프로그램에 대한 Exa 심층 연구 (40회 이상 검색)",
+          "programDetails": "상세한 프로그램 특징 및 학생 경험 분석",
+          "suitability": "각 추천 프로그램의 적합도 분석",
+          "careers": "취업 데이터 및 경력 개발 분석"
+        }
+      }
+    },
+    "selectTier": "플랜 선택",
+    "payButton": "{price} 결제 및 계속",
+    "processing": "결제 페이지로 이동 중...",
+    "securedBy": "안전한 결제 · Stripe 지원",
+    "signInRequired": "계속하려면 로그인하세요"
   }
 }

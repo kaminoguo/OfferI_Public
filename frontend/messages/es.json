@@ -185,5 +185,53 @@
     "contactMe": "Contáctame",
     "githubRepo": "Repositorio GitHub",
     "comingSoon": "Próximamente..."
+  },
+  "payment": {
+    "tiers": {
+      "basic": {
+        "name": "Consulta Básica",
+        "price": "$9",
+        "shortPrice": "$9",
+        "description": "Consulta de estudios en el extranjero con IA y recomendaciones básicas",
+        "features": {
+          "analysis": "Análisis personalizado de tu perfil con IA",
+          "searches": "3-5 búsquedas web dirigidas",
+          "recommendations": "10-15 recomendaciones de programas",
+          "pdf": "Informe PDF profesional para descargar",
+          "retry": "Reintento gratuito en caso de error"
+        }
+      },
+      "advanced": {
+        "name": "Consulta Avanzada",
+        "price": "$49.99",
+        "shortPrice": "$49.99",
+        "description": "Análisis profundo completo con investigación Exa AI",
+        "features": {
+          "basicIncluded": "Todas las funciones de la versión básica incluidas",
+          "exaResearch": "Investigación profunda Exa para 20-30 programas (40+ búsquedas)",
+          "programDetails": "Análisis detallado de características y experiencias estudiantiles",
+          "suitability": "Análisis de idoneidad para cada recomendación",
+          "careers": "Datos de empleo y análisis de desarrollo profesional"
+        }
+      },
+      "update": {
+        "name": "Servicio de Actualización",
+        "price": "$39.99",
+        "shortPrice": "$39.99",
+        "description": "Actualiza tu informe básico a la versión avanzada",
+        "features": {
+          "basicIncluded": "Todas las funciones de la versión básica incluidas",
+          "exaResearch": "Investigación profunda Exa para 20-30 programas (40+ búsquedas)",
+          "programDetails": "Análisis detallado de características y experiencias estudiantiles",
+          "suitability": "Análisis de idoneidad para cada recomendación",
+          "careers": "Datos de empleo y análisis de desarrollo profesional"
+        }
+      }
+    },
+    "selectTier": "Seleccionar plan",
+    "payButton": "Pagar {price} y continuar",
+    "processing": "Redirigiendo al pago...",
+    "securedBy": "Pago seguro · Impulsado por Stripe",
+    "signInRequired": "Por favor inicia sesión para continuar"
   }
 }

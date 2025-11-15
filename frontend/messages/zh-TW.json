@@ -185,5 +185,53 @@
     "contactMe": "聯絡我",
     "githubRepo": "GitHub儲存庫",
     "comingSoon": "即將推出..."
+  },
+  "payment": {
+    "tiers": {
+      "basic": {
+        "name": "基礎諮詢",
+        "price": "HK$69.99",
+        "shortPrice": "HK$69.99",
+        "description": "AI驅動的留學諮詢，基礎推薦",
+        "features": {
+          "analysis": "AI個人化背景分析",
+          "searches": "3-5次精準網路搜尋",
+          "recommendations": "10-15個專案推薦",
+          "pdf": "專業PDF報告下載",
+          "retry": "生成失敗免費重試"
+        }
+      },
+      "advanced": {
+        "name": "進階諮詢",
+        "price": "HK$389.99",
+        "shortPrice": "HK$389.99",
+        "description": "全面深度分析，Exa AI深度研究",
+        "features": {
+          "basicIncluded": "包含基礎版所有功能",
+          "exaResearch": "20-30個專案的Exa深度研究（40次以上搜尋）",
+          "programDetails": "詳細的專案特色與學生體驗分析",
+          "suitability": "每個推薦專案的適配度分析",
+          "careers": "就業數據與職業發展分析"
+        }
+      },
+      "update": {
+        "name": "升級服務",
+        "price": "HK$299.99",
+        "shortPrice": "HK$299.99",
+        "description": "將基礎報告升級為進階版",
+        "features": {
+          "basicIncluded": "包含基礎版所有功能",
+          "exaResearch": "20-30個專案的Exa深度研究（40次以上搜尋）",
+          "programDetails": "詳細的專案特色與學生體驗分析",
+          "suitability": "每個推薦專案的適配度分析",
+          "careers": "就業數據與職業發展分析"
+        }
+      }
+    },
+    "selectTier": "選擇方案",
+    "payButton": "支付 {price} 並繼續",
+    "processing": "正在跳轉到支付...",
+    "securedBy": "安全支付 · Stripe提供支援",
+    "signInRequired": "請登入後繼續"
   }
 }

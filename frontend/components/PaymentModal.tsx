@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Loader2, DollarSign } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
+import { useTranslations } from 'next-intl';
 
 type PaymentTier = 'basic' | 'update' | 'advanced';
 
@@ -13,60 +14,25 @@ interface PaymentModalProps {
   tier?: PaymentTier;  // Default to 'basic'
 }
 
-// Tier configuration
-const TIER_CONFIG = {
-  basic: {
-    price: 9,
-    name: 'Basic Consultation',
-    description: 'AI-powered study abroad consultation with basic recommendations',
-    features: [
-      'AI-powered personalized analysis of your background',
-      'Comprehensive program recommendations (3-5 web searches)',
-      'Professional PDF report you can download and share',
-      'Free retry if report generation fails'
-    ]
-  },
-  update: {
-    price: 39.99,
-    name: 'Update to Advanced',
-    description: 'Upgrade your basic report to get detailed program research',
-    features: [
-      'All basic features included',
-      'Deep Exa research for 20-30 programs (40+ searches)',
-      'Detailed program features and student experience analysis',
-      'Suitability analysis for each recommended program',
-      'Career outcomes and employment data'
-    ]
-  },
-  advanced: {
-    price: 49.99,
-    name: 'Advanced Consultation',
-    description: 'Comprehensive analysis with extensive program research from the start',
-    features: [
-      'AI-powered personalized analysis of your background',
-      'Deep Exa research for 20-30 programs (40+ searches)',
-      'Detailed program features and student experience analysis',
-      'Suitability analysis for each recommended program',
-      'Career outcomes and employment data',
-      'Professional PDF report you can download and share',
-      'Free retry if report generation fails'
-    ]
-  }
-};
-
 export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier: initialTier = 'basic' }: PaymentModalProps) {
   const { user } = useUser();
+  const t = useTranslations('payment');
+  const tError = useTranslations('error');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTier, setSelectedTier] = useState<PaymentTier>(initialTier);
 
-  const config = TIER_CONFIG[selectedTier];
-
   if (!isOpen) return null;
+
+  // Get features for selected tier
+  const getFeatures = (tier: PaymentTier): string[] => {
+    const features = t.raw(`tiers.${tier}.features`) as Record<string, string>;
+    return Object.values(features);
+  };
 
   const handlePayment = async () => {
     if (!user) {
-      setError('Please sign in to continue');
+      setError(t('signInRequired'));
       return;
     }
 
@@ -106,7 +72,7 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier:
       <div className="bg-background border border-border rounded-lg shadow-soft max-w-md w-full">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-semibold text-foreground">{config.name}</h2>
+          <h2 className="text-xl font-semibold text-foreground">{t('selectTier')}</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-md hover-minimal"
@@ -130,8 +96,8 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier:
               }`}
               disabled={loading}
             >
-              <div className="text-sm">Basic</div>
-              <div className="text-lg font-bold">$9</div>
+              <div className="text-sm">{t('tiers.basic.name')}</div>
+              <div className="text-lg font-bold">{t('tiers.basic.shortPrice')}</div>
             </button>
             <button
               onClick={() => setSelectedTier('advanced')}
@@ -142,8 +108,8 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier:
               }`}
               disabled={loading}
             >
-              <div className="text-sm">Advanced</div>
-              <div className="text-lg font-bold">$49.99</div>
+              <div className="text-sm">{t('tiers.advanced.name')}</div>
+              <div className="text-lg font-bold">{t('tiers.advanced.shortPrice')}</div>
             </button>
             <button
               onClick={() => setSelectedTier('update')}
@@ -154,8 +120,8 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier:
               }`}
               disabled={loading}
             >
-              <div className="text-sm">Update</div>
-              <div className="text-lg font-bold">$39.99</div>
+              <div className="text-sm">{t('tiers.update.name')}</div>
+              <div className="text-lg font-bold">{t('tiers.update.shortPrice')}</div>
             </button>
           </div>
 
@@ -163,14 +129,14 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier:
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <DollarSign className="w-8 h-8 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">{config.name}</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-2">{t(`tiers.${selectedTier}.name`)}</h3>
             <p className="text-sm text-muted-foreground">
-              {config.description}
+              {t(`tiers.${selectedTier}.description`)}
             </p>
           </div>
 
           <div className="space-y-3 mb-6 text-sm">
-            {config.features.map((feature, index) => (
+            {getFeatures(selectedTier).map((feature, index) => (
               <div key={index} className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
                 <p className="text-foreground">{feature}</p>
@@ -192,18 +158,18 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier:
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Redirecting to payment...
+                {t('processing')}
               </>
             ) : (
               <>
                 <DollarSign className="w-5 h-5" />
-                Pay ${config.price} & Continue
+                {t('payButton', { price: t(`tiers.${selectedTier}.price`) })}
               </>
             )}
           </button>
 
           <p className="text-xs text-center text-muted-foreground mt-4">
-            Secure payment powered by Stripe
+            {t('securedBy')}
           </p>
         </div>
       </div>

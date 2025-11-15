@@ -185,5 +185,53 @@
     "contactMe": "お問い合わせ",
     "githubRepo": "GitHubリポジトリ",
     "comingSoon": "近日公開..."
+  },
+  "payment": {
+    "tiers": {
+      "basic": {
+        "name": "基本コンサルティング",
+        "price": "$9",
+        "shortPrice": "$9",
+        "description": "AI搭載の留学コンサルティングと基本的な推薦",
+        "features": {
+          "analysis": "AIによる経歴のパーソナライズ分析",
+          "searches": "3-5回のターゲット型ウェブ検索",
+          "recommendations": "10-15のプログラム推薦",
+          "pdf": "プロフェッショナルPDFレポートのダウンロード",
+          "retry": "生成失敗時の無料再試行"
+        }
+      },
+      "advanced": {
+        "name": "上級コンサルティング",
+        "price": "$49.99",
+        "shortPrice": "$49.99",
+        "description": "Exa AI深層研究による包括的分析",
+        "features": {
+          "basicIncluded": "基本版のすべての機能を含む",
+          "exaResearch": "20-30プログラムのExa深層研究（40回以上の検索）",
+          "programDetails": "詳細なプログラム特徴と学生体験の分析",
+          "suitability": "各推薦の適合性分析",
+          "careers": "就職データとキャリア開発の分析"
+        }
+      },
+      "update": {
+        "name": "アップグレードサービス",
+        "price": "$39.99",
+        "shortPrice": "$39.99",
+        "description": "基本レポートを上級版にアップグレード",
+        "features": {
+          "basicIncluded": "基本版のすべての機能を含む",
+          "exaResearch": "20-30プログラムのExa深層研究（40回以上の検索）",
+          "programDetails": "詳細なプログラム特徴と学生体験の分析",
+          "suitability": "各推薦の適合性分析",
+          "careers": "就職データとキャリア開発の分析"
+        }
+      }
+    },
+    "selectTier": "プランを選択",
+    "payButton": "{price}を支払って続ける",
+    "processing": "支払いページへリダイレクト中...",
+    "securedBy": "安全な支払い · Stripe提供",
+    "signInRequired": "続行するにはサインインしてください"
   }
 }

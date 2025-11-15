@@ -185,5 +185,53 @@
     "contactMe": "联系我",
     "githubRepo": "GitHub仓库",
     "comingSoon": "即将推出..."
+  },
+  "payment": {
+    "tiers": {
+      "basic": {
+        "name": "基础咨询",
+        "price": "¥59.99",
+        "shortPrice": "¥59.99",
+        "description": "AI驱动的留学咨询，基础推荐",
+        "features": {
+          "analysis": "AI个性化背景分析",
+          "searches": "3-5次精准网络搜索",
+          "recommendations": "10-15个项目推荐",
+          "pdf": "专业PDF报告下载",
+          "retry": "生成失败免费重试"
+        }
+      },
+      "advanced": {
+        "name": "进阶咨询",
+        "price": "¥359",
+        "shortPrice": "¥359",
+        "description": "全面深度分析，Exa AI深度研究",
+        "features": {
+          "basicIncluded": "包含基础版所有功能",
+          "exaResearch": "20-30个项目的Exa深度研究（40+次搜索）",
+          "programDetails": "详细的项目特色与学生体验分析",
+          "suitability": "每个推荐项目的适配度分析",
+          "careers": "就业数据与职业发展分析"
+        }
+      },
+      "update": {
+        "name": "升级服务",
+        "price": "¥299.99",
+        "shortPrice": "¥299.99",
+        "description": "将基础报告升级为进阶版",
+        "features": {
+          "basicIncluded": "包含基础版所有功能",
+          "exaResearch": "20-30个项目的Exa深度研究（40+次搜索）",
+          "programDetails": "详细的项目特色与学生体验分析",
+          "suitability": "每个推荐项目的适配度分析",
+          "careers": "就业数据与职业发展分析"
+        }
+      }
+    },
+    "selectTier": "选择套餐",
+    "payButton": "支付 {price} 并继续",
+    "processing": "正在跳转到支付...",
+    "securedBy": "安全支付 · Stripe提供支持",
+    "signInRequired": "请登录后继续"
   }
 }
