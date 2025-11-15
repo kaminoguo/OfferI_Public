@@ -30,12 +30,13 @@ class PaymentStatus(str, enum.Enum):
 
 
 class Payment(Base):
-    """Payment table - one row per $6 WEB consultation"""
+    """Payment table - supports 3 tiers: basic ($9), advanced ($49.99), update ($39.99)"""
     __tablename__ = "payments"
 
     id = Column(String, primary_key=True, index=True)  # Stripe payment intent ID
     user_id = Column(String, index=True, nullable=False)  # Clerk user ID
-    amount = Column(Float, default=6.00, nullable=False)  # Fixed $6 per consultation
+    amount = Column(Float, default=9.00, nullable=False)  # Tier-based pricing
+    tier = Column(String, default='basic', nullable=False)  # basic/advanced/update
     status = Column(Enum(PaymentStatus), default=PaymentStatus.PAID, nullable=False)
     job_id = Column(String, nullable=True, index=True)  # Job ID when report generation starts
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
