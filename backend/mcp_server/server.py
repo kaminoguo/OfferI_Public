@@ -1646,8 +1646,8 @@ async def validate_programs_with_web(
             )
             cursor = conn.cursor()
 
-            # Get user_id from API key
-            cursor.execute("SELECT user_id FROM api_keys WHERE id = %s", (api_key,))
+            # Get user_id from API key (mcp_usage table)
+            cursor.execute("SELECT user_id FROM mcp_usage WHERE id = %s", (api_key,))
             result = cursor.fetchone()
             user_id = result[0] if result else "unknown"
 

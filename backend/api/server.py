@@ -210,7 +210,10 @@ async def submit_background(
         payment.updated_at = datetime.utcnow()
         db.commit()
 
-        logger.info(f"New job submitted: {job_id} (user: {user_id}, payment: {payment_id})")
+        # Extract tier from payment (basic/advanced/update)
+        tier = payment.tier or 'basic'  # Default to basic if not set
+
+        logger.info(f"New job submitted: {job_id} (user: {user_id}, payment: {payment_id}, tier: {tier})")
         logger.debug(f"User background: {user_background.dict()}")
 
         # Store job in Redis
@@ -220,6 +223,7 @@ async def submit_background(
             "user_background": json.dumps(user_background.dict(), ensure_ascii=False),
             "user_id": user_id,
             "payment_id": payment_id,
+            "tier": tier,  # Pass tier to job processor
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat()
         }
