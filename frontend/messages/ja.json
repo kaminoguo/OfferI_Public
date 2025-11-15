@@ -6,8 +6,8 @@
   "welcome": {
     "title": "OfferIへようこそ",
     "subtitle": "AI搭載のパーソナライズ留学コンサルタント",
-    "startButton": "相談を開始 ($6)",
-    "flow": "経歴を記入 → $6支払い → パーソナライズレポートを取得"
+    "startButton": "Start Consultation",
+    "flow": "Fill in background → Choose tier & pay → Get report"
   },
   "info": {
     "title": "重要な情報",
@@ -154,7 +154,7 @@
     "noConsultations": "まだ相談がありません",
     "pdfsAppear": "生成されたPDFはここに表示されます",
     "consultation": "相談",
-    "pricing": "MCP API • Web $6",
+    "pricing": "MCP API • Web (from $9)",
     "signOut": "サインアウト",
     "guestUser": "ゲストユーザー",
     "signIn": "サインイン",

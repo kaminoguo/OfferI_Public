@@ -6,8 +6,8 @@
   "welcome": {
     "title": "欢迎来到 OfferI",
     "subtitle": "AI驱动的个性化留学顾问",
-    "startButton": "开始咨询 ($6)",
-    "flow": "填写背景 → 支付$6 → 获取个性化报告"
+    "startButton": "开始咨询",
+    "flow": "填写背景 → 选择套餐并支付 → 获取个性化报告"
   },
   "info": {
     "title": "重要信息",
@@ -154,7 +154,7 @@
     "noConsultations": "还没有咨询记录",
     "pdfsAppear": "您生成的PDF将显示在这里",
     "consultation": "咨询",
-    "pricing": "MCP API • 网页 $6",
+    "pricing": "MCP API • 网页服务（$9起）",
     "signOut": "退出登录",
     "guestUser": "访客用户",
     "signIn": "登录",

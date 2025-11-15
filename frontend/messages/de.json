@@ -6,8 +6,8 @@
   "welcome": {
     "title": "Willkommen bei OfferI",
     "subtitle": "KI-gestützter personalisierter Studienberater für das Ausland",
-    "startButton": "Beratung starten ($6)",
-    "flow": "Profil ausfüllen → $6 bezahlen → Personalisierten Bericht erhalten"
+    "startButton": "Start Consultation",
+    "flow": "Fill in background → Choose tier & pay → Get report"
   },
   "info": {
     "title": "Wichtige Informationen",
@@ -154,7 +154,7 @@
     "noConsultations": "Noch keine Beratungen",
     "pdfsAppear": "Ihre generierten PDFs werden hier erscheinen",
     "consultation": "Beratung",
-    "pricing": "MCP API • Web $6",
+    "pricing": "MCP API • Web (from $9)",
     "signOut": "Abmelden",
     "guestUser": "Gastbenutzer",
     "signIn": "Anmelden",

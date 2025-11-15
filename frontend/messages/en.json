@@ -6,8 +6,8 @@
   "welcome": {
     "title": "Welcome to OfferI",
     "subtitle": "AI-powered personalized study abroad consultant",
-    "startButton": "Start Consultation ($6)",
-    "flow": "Fill in your background → Pay $6 → Get your personalized report"
+    "startButton": "Start Consultation",
+    "flow": "Fill in your background → Choose tier & pay → Get your personalized report"
   },
   "info": {
     "title": "Important Information",
@@ -154,7 +154,7 @@
     "noConsultations": "No consultations yet",
     "pdfsAppear": "Your generated PDFs will appear here",
     "consultation": "Consultation",
-    "pricing": "MCP API • Web $6",
+    "pricing": "MCP API • Web Service (from $9)",
     "signOut": "Sign out",
     "guestUser": "Guest User",
     "signIn": "Sign in",

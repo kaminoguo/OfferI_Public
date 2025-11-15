@@ -6,8 +6,8 @@
   "welcome": {
     "title": "歡迎來到 OfferI",
     "subtitle": "AI驅動的個人化留學顧問",
-    "startButton": "開始諮詢 ($6)",
-    "flow": "填寫背景 → 支付$6 → 獲取個人化報告"
+    "startButton": "Start Consultation",
+    "flow": "Fill in background → Choose tier & pay → Get report"
   },
   "info": {
     "title": "重要資訊",
@@ -154,7 +154,7 @@
     "noConsultations": "還沒有諮詢記錄",
     "pdfsAppear": "您生成的PDF將顯示在這裡",
     "consultation": "諮詢",
-    "pricing": "MCP API • 網頁 $6",
+    "pricing": "MCP API • Web (from $9)",
     "signOut": "登出",
     "guestUser": "訪客使用者",
     "signIn": "登入",

@@ -6,8 +6,8 @@
   "welcome": {
     "title": "Bienvenido a OfferI",
     "subtitle": "Consultor de estudios en el extranjero personalizado con IA",
-    "startButton": "Iniciar Consulta ($6)",
-    "flow": "Completa tu perfil → Paga $6 → Obtén tu informe personalizado"
+    "startButton": "Start Consultation",
+    "flow": "Fill in background → Choose tier & pay → Get report"
   },
   "info": {
     "title": "Información Importante",
@@ -154,7 +154,7 @@
     "noConsultations": "Aún no hay consultas",
     "pdfsAppear": "Tus PDFs generados aparecerán aquí",
     "consultation": "Consulta",
-    "pricing": "MCP API • Web $6",
+    "pricing": "MCP API • Web (from $9)",
     "signOut": "Cerrar sesión",
     "guestUser": "Usuario Invitado",
     "signIn": "Iniciar sesión",

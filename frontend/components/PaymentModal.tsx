@@ -54,12 +54,13 @@ const TIER_CONFIG = {
   }
 };
 
-export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier = 'basic' }: PaymentModalProps) {
+export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier: initialTier = 'basic' }: PaymentModalProps) {
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTier, setSelectedTier] = useState<PaymentTier>(initialTier);
 
-  const config = TIER_CONFIG[tier];
+  const config = TIER_CONFIG[selectedTier];
 
   if (!isOpen) return null;
 
@@ -81,7 +82,7 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier 
         },
         body: JSON.stringify({
           user_id: user.id,
-          tier: tier,
+          tier: selectedTier,
         }),
       });
 
@@ -118,13 +119,51 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier 
 
         {/* Content */}
         <div className="p-6">
+          {/* Tier Selection Tabs */}
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setSelectedTier('basic')}
+              className={`flex-1 py-3 px-4 rounded-md border-2 transition-all ${
+                selectedTier === 'basic'
+                  ? 'border-primary bg-primary/5 text-primary font-semibold'
+                  : 'border-border hover:border-primary/50 text-muted-foreground'
+              }`}
+              disabled={loading}
+            >
+              <div className="text-sm">Basic</div>
+              <div className="text-lg font-bold">$9</div>
+            </button>
+            <button
+              onClick={() => setSelectedTier('advanced')}
+              className={`flex-1 py-3 px-4 rounded-md border-2 transition-all ${
+                selectedTier === 'advanced'
+                  ? 'border-primary bg-primary/5 text-primary font-semibold'
+                  : 'border-border hover:border-primary/50 text-muted-foreground'
+              }`}
+              disabled={loading}
+            >
+              <div className="text-sm">Advanced</div>
+              <div className="text-lg font-bold">$49.99</div>
+            </button>
+            <button
+              onClick={() => setSelectedTier('update')}
+              className={`flex-1 py-3 px-4 rounded-md border-2 transition-all ${
+                selectedTier === 'update'
+                  ? 'border-primary bg-primary/5 text-primary font-semibold'
+                  : 'border-border hover:border-primary/50 text-muted-foreground'
+              }`}
+              disabled={loading}
+            >
+              <div className="text-sm">Update</div>
+              <div className="text-lg font-bold">$39.99</div>
+            </button>
+          </div>
+
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <DollarSign className="w-8 h-8 text-primary" />
             </div>
-            <div className="mb-2">
-              <span className="text-4xl font-bold text-foreground">${config.price}</span>
-            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">{config.name}</h3>
             <p className="text-sm text-muted-foreground">
               {config.description}
             </p>

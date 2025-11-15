@@ -6,8 +6,8 @@
   "welcome": {
     "title": "OfferI에 오신 것을 환영합니다",
     "subtitle": "AI 기반 맞춤형 유학 컨설턴트",
-    "startButton": "상담 시작 ($6)",
-    "flow": "배경 작성 → $6 결제 → 맞춤형 보고서 받기"
+    "startButton": "Start Consultation",
+    "flow": "Fill in background → Choose tier & pay → Get report"
   },
   "info": {
     "title": "중요 정보",
@@ -154,7 +154,7 @@
     "noConsultations": "아직 상담이 없습니다",
     "pdfsAppear": "생성된 PDF가 여기에 표시됩니다",
     "consultation": "상담",
-    "pricing": "MCP API • 웹 $6",
+    "pricing": "MCP API • Web (from $9)",
     "signOut": "로그아웃",
     "guestUser": "게스트 사용자",
     "signIn": "로그인",
