@@ -160,9 +160,6 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">{t('settings.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('settings.subtitle')}
-          </p>
         </div>
 
         {/* Newly Created Key Alert */}
@@ -294,6 +291,7 @@ export default function SettingsPage() {
 
         {/* MCP API Notice */}
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+          <h3 className="text-base font-semibold text-purple-900 mb-2">{t('settings.mcpNotice.title')}</h3>
           <p className="text-sm text-purple-900">
             {t('settings.mcpNotice.message', { email: t('common.email') })}
           </p>

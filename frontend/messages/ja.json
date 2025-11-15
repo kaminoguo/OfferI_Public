@@ -186,6 +186,7 @@
     "githubRepo": "GitHubリポジトリ",
     "comingSoon": "近日公開...",
     "mcpNotice": {
+      "title": "MCPサービス",
       "message": "自社製品に統合したいですか？{email} にお問い合わせいただき、API キーを取得してください"
     }
   },

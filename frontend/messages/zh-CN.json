@@ -186,6 +186,7 @@
     "githubRepo": "GitHub仓库",
     "comingSoon": "即将推出...",
     "mcpNotice": {
+      "title": "MCP服务",
       "message": "想集成进自己的产品？请联系 {email} 获取 API 密钥"
     }
   },

@@ -186,6 +186,7 @@
     "githubRepo": "GitHub Repository",
     "comingSoon": "Coming soon...",
     "mcpNotice": {
+      "title": "MCP Service",
       "message": "Want to integrate into your product? Contact {email} to get an API key"
     }
   },

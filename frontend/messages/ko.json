@@ -186,6 +186,7 @@
     "githubRepo": "GitHub 저장소",
     "comingSoon": "곧 출시...",
     "mcpNotice": {
+      "title": "MCP 서비스",
       "message": "제품에 통합하고 싶으신가요? {email}로 연락하여 API 키를 받으세요"
     }
   },

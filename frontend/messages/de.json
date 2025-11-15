@@ -186,6 +186,7 @@
     "githubRepo": "GitHub-Repository",
     "comingSoon": "Demnächst verfügbar...",
     "mcpNotice": {
+      "title": "MCP-Dienst",
       "message": "Möchten Sie in Ihr Produkt integrieren? Kontaktieren Sie {email}, um einen API-Schlüssel zu erhalten"
     }
   },
