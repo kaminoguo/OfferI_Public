@@ -18,7 +18,7 @@
 
 **OfferI** is an AI-powered study abroad consultation platform that provides personalized master's program recommendations from a curated database of **60,000+ high-quality programs** from top universities worldwide.
 
-Unlike traditional consultants charging $2,000-5,000, OfferI delivers professional analysis for **$6 per consultation**, with reports generated in **10-15 minutes**.
+Unlike traditional consultants charging $2,000-5,000, OfferI delivers professional analysis starting at **$9 per consultation** (3 pricing tiers available), with reports generated in **10-15 minutes**.
 
 ### Current Focus
 
@@ -100,6 +100,49 @@ Using vendor-official tools means we benefit from their improvements without add
 - DigitalOcean (Singapore)
 - Nginx (Reverse proxy)
 - WeasyPrint (PDF generation)
+
+---
+
+## Pricing
+
+### Web Service (3 Tiers)
+
+**Basic Consultation - $9 / ¥59.99 / HK$69.99**
+- AI-powered personalized analysis
+- 3-5 targeted web searches
+- 10-15 program recommendations
+- Professional PDF report
+- Free retry if generation fails
+
+**Advanced Consultation - $49.99 / ¥399.99 / HK$389.99**
+- Everything in Basic tier
+- Deep Exa research for 20-30 programs (40+ searches)
+- Detailed program features and student experience analysis
+- Suitability analysis for each recommended program
+- Career outcomes and employment data
+
+**Update Option - $39.99 / ¥299.99 / HK$299.99**
+- Upgrade your basic report to advanced tier
+- Available after viewing basic report results
+- Pay only for the research upgrade
+
+**Payment Features:**
+- Multi-currency display based on customer location (USD/CNY/HKD)
+- Secure payment via Stripe (card, Alipay, Apple Pay, Google Pay, Link)
+- No subscription, no hidden fees
+- 10-15 minutes delivery
+
+### MCP API Access
+
+**Free Tier**
+- 5 complete consultations per month
+- Perfect for personal projects and testing
+- Full access to 60,000+ program database
+
+**Super Key**
+- Unlimited consultations
+- For production applications
+- Contact us for pricing
 
 ---
 

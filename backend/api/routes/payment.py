@@ -18,8 +18,19 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
-# Fixed price per consultation
-CONSULTATION_PRICE = 6.00
+# Stripe Price IDs for different tiers
+PRICE_IDS = {
+    'basic': 'price_1STcw0AYK8RdUDIMoHe7yAN1',      # $9 Basic
+    'update': 'price_1STcxJAYK8RdUDIMXqbho0bJ',     # $39.99 Update
+    'advanced': 'price_1STcyfAYK8RdUDIM1o3uhF2V',   # $49.99 Advanced
+}
+
+# Price mapping for database records
+TIER_PRICES = {
+    'basic': 9.00,
+    'update': 39.99,
+    'advanced': 49.99,
+}
 
 router = APIRouter(prefix="/api/payment", tags=["payment"])
 
@@ -31,6 +42,7 @@ router = APIRouter(prefix="/api/payment", tags=["payment"])
 class PaymentRequest(BaseModel):
     """Request to create payment session"""
     user_id: str  # Clerk user ID
+    tier: str = 'basic'  # 'basic', 'update', or 'advanced'
 
 
 class PaymentResponse(BaseModel):
@@ -49,10 +61,18 @@ async def create_payment_session(
     db: Session = Depends(get_db)
 ):
     """
-    Create Stripe checkout session for $6 consultation
+    Create Stripe checkout session for study abroad consultation
+    Supports 3 tiers: basic ($9), update ($39.99), advanced ($49.99)
     """
     try:
-        # Create Stripe checkout session
+        # Validate tier
+        if request.tier not in PRICE_IDS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid tier: {request.tier}. Must be 'basic', 'update', or 'advanced'"
+            )
+
+        # Create Stripe checkout session using Price ID
         # Using globally supported payment methods (works in all regions)
         # Alipay will show based on Stripe Dashboard settings + customer location/preferences
         # Prefer automatic payment methods so Stripe decides the best set (card, wallets, Link, Alipay, etc.)
@@ -65,14 +85,7 @@ async def create_payment_session(
             },
             line_items=[
                 {
-                    "price_data": {
-                        "currency": "usd",
-                        "product_data": {
-                            "name": "OfferI Study Abroad Consultation",
-                            "description": "AI-powered personalized study abroad recommendation report",
-                        },
-                        "unit_amount": int(CONSULTATION_PRICE * 100),  # Convert to cents
-                    },
+                    "price": PRICE_IDS[request.tier],
                     "quantity": 1,
                 }
             ],
@@ -81,6 +94,7 @@ async def create_payment_session(
             cancel_url=f"{FRONTEND_URL}?payment=cancel",
             metadata={
                 "user_id": request.user_id,
+                "tier": request.tier,
             },
         )
 
@@ -127,22 +141,26 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
 
             # Extract data
             user_id = session["metadata"]["user_id"]
+            tier = session["metadata"].get("tier", "basic")
             payment_intent = session.get("payment_intent")
             session_id = session.get("id")
 
-            logger.info(f"Payment completed: user={user_id}, session={session_id}, payment_intent={payment_intent}")
+            # Get amount based on tier
+            amount = TIER_PRICES.get(tier, 9.00)
+
+            logger.info(f"Payment completed: user={user_id}, tier={tier}, amount=${amount}, session={session_id}, payment_intent={payment_intent}")
 
             # Create payment record
             payment = Payment(
                 id=payment_intent or session_id,  # Use payment_intent ID or session ID
                 user_id=user_id,
-                amount=CONSULTATION_PRICE,
+                amount=amount,
                 status=PaymentStatus.PAID,
             )
             db.add(payment)
             db.commit()
 
-            logger.success(f"Payment record created: {payment.id} for user {user_id}")
+            logger.success(f"Payment record created: {payment.id} for user {user_id} (tier={tier}, amount=${amount})")
 
         return {"status": "success"}
 

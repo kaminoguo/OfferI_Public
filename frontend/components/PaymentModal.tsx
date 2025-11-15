@@ -4,16 +4,62 @@ import { useState } from 'react';
 import { X, Loader2, DollarSign } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 
+type PaymentTier = 'basic' | 'update' | 'advanced';
+
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPaymentComplete: (paymentId: string) => void;
+  tier?: PaymentTier;  // Default to 'basic'
 }
 
-export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: PaymentModalProps) {
+// Tier configuration
+const TIER_CONFIG = {
+  basic: {
+    price: 9,
+    name: 'Basic Consultation',
+    description: 'AI-powered study abroad consultation with basic recommendations',
+    features: [
+      'AI-powered personalized analysis of your background',
+      'Comprehensive program recommendations (3-5 web searches)',
+      'Professional PDF report you can download and share',
+      'Free retry if report generation fails'
+    ]
+  },
+  update: {
+    price: 39.99,
+    name: 'Update to Advanced',
+    description: 'Upgrade your basic report to get detailed program research',
+    features: [
+      'All basic features included',
+      'Deep Exa research for 20-30 programs (40+ searches)',
+      'Detailed program features and student experience analysis',
+      'Suitability analysis for each recommended program',
+      'Career outcomes and employment data'
+    ]
+  },
+  advanced: {
+    price: 49.99,
+    name: 'Advanced Consultation',
+    description: 'Comprehensive analysis with extensive program research from the start',
+    features: [
+      'AI-powered personalized analysis of your background',
+      'Deep Exa research for 20-30 programs (40+ searches)',
+      'Detailed program features and student experience analysis',
+      'Suitability analysis for each recommended program',
+      'Career outcomes and employment data',
+      'Professional PDF report you can download and share',
+      'Free retry if report generation fails'
+    ]
+  }
+};
+
+export default function PaymentModal({ isOpen, onClose, onPaymentComplete, tier = 'basic' }: PaymentModalProps) {
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const config = TIER_CONFIG[tier];
 
   if (!isOpen) return null;
 
@@ -35,6 +81,7 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
         },
         body: JSON.stringify({
           user_id: user.id,
+          tier: tier,
         }),
       });
 
@@ -58,7 +105,7 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
       <div className="bg-background border border-border rounded-lg shadow-soft max-w-md w-full">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-semibold text-foreground">Payment Required</h2>
+          <h2 className="text-xl font-semibold text-foreground">{config.name}</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-md hover-minimal"
@@ -76,38 +123,20 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
               <DollarSign className="w-8 h-8 text-primary" />
             </div>
             <div className="mb-2">
-              <span className="text-4xl font-bold text-foreground">$6</span>
+              <span className="text-4xl font-bold text-foreground">${config.price}</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              One-time payment for comprehensive study abroad consultation
+              {config.description}
             </p>
           </div>
 
           <div className="space-y-3 mb-6 text-sm">
-            <div className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
-              <p className="text-foreground">
-                AI-powered personalized analysis of your background
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
-              <p className="text-foreground">
-                Comprehensive program recommendations tailored to your profile
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
-              <p className="text-foreground">
-                Professional PDF report you can download and share
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
-              <p className="text-foreground">
-                Free retry if report generation fails
-              </p>
-            </div>
+            {config.features.map((feature, index) => (
+              <div key={index} className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>
+                <p className="text-foreground">{feature}</p>
+              </div>
+            ))}
           </div>
 
           {error && (
@@ -129,7 +158,7 @@ export default function PaymentModal({ isOpen, onClose, onPaymentComplete }: Pay
             ) : (
               <>
                 <DollarSign className="w-5 h-5" />
-                Pay $6 & Continue
+                Pay ${config.price} & Continue
               </>
             )}
           </button>
