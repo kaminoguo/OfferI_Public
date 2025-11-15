@@ -1,12 +1,27 @@
 #!/usr/bin/env python3
 """
-OfferI MCP Server - Workflow Orchestration Version 1.09.1
+OfferI MCP Server - Workflow Orchestration Version 1.10
 
 Architecture: Token-based workflow with classification-based filtering
 - Each workflow tool returns a token required by the next tool
 - Simplified single-pass processing (removed batch logic)
 - Classification-based early filtering to reduce web search costs
 - LLM knowledge-first approach with conditional web searches
+
+Major Changes (v1.10 - Nov 16, 2025):
+- Tier-based consultation workflow (basic $9, advanced $49.99, upgrade $39.99)
+  * Tool 1: Added required 'tier' parameter (basic/advanced/update)
+  * Tool 2-6: Propagate tier through entire token chain
+  * Tool 5: Basic tier saves consultation state to PostgreSQL for upgrade
+  * NEW Tool: upgrade_to_advanced() - Resume workflow from saved state
+  * Advanced tier continues to score_and_rank_programs() and generate_final_report()
+- PostgreSQL state persistence
+  * consultation_states table stores workflow data for basic tier
+  * 7-day expiration for state cleanup
+  * JSONB storage for flexible workflow data
+- Removed monthly quota system
+  * All active API keys have unlimited access
+  * Simplified authentication (no quota checks)
 
 Critical Fixes (v1.09.1 - Nov 7, 2025):
 - Tool 7: Fixed conditional search validation logic
@@ -618,12 +633,10 @@ async def start_and_select_universities(
         Call 2: selection_token + selected universities + instructions for next step
     """
     # ═══════════════════════════════════════════════════════════════
-    # QUOTA VALIDATION
+    # API KEY VALIDATION
     # ═══════════════════════════════════════════════════════════════
     import psycopg2
     from fastmcp.server.dependencies import get_http_headers
-
-    FREE_CONSULTATION_LIMIT = 5
 
     # Get API key from headers
     api_key = ""
@@ -667,19 +680,7 @@ async def start_and_select_universities(
             conn.close()
             raise ValueError(f"❌ API key has been revoked. Please generate a new key at https://offeri.org/dashboard")
 
-        # Only API keys with proper access are allowed
-        if not is_super_key:
-            conn.close()
-            raise ValueError(
-                f"❌ API KEY REQUIRED\n\n"
-                f"The MCP API requires a valid API key for access.\n\n"
-                f"📧 Contact us to get your API key: lyrica2333@gmail.com\n\n"
-                f"💡 API Key Benefits:\n"
-                f"   • Unlimited consultations\n"
-                f"   • Priority processing\n"
-                f"   • Dedicated support\n"
-            )
-
+        # All active API keys have unlimited access
         conn.close()
 
     except ValueError:
@@ -1022,7 +1023,8 @@ where shortlisted_by_university = {{"University Name": [program_id1, program_id2
 async def start_consultation(
     background: str,
     tier_assessment: dict,
-    web_searches: Optional[List[dict]] = None
+    web_searches: Optional[List[dict]] = None,
+    tier: str = 'basic'
 ) -> dict:
     """
     Step 1: Start consultation session
@@ -1072,17 +1074,18 @@ async def start_consultation(
         web_searches: Optional list of 0-3 web search results (using your built-in search)
             Each: {"query": "...", "num_results": <1-25>, "key_findings": "..."}
             ONLY include if genuinely uncertain after knowledge-based analysis
+        tier: Payment tier - 'basic' ($9) or 'advanced' ($49.99). Default: 'basic'
+            - 'basic': Workflow stops after validation, saves state for potential upgrade
+            - 'advanced': Complete workflow with deep research (40+ Exa searches)
 
     Returns:
         consultation_token + validated tier assessment + next_step instructions
     """
     # ═══════════════════════════════════════════════════════════════
-    # QUOTA VALIDATION (v1.16)
+    # API KEY VALIDATION
     # ═══════════════════════════════════════════════════════════════
     import psycopg2
     from fastmcp.server.dependencies import get_http_headers
-
-    FREE_CONSULTATION_LIMIT = 5  # 5 free consultations per month
 
     # Get API key from headers
     api_key = ""
@@ -1126,19 +1129,7 @@ async def start_consultation(
             conn.close()
             raise ValueError(f"❌ API key has been revoked. Please generate a new key at https://offeri.org/dashboard")
 
-        # Only API keys with proper access are allowed
-        if not is_super_key:
-            conn.close()
-            raise ValueError(
-                f"❌ API KEY REQUIRED\n\n"
-                f"The MCP API requires a valid API key for access.\n\n"
-                f"📧 Contact us to get your API key: lyrica2333@gmail.com\n\n"
-                f"💡 API Key Benefits:\n"
-                f"   • Unlimited consultations\n"
-                f"   • Priority processing\n"
-                f"   • Dedicated support\n"
-            )
-
+        # All active API keys have unlimited access
         conn.close()
 
     except ValueError:
@@ -1190,7 +1181,8 @@ async def start_consultation(
         "background": background,
         "tier_assessment": tier_assessment,
         "web_searches_completed": search_count,
-        "web_searches_data": web_searches or []
+        "web_searches_data": web_searches or [],
+        "tier": tier  # 'basic' or 'advanced'
     })
 
     return {
@@ -1231,9 +1223,10 @@ async def explore_universities(
     """
     consultation_data = validate_token(consultation_token, "consultation")
 
-    # Extract career_clarity for later use in scoring
+    # Extract career_clarity and tier for later use
     tier_assessment = consultation_data.get("tier_assessment", {})
     career_clarity = tier_assessment.get("career_clarity", "medium")
+    tier = consultation_data.get("tier", "basic")  # Extract tier
 
     universities = _list_universities(country)
 
@@ -1246,7 +1239,8 @@ async def explore_universities(
         "country": country,
         "universities": universities,
         "total_universities": len(universities),
-        "career_clarity": career_clarity  # Pass through for scoring
+        "career_clarity": career_clarity,  # Pass through for scoring
+        "tier": tier  # Pass through tier
     })
     
     return {
@@ -1316,6 +1310,7 @@ async def get_university_programs(
     """
     exploration_data = validate_token(exploration_token, "exploration")
     career_clarity = exploration_data.get("career_clarity", "medium")
+    tier = exploration_data.get("tier", "basic")
 
     if not universities or not isinstance(universities, list):
         raise ValueError("You must provide a list of university names")
@@ -1392,6 +1387,7 @@ get_university_programs(
         "all_programs": all_programs,
         "total_programs": total_programs,
         "career_clarity": career_clarity,
+        "tier": tier,
         "selected_classifications": selected_classifications,
         "classification_statistics": classification_stats
     })
@@ -1464,6 +1460,7 @@ async def shortlist_programs_by_name(
     """
     programs_data = validate_token(programs_token, "programs")
     career_clarity = programs_data.get("career_clarity", "medium")
+    tier = programs_data.get("tier", "basic")
 
     if not shortlisted_by_university or not isinstance(shortlisted_by_university, dict):
         raise ValueError("You must provide shortlisted_by_university as a dict")
@@ -1477,7 +1474,8 @@ async def shortlist_programs_by_name(
         "universities": list(shortlisted_by_university.keys()),
         "shortlisted_by_university": shortlisted_by_university,
         "total_shortlisted": total_shortlisted,
-        "career_clarity": career_clarity
+        "career_clarity": career_clarity,
+        "tier": tier
     })
 
     return {
@@ -1567,6 +1565,7 @@ async def validate_programs_with_web(
     """
     shortlist_data = validate_token(shortlist_token, "shortlist")
     career_clarity = shortlist_data.get("career_clarity", "medium")
+    tier = shortlist_data.get("tier", "basic")
     expected_unis = shortlist_data["universities"]
 
     if not validated_programs or not isinstance(validated_programs, dict):
@@ -1621,18 +1620,233 @@ async def validate_programs_with_web(
         "final_program_ids": all_final_ids,
         "validated_programs": validated_programs,
         "web_searches": optional_web_searches or {},
-        "career_clarity": career_clarity
+        "career_clarity": career_clarity,
+        "tier": tier
     })
 
-    return {
+    # BASIC TIER: Save state to consultation_states table for potential upgrade
+    consultation_state_id = None
+    if tier == 'basic':
+        import psycopg2
+        import json
+        from datetime import datetime
+
+        try:
+            # Get user_id from API key
+            headers = get_http_headers()
+            auth_header = headers.get("authorization", "")
+            api_key = auth_header[7:] if auth_header.startswith("Bearer ") else ""
+
+            conn = psycopg2.connect(
+                host=os.getenv("POSTGRES_HOST", "localhost"),
+                port=os.getenv("POSTGRES_PORT", "5432"),
+                dbname=os.getenv("POSTGRES_DB", "offeri"),
+                user=os.getenv("POSTGRES_USER", "offeri_user"),
+                password=os.getenv("POSTGRES_PASSWORD", "")
+            )
+            cursor = conn.cursor()
+
+            # Get user_id from API key
+            cursor.execute("SELECT user_id FROM api_keys WHERE id = %s", (api_key,))
+            result = cursor.fetchone()
+            user_id = result[0] if result else "unknown"
+
+            # Generate unique consultation_state_id
+            import uuid
+            consultation_state_id = f"cs_{uuid.uuid4().hex[:16]}"
+
+            # Save complete workflow state
+            workflow_data = {
+                "validation_token": token,
+                "validated_programs": validated_programs,
+                "total_programs": len(all_final_ids),
+                "universities": list(current_unis),
+                "career_clarity": career_clarity,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+
+            cursor.execute("""
+                INSERT INTO consultation_states (id, user_id, tier, workflow_step, workflow_data)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (consultation_state_id, user_id, 'basic', 'validation_complete', json.dumps(workflow_data)))
+
+            conn.commit()
+            conn.close()
+
+            logger.info(f"💾 BASIC tier: Saved consultation state {consultation_state_id} for user {user_id}")
+        except Exception as e:
+            logger.error(f"Failed to save consultation state: {e}")
+            # Don't fail the workflow if state saving fails
+
+    response = {
         "validation_token": token,
         "universities_validated": len(validated_programs),
         "total_programs_validated": len(all_final_ids),
         "web_searches_performed": total_searches,
         "programs_validated_with_knowledge": total_skipped,
         "message": f"✅ Validated {len(all_final_ids)} programs from {len(validated_programs)} universities\n({total_searches} web searches, {total_skipped} validated with own knowledge)",
-        "next_step": "Call score_and_rank_programs(validation_token)"
     }
+
+    if tier == 'basic':
+        response["consultation_state_id"] = consultation_state_id
+        response["tier"] = "basic"
+        response["upgrade_available"] = True
+        response["message"] += f"\n\n💡 BASIC TIER ($9): Consultation complete!\n📋 State saved: {consultation_state_id}\n🚀 Want deep research (40+ Exa searches)? Upgrade to Advanced for $39.99\n   → Call upgrade_to_advanced('{consultation_state_id}')"
+        response["next_step"] = "Basic tier complete. User can upgrade to advanced tier."
+    else:
+        response["next_step"] = "Call score_and_rank_programs(validation_token)"
+
+    return response
+
+
+@mcp.tool
+async def upgrade_to_advanced(
+    consultation_state_id: str
+) -> dict:
+    """
+    Upgrade from basic tier to advanced tier
+
+    Loads saved workflow state from PostgreSQL and resumes execution
+    from score_and_rank_programs() → generate_final_report() with Exa research
+
+    Args:
+        consultation_state_id: State ID from basic tier (format: cs_xxxxx)
+
+    Returns:
+        Validation token to continue workflow with score_and_rank_programs()
+    """
+    import psycopg2
+    import json
+    from datetime import datetime
+
+    # Load consultation state from PostgreSQL
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv("POSTGRES_HOST", "localhost"),
+            port=os.getenv("POSTGRES_PORT", "5432"),
+            dbname=os.getenv("POSTGRES_DB", "offeri"),
+            user=os.getenv("POSTGRES_USER", "offeri_user"),
+            password=os.getenv("POSTGRES_PASSWORD", "")
+        )
+        cursor = conn.cursor()
+
+        # Fetch consultation state
+        cursor.execute("""
+            SELECT user_id, tier, workflow_step, workflow_data, created_at, expires_at
+            FROM consultation_states
+            WHERE id = %s
+        """, (consultation_state_id,))
+
+        result = cursor.fetchone()
+        if not result:
+            conn.close()
+            raise ValueError(
+                f"❌ Consultation state not found: {consultation_state_id}\n\n"
+                f"This state ID may be invalid, expired, or already used.\n"
+                f"Please start a new basic consultation."
+            )
+
+        user_id, tier, workflow_step, workflow_data_json, created_at, expires_at = result
+
+        # Check if expired
+        if expires_at < datetime.utcnow():
+            conn.close()
+            raise ValueError(
+                f"❌ Consultation state expired: {consultation_state_id}\n\n"
+                f"Created: {created_at}\n"
+                f"Expired: {expires_at}\n\n"
+                f"Consultation states are valid for 7 days. Please start a new basic consultation."
+            )
+
+        # Verify tier is basic
+        if tier != 'basic':
+            conn.close()
+            raise ValueError(
+                f"❌ Invalid upgrade request: {consultation_state_id}\n\n"
+                f"This consultation state is for tier '{tier}', not 'basic'.\n"
+                f"Only basic tier consultations can be upgraded to advanced."
+            )
+
+        # Verify workflow step
+        if workflow_step != 'validation_complete':
+            conn.close()
+            raise ValueError(
+                f"❌ Invalid workflow state: {consultation_state_id}\n\n"
+                f"Current workflow step: {workflow_step}\n"
+                f"Expected: validation_complete\n\n"
+                f"This consultation is not ready for upgrade."
+            )
+
+        # Parse workflow data
+        workflow_data = json.loads(workflow_data_json)
+        validation_token = workflow_data.get("validation_token")
+        total_programs = workflow_data.get("total_programs")
+        universities = workflow_data.get("universities", [])
+
+        if not validation_token:
+            conn.close()
+            raise ValueError(
+                f"❌ Invalid consultation state: {consultation_state_id}\n\n"
+                f"Missing validation_token in workflow_data.\n"
+                f"This state may be corrupted. Please start a new basic consultation."
+            )
+
+        # Update consultation state to 'advanced' tier
+        cursor.execute("""
+            UPDATE consultation_states
+            SET tier = 'advanced', workflow_step = 'upgrade_initiated'
+            WHERE id = %s
+        """, (consultation_state_id,))
+
+        conn.commit()
+        conn.close()
+
+        logger.info(f"🚀 UPGRADE: {consultation_state_id} upgraded from basic to advanced for user {user_id}")
+
+        return {
+            "upgraded": True,
+            "consultation_state_id": consultation_state_id,
+            "validation_token": validation_token,
+            "total_programs": total_programs,
+            "universities": len(universities),
+            "message": f"""
+✅ Successfully upgraded to Advanced tier!
+
+📊 Consultation Details:
+   • State ID: {consultation_state_id}
+   • Programs validated: {total_programs}
+   • Universities: {len(universities)}
+   • Created: {created_at}
+
+🎯 Next Step:
+   Call score_and_rank_programs(validation_token) to continue the workflow.
+
+   This will rank your {total_programs} validated programs and prepare them for
+   deep Exa research (40+ searches) in the final report generation.
+            """,
+            "next_step": f"Call score_and_rank_programs('{validation_token}')"
+        }
+
+    except psycopg2.Error as e:
+        logger.error(f"PostgreSQL error in upgrade_to_advanced: {e}")
+        raise ValueError(
+            f"❌ Database error while loading consultation state.\n\n"
+            f"Error: {str(e)}\n\n"
+            f"Please contact support at lyrica2333@gmail.com"
+        )
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON decode error in upgrade_to_advanced: {e}")
+        raise ValueError(
+            f"❌ Corrupted consultation state: {consultation_state_id}\n\n"
+            f"Unable to parse workflow data. Please start a new basic consultation."
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in upgrade_to_advanced: {e}")
+        raise ValueError(
+            f"❌ Unexpected error while upgrading consultation.\n\n"
+            f"Error: {str(e)}\n\n"
+            f"Please contact support at lyrica2333@gmail.com"
+        )
 
 
 @mcp.tool
@@ -1650,6 +1864,7 @@ async def score_and_rank_programs(
     """
     validation_data = validate_token(validation_token, "validation")
     career_clarity = validation_data.get("career_clarity", "medium")
+    tier = validation_data.get("tier", "advanced")  # Should be 'advanced' here
 
     final_ids = validation_data["final_program_ids"]
     universities_count = len(validation_data.get("validated_universities", []))
@@ -1717,7 +1932,8 @@ async def score_and_rank_programs(
         "total_universities_validated": universities_count,
         "career_clarity": career_clarity,
         "reputation_weight": reputation_weight,
-        "fit_weight": fit_weight
+        "fit_weight": fit_weight,
+        "tier": tier
     })
     
     return {
