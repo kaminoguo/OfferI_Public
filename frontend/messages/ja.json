@@ -184,7 +184,17 @@
     "contactLinks": "連絡先とリンク",
     "contactMe": "お問い合わせ",
     "githubRepo": "GitHubリポジトリ",
-    "comingSoon": "近日公開..."
+    "comingSoon": "近日公開...",
+    "mcpNotice": {
+      "title": "MCP API には API キーが必要",
+      "description": "MCP API にアクセスするには有効な API キーが必要です。",
+      "benefits": "API キーのメリット：",
+      "unlimitedConsultations": "無制限の相談（月次制限なし）",
+      "priorityProcessing": "優先処理",
+      "dedicatedSupport": "専用サポート",
+      "contactTitle": "API キーの取得：",
+      "contactEmail": "📧 メール：{email}"
+    }
   },
   "payment": {
     "tiers": {

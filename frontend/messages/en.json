@@ -184,7 +184,17 @@
     "contactLinks": "Contact & Links",
     "contactMe": "Contact Me",
     "githubRepo": "GitHub Repository",
-    "comingSoon": "Coming soon..."
+    "comingSoon": "Coming soon...",
+    "mcpNotice": {
+      "title": "MCP API Requires API Key",
+      "description": "MCP API requires a valid API key for access.",
+      "benefits": "API Key Benefits:",
+      "unlimitedConsultations": "Unlimited consultations (no monthly quota)",
+      "priorityProcessing": "Priority processing",
+      "dedicatedSupport": "Dedicated support",
+      "contactTitle": "Get API Key:",
+      "contactEmail": "📧 Email: {email}"
+    }
   },
   "payment": {
     "tiers": {

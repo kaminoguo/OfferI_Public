@@ -292,7 +292,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Super API Notice */}
+        {/* MCP API Notice */}
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
           <div className="flex items-start gap-3">
             <div className="p-2 bg-purple-100 rounded-lg">
@@ -300,26 +300,23 @@ export default function SettingsPage() {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-purple-900 mb-2">
-                MCP API Requires Super API Key
+                {t('settings.mcpNotice.title')}
               </h3>
               <p className="text-sm text-purple-800 mb-3">
-                The MCP API now requires a Super API key for unlimited access. Regular API keys cannot be used for MCP calls.
+                {t('settings.mcpNotice.description')}
               </p>
               <div className="space-y-2 text-sm text-purple-800">
-                <p className="font-medium">Super API Benefits:</p>
+                <p className="font-medium">{t('settings.mcpNotice.benefits')}</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>Unlimited consultations (no monthly quota)</li>
-                  <li>Priority processing</li>
-                  <li>Dedicated support</li>
+                  <li>{t('settings.mcpNotice.unlimitedConsultations')}</li>
+                  <li>{t('settings.mcpNotice.priorityProcessing')}</li>
+                  <li>{t('settings.mcpNotice.dedicatedSupport')}</li>
                 </ul>
               </div>
               <div className="mt-4 p-3 bg-white border border-purple-200 rounded-md">
-                <p className="text-sm font-medium text-purple-900 mb-1">Contact for Super API:</p>
+                <p className="text-sm font-medium text-purple-900 mb-1">{t('settings.mcpNotice.contactTitle')}</p>
                 <p className="text-sm text-purple-800">
-                  📧 Email: <a href="mailto:lyrica2333@gmail.com" className="text-purple-700 hover:underline">lyrica2333@gmail.com</a>
-                </p>
-                <p className="text-sm text-purple-800">
-                  💬 WeChat: Please email for WeChat contact
+                  {t('settings.mcpNotice.contactEmail', { email: t('common.email') })}
                 </p>
               </div>
             </div>

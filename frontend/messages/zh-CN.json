@@ -184,7 +184,17 @@
     "contactLinks": "联系方式与链接",
     "contactMe": "联系我",
     "githubRepo": "GitHub仓库",
-    "comingSoon": "即将推出..."
+    "comingSoon": "即将推出...",
+    "mcpNotice": {
+      "title": "MCP API 需要 API 密钥",
+      "description": "MCP API 需要有效的 API 密钥才能访问。",
+      "benefits": "API 密钥权益：",
+      "unlimitedConsultations": "无限次咨询（无月度配额）",
+      "priorityProcessing": "优先处理",
+      "dedicatedSupport": "专属支持",
+      "contactTitle": "获取 API 密钥：",
+      "contactEmail": "📧 邮箱：{email}"
+    }
   },
   "payment": {
     "tiers": {

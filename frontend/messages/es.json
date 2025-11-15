@@ -184,7 +184,17 @@
     "contactLinks": "Contacto y Enlaces",
     "contactMe": "Contáctame",
     "githubRepo": "Repositorio GitHub",
-    "comingSoon": "Próximamente..."
+    "comingSoon": "Próximamente...",
+    "mcpNotice": {
+      "title": "MCP API requiere clave API",
+      "description": "El acceso a la API MCP requiere una clave API válida.",
+      "benefits": "Beneficios de la clave API:",
+      "unlimitedConsultations": "Consultas ilimitadas (sin cuota mensual)",
+      "priorityProcessing": "Procesamiento prioritario",
+      "dedicatedSupport": "Soporte dedicado",
+      "contactTitle": "Obtener clave API:",
+      "contactEmail": "📧 Email: {email}"
+    }
   },
   "payment": {
     "tiers": {

@@ -184,7 +184,17 @@
     "contactLinks": "Kontakt & Links",
     "contactMe": "Kontaktieren Sie mich",
     "githubRepo": "GitHub-Repository",
-    "comingSoon": "Demnächst verfügbar..."
+    "comingSoon": "Demnächst verfügbar...",
+    "mcpNotice": {
+      "title": "MCP API benötigt API-Schlüssel",
+      "description": "Für den Zugriff auf die MCP API ist ein gültiger API-Schlüssel erforderlich.",
+      "benefits": "API-Schlüssel-Vorteile:",
+      "unlimitedConsultations": "Unbegrenzte Beratungen (keine monatliche Quote)",
+      "priorityProcessing": "Prioritätsbearbeitung",
+      "dedicatedSupport": "Dedizierter Support",
+      "contactTitle": "API-Schlüssel erhalten:",
+      "contactEmail": "📧 E-Mail: {email}"
+    }
   },
   "payment": {
     "tiers": {

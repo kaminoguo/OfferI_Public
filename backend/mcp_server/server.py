@@ -667,16 +667,14 @@ async def start_and_select_universities(
             conn.close()
             raise ValueError(f"❌ API key has been revoked. Please generate a new key at https://offeri.org/dashboard")
 
-        # Only Super API keys are allowed
+        # Only API keys with proper access are allowed
         if not is_super_key:
             conn.close()
             raise ValueError(
-                f"❌ SUPER API KEY REQUIRED\n\n"
-                f"The MCP API now requires a Super API key for access.\n\n"
-                f"📧 Contact us to get your Super API key:\n"
-                f"   Email: lyrica2333@gmail.com\n"
-                f"   WeChat: Please email for WeChat contact\n\n"
-                f"💡 Why Super API?\n"
+                f"❌ API KEY REQUIRED\n\n"
+                f"The MCP API requires a valid API key for access.\n\n"
+                f"📧 Contact us to get your API key: lyrica2333@gmail.com\n\n"
+                f"💡 API Key Benefits:\n"
                 f"   • Unlimited consultations\n"
                 f"   • Priority processing\n"
                 f"   • Dedicated support\n"
@@ -1128,16 +1126,14 @@ async def start_consultation(
             conn.close()
             raise ValueError(f"❌ API key has been revoked. Please generate a new key at https://offeri.org/dashboard")
 
-        # Only Super API keys are allowed
+        # Only API keys with proper access are allowed
         if not is_super_key:
             conn.close()
             raise ValueError(
-                f"❌ SUPER API KEY REQUIRED\n\n"
-                f"The MCP API now requires a Super API key for access.\n\n"
-                f"📧 Contact us to get your Super API key:\n"
-                f"   Email: lyrica2333@gmail.com\n"
-                f"   WeChat: Please email for WeChat contact\n\n"
-                f"💡 Why Super API?\n"
+                f"❌ API KEY REQUIRED\n\n"
+                f"The MCP API requires a valid API key for access.\n\n"
+                f"📧 Contact us to get your API key: lyrica2333@gmail.com\n\n"
+                f"💡 API Key Benefits:\n"
                 f"   • Unlimited consultations\n"
                 f"   • Priority processing\n"
                 f"   • Dedicated support\n"
