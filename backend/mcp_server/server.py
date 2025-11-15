@@ -638,7 +638,7 @@ async def start_and_select_universities(
     if not api_key or not api_key.startswith("sk_"):
         raise ValueError("❌ Invalid or missing API key. Please provide a valid API key in Authorization header.")
 
-    # Check quota in database
+    # Check if super key
     try:
         conn = psycopg2.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
@@ -648,7 +648,6 @@ async def start_and_select_universities(
             password=os.getenv("POSTGRES_PASSWORD", "")
         )
         cursor = conn.cursor()
-        now = datetime.utcnow()
 
         # Get user_id and check if super key
         cursor.execute("""
@@ -668,36 +667,27 @@ async def start_and_select_universities(
             conn.close()
             raise ValueError(f"❌ API key has been revoked. Please generate a new key at https://offeri.org/dashboard")
 
-        # Super keys have unlimited access
+        # Only Super API keys are allowed
         if not is_super_key:
-            # Check current month usage
-            usage_id = f"{user_id}_{now.year}_{now.month}"
-            cursor.execute("""
-                SELECT usage_count FROM mcp_usage
-                WHERE id = %s
-            """, (usage_id,))
-            usage_result = cursor.fetchone()
-
-            current_usage = usage_result[0] if usage_result else 0
-
-            if current_usage >= FREE_CONSULTATION_LIMIT:
-                conn.close()
-                raise ValueError(
-                    f"❌ MONTHLY QUOTA EXCEEDED\n\n"
-                    f"You've used all {FREE_CONSULTATION_LIMIT} free consultations this month ({now.year}-{now.month:02d}).\n\n"
-                    f"📊 Usage: {current_usage}/{FREE_CONSULTATION_LIMIT}\n"
-                    f"📅 Resets: {now.year}-{(now.month % 12) + 1:02d}-01\n\n"
-                    f"💡 Options:\n"
-                    f"  1. Wait for monthly reset (1st of next month)\n"
-                    f"  2. Contact us for unlimited Super API keys: support@offeri.org\n"
-                )
+            conn.close()
+            raise ValueError(
+                f"❌ SUPER API KEY REQUIRED\n\n"
+                f"The MCP API now requires a Super API key for access.\n\n"
+                f"📧 Contact us to get your Super API key:\n"
+                f"   Email: lyrica2333@gmail.com\n"
+                f"   WeChat: Please email for WeChat contact\n\n"
+                f"💡 Why Super API?\n"
+                f"   • Unlimited consultations\n"
+                f"   • Priority processing\n"
+                f"   • Dedicated support\n"
+            )
 
         conn.close()
 
     except ValueError:
         raise
     except Exception as e:
-        print(f"⚠️ Quota check failed (database error): {e}")
+        print(f"⚠️ API key validation failed (database error): {e}")
         pass
 
     # ═══════════════════════════════════════════════════════════════
@@ -1109,7 +1099,7 @@ async def start_consultation(
     if not api_key or not api_key.startswith("sk_"):
         raise ValueError("❌ Invalid or missing API key. Please provide a valid API key in Authorization header.")
 
-    # Check quota in database
+    # Check if super key
     try:
         conn = psycopg2.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
@@ -1119,7 +1109,6 @@ async def start_consultation(
             password=os.getenv("POSTGRES_PASSWORD", "")
         )
         cursor = conn.cursor()
-        now = datetime.utcnow()
 
         # Get user_id and check if super key
         cursor.execute("""
@@ -1139,41 +1128,29 @@ async def start_consultation(
             conn.close()
             raise ValueError(f"❌ API key has been revoked. Please generate a new key at https://offeri.org/dashboard")
 
-        # Super keys have unlimited access
-        if is_super_key:
+        # Only Super API keys are allowed
+        if not is_super_key:
             conn.close()
-            # No quota check needed for super keys
-        else:
-            # Check current month usage
-            usage_id = f"{user_id}_{now.year}_{now.month}"
-            cursor.execute("""
-                SELECT usage_count FROM mcp_usage
-                WHERE id = %s
-            """, (usage_id,))
-            usage_result = cursor.fetchone()
+            raise ValueError(
+                f"❌ SUPER API KEY REQUIRED\n\n"
+                f"The MCP API now requires a Super API key for access.\n\n"
+                f"📧 Contact us to get your Super API key:\n"
+                f"   Email: lyrica2333@gmail.com\n"
+                f"   WeChat: Please email for WeChat contact\n\n"
+                f"💡 Why Super API?\n"
+                f"   • Unlimited consultations\n"
+                f"   • Priority processing\n"
+                f"   • Dedicated support\n"
+            )
 
-            current_usage = usage_result[0] if usage_result else 0
-
-            if current_usage >= FREE_CONSULTATION_LIMIT:
-                conn.close()
-                raise ValueError(
-                    f"❌ MONTHLY QUOTA EXCEEDED\n\n"
-                    f"You've used all {FREE_CONSULTATION_LIMIT} free consultations this month ({now.year}-{now.month:02d}).\n\n"
-                    f"📊 Usage: {current_usage}/{FREE_CONSULTATION_LIMIT}\n"
-                    f"📅 Resets: {now.year}-{(now.month % 12) + 1:02d}-01\n\n"
-                    f"💡 Options:\n"
-                    f"  1. Wait for monthly reset (1st of next month)\n"
-                    f"  2. Contact us for unlimited Super API keys: support@offeri.org\n"
-                )
-
-            conn.close()
+        conn.close()
 
     except ValueError:
         # Re-raise validation errors (quota exceeded, invalid key, etc.)
         raise
     except Exception as e:
         # Log database errors but don't block (fail-open for reliability)
-        print(f"⚠️ Quota check failed (database error): {e}")
+        print(f"⚠️ API key validation failed (database error): {e}")
         pass
 
     # ═══════════════════════════════════════════════════════════════

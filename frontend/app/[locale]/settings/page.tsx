@@ -292,6 +292,40 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Super API Notice */}
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Key className="w-6 h-6 text-purple-700" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-purple-900 mb-2">
+                MCP API Requires Super API Key
+              </h3>
+              <p className="text-sm text-purple-800 mb-3">
+                The MCP API now requires a Super API key for unlimited access. Regular API keys cannot be used for MCP calls.
+              </p>
+              <div className="space-y-2 text-sm text-purple-800">
+                <p className="font-medium">Super API Benefits:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Unlimited consultations (no monthly quota)</li>
+                  <li>Priority processing</li>
+                  <li>Dedicated support</li>
+                </ul>
+              </div>
+              <div className="mt-4 p-3 bg-white border border-purple-200 rounded-md">
+                <p className="text-sm font-medium text-purple-900 mb-1">Contact for Super API:</p>
+                <p className="text-sm text-purple-800">
+                  📧 Email: <a href="mailto:lyrica2333@gmail.com" className="text-purple-700 hover:underline">lyrica2333@gmail.com</a>
+                </p>
+                <p className="text-sm text-purple-800">
+                  💬 WeChat: Please email for WeChat contact
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Contact & Links */}
         <div className="bg-white border border-border rounded-lg p-6">
           <div className="flex items-center gap-3 mb-4">
