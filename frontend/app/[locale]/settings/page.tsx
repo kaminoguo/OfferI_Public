@@ -293,34 +293,10 @@ export default function SettingsPage() {
         </div>
 
         {/* MCP API Notice */}
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Key className="w-6 h-6 text-purple-700" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-purple-900 mb-2">
-                {t('settings.mcpNotice.title')}
-              </h3>
-              <p className="text-sm text-purple-800 mb-3">
-                {t('settings.mcpNotice.description')}
-              </p>
-              <div className="space-y-2 text-sm text-purple-800">
-                <p className="font-medium">{t('settings.mcpNotice.benefits')}</p>
-                <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>{t('settings.mcpNotice.unlimitedConsultations')}</li>
-                  <li>{t('settings.mcpNotice.priorityProcessing')}</li>
-                  <li>{t('settings.mcpNotice.dedicatedSupport')}</li>
-                </ul>
-              </div>
-              <div className="mt-4 p-3 bg-white border border-purple-200 rounded-md">
-                <p className="text-sm font-medium text-purple-900 mb-1">{t('settings.mcpNotice.contactTitle')}</p>
-                <p className="text-sm text-purple-800">
-                  {t('settings.mcpNotice.contactEmail', { email: t('common.email') })}
-                </p>
-              </div>
-            </div>
-          </div>
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-purple-900">
+            {t('settings.mcpNotice.message', { email: t('common.email') })}
+          </p>
         </div>
 
         {/* Contact & Links */}

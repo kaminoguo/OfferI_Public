@@ -186,14 +186,7 @@
     "githubRepo": "GitHub Repository",
     "comingSoon": "Coming soon...",
     "mcpNotice": {
-      "title": "MCP API Requires API Key",
-      "description": "MCP API requires a valid API key for access.",
-      "benefits": "API Key Benefits:",
-      "unlimitedConsultations": "Unlimited consultations (no monthly quota)",
-      "priorityProcessing": "Priority processing",
-      "dedicatedSupport": "Dedicated support",
-      "contactTitle": "Get API Key:",
-      "contactEmail": "📧 Email: {email}"
+      "message": "Want to integrate into your product? Contact {email} to get an API key"
     }
   },
   "payment": {

@@ -186,14 +186,7 @@
     "githubRepo": "GitHub 저장소",
     "comingSoon": "곧 출시...",
     "mcpNotice": {
-      "title": "MCP API에는 API 키 필요",
-      "description": "MCP API 액세스에는 유효한 API 키가 필요합니다.",
-      "benefits": "API 키 혜택：",
-      "unlimitedConsultations": "무제한 상담（월간 할당량 없음）",
-      "priorityProcessing": "우선 처리",
-      "dedicatedSupport": "전용 지원",
-      "contactTitle": "API 키 받기：",
-      "contactEmail": "📧 이메일：{email}"
+      "message": "제품에 통합하고 싶으신가요? {email}로 연락하여 API 키를 받으세요"
     }
   },
   "payment": {

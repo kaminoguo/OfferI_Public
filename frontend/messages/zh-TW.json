@@ -186,14 +186,7 @@
     "githubRepo": "GitHub儲存庫",
     "comingSoon": "即將推出...",
     "mcpNotice": {
-      "title": "MCP API 需要 API 金鑰",
-      "description": "MCP API 需要有效的 API 金鑰才能訪問。",
-      "benefits": "API 金鑰權益：",
-      "unlimitedConsultations": "無限次諮詢（無月度配額）",
-      "priorityProcessing": "優先處理",
-      "dedicatedSupport": "專屬支援",
-      "contactTitle": "獲取 API 金鑰：",
-      "contactEmail": "📧 郵箱：{email}"
+      "message": "想整合進自己的產品？請聯繫 {email} 獲取 API 金鑰"
     }
   },
   "payment": {
