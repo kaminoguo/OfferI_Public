@@ -200,7 +200,7 @@
         "features": {
           "analysis": "KI-gestützte personalisierte Analyse Ihres Hintergrunds",
           "searches": "3-5 gezielte Web-Suchen",
-          "recommendations": "10-15 Programmempfehlungen",
+          "recommendations": "10+ Programmempfehlungen (10-20 für ≤7 Universitäten, 20+ für >7)",
           "pdf": "Professioneller PDF-Bericht zum Download",
           "retry": "Kostenlose Wiederholung bei Generierungsfehler"
         }
@@ -212,7 +212,7 @@
         "description": "Umfassende Tiefenanalyse mit Exa AI-Tiefenforschung",
         "features": {
           "basicIncluded": "Alle Funktionen der Basis-Version enthalten",
-          "exaResearch": "Exa-Tiefenforschung für 20-30 Programme (40+ Suchen)",
+          "exaResearch": "Exa-Tiefenforschung mit 2 Suchen pro Programm (Lehrplan + Karriere)",
           "programDetails": "Detaillierte Programmmerkmale und Studentenerfahrungsanalyse",
           "suitability": "Passgenauigkeitsanalyse für jede Empfehlung",
           "careers": "Beschäftigungsdaten und Karriereentwicklungsanalyse"
@@ -225,7 +225,7 @@
         "description": "Upgrade Ihres Basis-Berichts zur erweiterten Version",
         "features": {
           "basicIncluded": "Alle Funktionen der Basis-Version enthalten",
-          "exaResearch": "Exa-Tiefenforschung für 20-30 Programme (40+ Suchen)",
+          "exaResearch": "Exa-Tiefenforschung mit 2 Suchen pro Programm (Lehrplan + Karriere)",
           "programDetails": "Detaillierte Programmmerkmale und Studentenerfahrungsanalyse",
           "suitability": "Passgenauigkeitsanalyse für jede Empfehlung",
           "careers": "Beschäftigungsdaten und Karriereentwicklungsanalyse"

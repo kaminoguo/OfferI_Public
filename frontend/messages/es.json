@@ -200,7 +200,7 @@
         "features": {
           "analysis": "Análisis personalizado de tu perfil con IA",
           "searches": "3-5 búsquedas web dirigidas",
-          "recommendations": "10-15 recomendaciones de programas",
+          "recommendations": "10+ recomendaciones de programas (10-20 para ≤7 universidades, 20+ para >7)",
           "pdf": "Informe PDF profesional para descargar",
           "retry": "Reintento gratuito en caso de error"
         }
@@ -212,7 +212,7 @@
         "description": "Análisis profundo completo con investigación Exa AI",
         "features": {
           "basicIncluded": "Todas las funciones de la versión básica incluidas",
-          "exaResearch": "Investigación profunda Exa para 20-30 programas (40+ búsquedas)",
+          "exaResearch": "Investigación profunda Exa con 2 búsquedas por programa (currículo + carrera)",
           "programDetails": "Análisis detallado de características y experiencias estudiantiles",
           "suitability": "Análisis de idoneidad para cada recomendación",
           "careers": "Datos de empleo y análisis de desarrollo profesional"
@@ -225,7 +225,7 @@
         "description": "Actualiza tu informe básico a la versión avanzada",
         "features": {
           "basicIncluded": "Todas las funciones de la versión básica incluidas",
-          "exaResearch": "Investigación profunda Exa para 20-30 programas (40+ búsquedas)",
+          "exaResearch": "Investigación profunda Exa con 2 búsquedas por programa (currículo + carrera)",
           "programDetails": "Análisis detallado de características y experiencias estudiantiles",
           "suitability": "Análisis de idoneidad para cada recomendación",
           "careers": "Datos de empleo y análisis de desarrollo profesional"

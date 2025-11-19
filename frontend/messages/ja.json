@@ -200,7 +200,7 @@
         "features": {
           "analysis": "AIによる経歴のパーソナライズ分析",
           "searches": "3-5回のターゲット型ウェブ検索",
-          "recommendations": "10-15のプログラム推薦",
+          "recommendations": "10+のプログラム推薦（≤7大学は10-20個、>7は20+個）",
           "pdf": "プロフェッショナルPDFレポートのダウンロード",
           "retry": "生成失敗時の無料再試行"
         }
@@ -212,7 +212,7 @@
         "description": "Exa AI深層研究による包括的分析",
         "features": {
           "basicIncluded": "基本版のすべての機能を含む",
-          "exaResearch": "20-30プログラムのExa深層研究（40回以上の検索）",
+          "exaResearch": "各プログラム2回のExa詳細調査（カリキュラム+キャリア）",
           "programDetails": "詳細なプログラム特徴と学生体験の分析",
           "suitability": "各推薦の適合性分析",
           "careers": "就職データとキャリア開発の分析"
@@ -225,7 +225,7 @@
         "description": "基本レポートを上級版にアップグレード",
         "features": {
           "basicIncluded": "基本版のすべての機能を含む",
-          "exaResearch": "20-30プログラムのExa深層研究（40回以上の検索）",
+          "exaResearch": "各プログラム2回のExa詳細調査（カリキュラム+キャリア）",
           "programDetails": "詳細なプログラム特徴と学生体験の分析",
           "suitability": "各推薦の適合性分析",
           "careers": "就職データとキャリア開発の分析"

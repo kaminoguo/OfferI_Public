@@ -200,7 +200,7 @@
         "features": {
           "analysis": "AI个性化背景分析",
           "searches": "3-5次精准网络搜索",
-          "recommendations": "10-15个项目推荐",
+          "recommendations": "10+个项目推荐（≤7所大学推荐10-20个，>7所推荐20+个）",
           "pdf": "专业PDF报告下载",
           "retry": "生成失败免费重试"
         }
@@ -212,7 +212,7 @@
         "description": "全面深度分析，Exa AI深度研究",
         "features": {
           "basicIncluded": "包含基础版所有功能",
-          "exaResearch": "20-30个项目的Exa深度研究（40+次搜索）",
+          "exaResearch": "Exa深度研究，每个项目2次搜索（课程结构+职业成果）",
           "programDetails": "详细的项目特色与学生体验分析",
           "suitability": "每个推荐项目的适配度分析",
           "careers": "就业数据与职业发展分析"
@@ -225,7 +225,7 @@
         "description": "将基础报告升级为进阶版",
         "features": {
           "basicIncluded": "包含基础版所有功能",
-          "exaResearch": "20-30个项目的Exa深度研究（40+次搜索）",
+          "exaResearch": "Exa深度研究，每个项目2次搜索（课程结构+职业成果）",
           "programDetails": "详细的项目特色与学生体验分析",
           "suitability": "每个推荐项目的适配度分析",
           "careers": "就业数据与职业发展分析"

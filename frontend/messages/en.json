@@ -200,7 +200,7 @@
         "features": {
           "analysis": "AI-powered personalized analysis of your background",
           "searches": "3-5 targeted web searches",
-          "recommendations": "10-15 program recommendations",
+          "recommendations": "10+ program recommendations (10-20 for ≤7 universities, 20+ for >7)",
           "pdf": "Professional PDF report download",
           "retry": "Free retry if generation fails"
         }
@@ -212,7 +212,7 @@
         "description": "Comprehensive in-depth analysis with Exa AI deep research",
         "features": {
           "basicIncluded": "All features from Basic tier included",
-          "exaResearch": "Exa deep research for 20-30 programs (40+ searches)",
+          "exaResearch": "Exa deep research with 2 searches per program (curriculum + career)",
           "programDetails": "Detailed program features and student experience analysis",
           "suitability": "Suitability analysis for each recommendation",
           "careers": "Employment data and career development analysis"
@@ -225,7 +225,7 @@
         "description": "Upgrade your basic report to advanced tier",
         "features": {
           "basicIncluded": "All features from Basic tier included",
-          "exaResearch": "Exa deep research for 20-30 programs (40+ searches)",
+          "exaResearch": "Exa deep research with 2 searches per program (curriculum + career)",
           "programDetails": "Detailed program features and student experience analysis",
           "suitability": "Suitability analysis for each recommendation",
           "careers": "Employment data and career development analysis"

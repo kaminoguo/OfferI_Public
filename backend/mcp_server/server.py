@@ -1,127 +1,27 @@
 #!/usr/bin/env python3
 """
-OfferI MCP Server - Workflow Orchestration Version 1.10
+OfferI MCP Server v1.2.0
 
-Architecture: Token-based workflow with classification-based filtering
-- Each workflow tool returns a token required by the next tool
-- Simplified single-pass processing (removed batch logic)
-- Classification-based early filtering to reduce web search costs
-- LLM knowledge-first approach with conditional web searches
+Database: 44,352 programs from 1,160 universities worldwide.
+Token-based workflow with 6-step orchestration.
 
-Major Changes (v1.10 - Nov 16, 2025):
-- Tier-based consultation workflow (basic $9, advanced $49.99, upgrade $39.99)
-  * Tool 1: Added required 'tier' parameter (basic/advanced/update)
-  * Tool 2-6: Propagate tier through entire token chain
-  * Tool 5: Basic tier saves consultation state to PostgreSQL for upgrade
-  * NEW Tool: upgrade_to_advanced() - Resume workflow from saved state
-  * Advanced tier continues to score_and_rank_programs() and generate_final_report()
-- PostgreSQL state persistence
-  * consultation_states table stores workflow data for basic tier
-  * 7-day expiration for state cleanup
-  * JSONB storage for flexible workflow data
-- Removed monthly quota system
-  * All active API keys have unlimited access
-  * Simplified authentication (no quota checks)
-
-Critical Fixes (v1.09.1 - Nov 7, 2025):
-- Tool 7: Fixed conditional search validation logic
-  * source="llm_knowledge": Only requires 'findings', num_results NOT required
-  * source="exa": Requires both 'num_results' (5-8) and 'findings'
-  * Resolves conflict between "conditional search" design and rigid validation
-- Tool 7: Batch error reporting
-  * Collects ALL validation errors before throwing
-  * Returns structured list: "Found N errors: 1. ... 2. ... 3. ..."
-  * Prevents "fix one error → resubmit → find another error" loops
-- Tool 7: Relaxed num_results range from 6-8 to 5-8
-  * More flexible for LLM decision-making
-  * Reduces unnecessary retries
-- Impact: Eliminates full payload resubmissions, saves 70-85% tokens on validation errors
-
-Major Changes (v1.09):
-- Tool 3: Classification-based filtering (NO MORE BATCH PROCESSING)
-  * LLM gets all classifications from selected universities
-  * LLM chooses relevant classifications based on student background
-  * Only retrieves programs from selected classifications
-  * All universities processed in single call (removed 5-university batch limit)
-  * Dramatically reduces program count before name screening
-- Tool 5: Simplified to single-round validation
-  * Merged Round 3 (career-clarity filtering) + Round 4 (web search) into ONE round
-  * LLM uses its own knowledge first
-  * Only searches web if uncertain about specific program
-  * Conditional web search reduces API costs
-- Tool 7: Redesigned with focused Exa searches
-  * DELETED: Exa searches for tuition, timeline, costs, deadlines
-  * NEW: 2 targeted Exa searches per program:
-    - Search 1: Curriculum/program structure/features (6-8 results)
-    - Search 2: Career outcomes/student experience (6-8 results)
-  * LLM can skip searches if it has sufficient knowledge
-  * Focus: Program features + Student experience + Suitability analysis
-
-Previous Changes (v1.08):
-- Tool 5: Complete redesign of validation logic (validate_programs_with_exa → validate_programs_with_web)
-  * Removed: Two-stage web search (Stage 1: admission cases, Stage 2: program quality)
-  * New: Four-round filtering workflow
-    - Round 3: Career-clarity-based strict filtering (before web search)
-      * High clarity → Remove programs not matching career direction (宁缺毋滥)
-      * Low clarity → Remove lower-tier universities (prioritize reputation)
-      * Medium clarity → Balanced filtering
-    - Round 4: Final filtering based on target audience match
-  * Quality improvement: Career-aligned filtering BEFORE web search reduces noise
-
-Previous Changes (v1.06):
-- Tool 1-6: Career clarity-based ranking system
-  * Tool 1: Added required career_clarity field (high/medium/low) in tier_assessment
-  * Tool 2-5: Propagate career_clarity through token chain
-  * Tool 6: Weighted scoring based on career clarity
-    - High clarity (clear goals): 70% program fit, 30% university reputation
-    - Medium clarity (general direction): 50% fit, 50% reputation
-    - Low clarity (exploring): 30% fit, 70% reputation
-  * University reputation scoring helper function added
-
-Previous Changes (v1.05):
-- Tool 7: Optimized search parameters based on empirical testing
-  * Search 1: Precise university domain filtering (100% relevance vs 50%)
-  * Search 3: Specific deadline keywords (100% relevance vs 0-25%)
-  * Maintains backward compatibility while improving quality
-
-Previous Changes (v1.04):
-- Tool 1 & 5: Generic web search instead of Exa-specific
-  * LLM can now choose ANY search tool (Exa, gemini-cli, Bright Data, etc.)
-  * Parameters: exa_admission_searches → web_searches, exa_validations → web_validations
-- Tool 7: Quality validation added
-  * If universities > 7 but programs < 20, reject report
-
-Previous Changes (v1.03):
-- Tool 1: LLM-first with REQUIRED tier_assessment dict before optional searches
-  * Forces LLM to analyze using knowledge base FIRST
-  * Then decides if 0-3 web searches needed (max 25 results each)
-- Tool 3-5: Strict batch processing workflow
-  * Process ONE batch (5 universities) at a time
-
-Optimization Summary:
-- Tool 1: 95 results → 0-75 results (0-100% savings)
-- Tool 5: Per-program search with skip optimization
-  * 3-8 results per program (focused micro-searches)
-  * LLM can skip well-known programs → variable cost based on knowledge
-  * Career-based filtering BEFORE search reduces noise
-- Tool 7: Domain-specific search optimization (50% → 100% relevance)
-
-Transport Modes:
-- STDIO: For internal workers (default)
-- Streamable HTTP: For external Claude Desktop/Code users (use --http flag)
+Transport:
+- STDIO: Internal workers (default)
+- HTTP: External users via --http flag
 """
 import os
 import sys
 import sqlite3
 import secrets
 import json
+import psycopg2
 from pathlib import Path
 from typing import Optional, List, Any, Dict, Union
 from datetime import datetime
 from fastmcp import FastMCP
 
 # Version
-__version__ = "1.09.1"
+__version__ = "1.2.0"
 
 # Database path
 DB_PATH = os.getenv("DB_PATH", "/app/mcp/programs.db")
@@ -152,51 +52,17 @@ _active_tokens = {}
 mcp = FastMCP(
     name="OfferI Study Abroad",
     instructions="""
-    Study abroad program consultation MCP server with 44,352 programs worldwide.
-    Current date: November 2025
+    Study abroad consultation server with 44,352 programs from 1,160 universities.
 
-    WORKFLOW ENFORCEMENT (SIMPLIFIED v2.0):
-    This server uses token-based workflow orchestration:
+    6-step workflow (token-based):
+    1. start_and_select_universities - Select universities with strategy
+    2. select_classifications - Choose academic fields
+    3. process_university_programs - University-by-university program filtering
+    4. analyze_and_shortlist - Research and shortlist per university
+    5. select_final_programs - Choose final programs by strategy ratio
+    6. generate_final_report - Generate recommendations
 
-    1. start_and_select_universities() - TWO-CALL WORKFLOW
-       Call 1: Get all universities in target country
-       Call 2: Submit selected universities (0-3 optional web searches)
-       → Returns: selection_token
-
-    2. select_classifications() - TWO-CALL WORKFLOW
-       Call 1: View all 15 classification categories
-       Call 2: Submit selected classifications
-       → Returns: classifications_token
-
-    3. get_filtered_programs() - Get programs with OR logic filtering
-       → Includes programs where PRIMARY or SECONDARY classification matches
-       → Returns: programs_token
-
-    4. shortlist_programs_by_name() - Name-based screening
-       → Returns: shortlist_token
-
-    5. deep_validation() - Comprehensive validation (allows 3-5 web searches in basic tier)
-       → Validates: student profile match, curriculum fit, career outcomes
-       → Returns: validation_token
-
-    6. generate_final_report() - Basic report with LLM knowledge
-       → Dynamic program count (10-20 for ≤7 universities, 20-30 for >7)
-       → No explicit tier labels (reach/match/safety)
-       → Returns: report_token + upgrade prompt
-
-    KEY CHANGES FROM v1.09:
-    - Removed: tier_assessment, career_clarity scoring, score_and_rank_programs
-    - Removed: batch processing (all universities processed at once)
-    - Added: OR logic for classification filtering (primary + secondary)
-    - Added: Two-call pattern for university and classification selection
-    - Simplified: Single-pass workflow, no tier judgments
-
-    CLASSIFICATION OR LOGIC:
-    Programs are matched if EITHER primary OR secondary classification matches selected categories.
-    Example: "Business Analytics" (Business + Computing) appears when selecting either classification.
-
-    LANGUAGE POLICY:
-    Output language MUST match user's input language.
+    Output language matches user input.
     """
 )
 
@@ -236,6 +102,91 @@ def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def validate_api_key_and_tool(tool_name: str) -> tuple:
+    """
+    Validate API key and check tool permission based on tier.
+
+    Extracts API key from HTTP Authorization header or SSE_API_KEY env var,
+    queries PostgreSQL for tier and allowed_tools, and validates access.
+
+    Args:
+        tool_name: Name of the tool being called
+
+    Returns:
+        (tier, allowed_tools) if valid
+
+    Raises:
+        ValueError: If API key is invalid, inactive, or lacks permission
+    """
+    from fastmcp.server.dependencies import get_http_headers
+
+    # Extract API key from Authorization header or environment
+    api_key = ""
+    try:
+        headers = get_http_headers()
+        auth_header = headers.get("authorization", "")
+        if auth_header.startswith("Bearer "):
+            api_key = auth_header[7:]
+    except:
+        pass  # Exception during header retrieval
+
+    # Fallback to environment variable if no API key from headers
+    if not api_key:
+        api_key = os.getenv("SSE_API_KEY", "")
+
+    if not api_key or not api_key.startswith("sk_"):
+        raise ValueError("Invalid or missing API key. Please provide a valid API key in Authorization header.")
+
+    # Query PostgreSQL for tier and allowed_tools
+    try:
+        conn = psycopg2.connect(
+            host=os.getenv("POSTGRES_HOST", "localhost"),
+            port=os.getenv("POSTGRES_PORT", "5432"),
+            dbname=os.getenv("POSTGRES_DB", "offeri"),
+            user=os.getenv("POSTGRES_USER", "offeri_user"),
+            password=os.getenv("POSTGRES_PASSWORD", "")
+        )
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT tier, allowed_tools, is_active
+            FROM api_keys
+            WHERE id = %s
+        """, (api_key,))
+        result = cursor.fetchone()
+
+        if not result:
+            conn.close()
+            raise ValueError(f"API key not found or invalid: {api_key[:20]}...")
+
+        tier, allowed_tools, is_active = result
+
+        if not is_active:
+            conn.close()
+            raise ValueError(f"API key has been revoked. Please generate a new key at https://offeri.org/dashboard")
+
+        # Validate tool permission
+        if tool_name not in allowed_tools:
+            conn.close()
+            # Show first 5 tools to avoid overwhelming user
+            available_tools = ', '.join(allowed_tools[:5])
+            if len(allowed_tools) > 5:
+                available_tools += f" (and {len(allowed_tools) - 5} more)"
+            raise ValueError(
+                f"Access denied: {tool_name}\n"
+                f"Your tier '{tier}' only has access to: {available_tools}"
+            )
+
+        conn.close()
+        return (tier, allowed_tools)
+
+    except ValueError:
+        raise
+    except Exception as e:
+        raise ValueError(f"API key validation failed (database error): {e}")
+
 
 def clean_null_values(data: Any) -> Any:
     """Remove null, empty, N/A values"""
@@ -314,7 +265,7 @@ def _search_programs(university_name: str, classification_filters: Optional[List
     cursor = conn.cursor()
 
     query = """
-        SELECT program_id, program_name, classification, secondary_classification
+        SELECT program_id, program_name, degree_type
         FROM programs
         WHERE LOWER(university_name) LIKE LOWER(?)
     """
@@ -336,8 +287,7 @@ def _search_programs(university_name: str, classification_filters: Optional[List
     return [{
         "id": row["program_id"],
         "name": row["program_name"],
-        "classification": row["classification"],
-        "secondary_classification": row["secondary_classification"]
+        "degree": row["degree_type"]
     } for row in results]
 
 def _get_program_details_batch(program_ids: List[int]) -> List[dict]:
@@ -384,216 +334,6 @@ def _get_program_details_batch(program_ids: List[int]) -> List[dict]:
 
 
 # ═══════════════════════════════════════════════════════════════
-# BACKGROUND ANALYSIS HELPERS (AI-Driven, Flexible)
-# ═══════════════════════════════════════════════════════════════
-
-def analyze_hard_criteria(background: str) -> dict:
-    """
-    Extract quantifiable academic criteria from student background.
-    Uses flexible AI analysis - no hard-coded field expectations.
-
-    Args:
-        background: Free-text student background
-
-    Returns:
-        dict with school_tier, gpa_range, major_field (or "unknown" if not mentioned)
-    """
-    # Note: This is a simplified version. In production, use an LLM API call
-    # For now, return a structured placeholder to demonstrate the pattern
-
-    background_lower = background.lower()
-
-    # School tier heuristics (simplified)
-    school_tier = "unknown"
-    if any(keyword in background_lower for keyword in ["top", "985", "211", "ivy", "stanford", "mit", "cmu"]):
-        school_tier = "top-tier"
-    elif any(keyword in background_lower for keyword in ["mid", "state university"]):
-        school_tier = "mid-tier"
-
-    # GPA range heuristics (simplified)
-    gpa_range = "unknown"
-    if "gpa" in background_lower or "grade" in background_lower:
-        if any(str(gpa) in background for gpa in ["3.8", "3.9", "4.0", "3.7"]):
-            gpa_range = "high"
-        elif any(str(gpa) in background for gpa in ["3.0", "3.1", "3.2", "3.3", "3.4", "3.5"]):
-            gpa_range = "medium"
-        else:
-            gpa_range = "low"
-
-    # Major field extraction (simplified)
-    major_field = "unknown"
-    if any(keyword in background_lower for keyword in ["cs", "computer science", "software"]):
-        major_field = "Computer Science"
-    elif any(keyword in background_lower for keyword in ["ee", "electrical", "electronic"]):
-        major_field = "Electrical Engineering"
-    elif any(keyword in background_lower for keyword in ["ai", "artificial intelligence", "machine learning"]):
-        major_field = "AI/ML"
-    elif any(keyword in background_lower for keyword in ["business", "management"]):
-        major_field = "Business"
-
-    return {
-        "school_tier": school_tier,
-        "gpa_range": gpa_range,
-        "major_field": major_field
-    }
-
-
-def analyze_soft_criteria(background: str, target_country: str) -> list:
-    """
-    Identify unique strengths and distinctive aspects from student background.
-    Completely flexible - no predefined categories.
-
-    Args:
-        background: Free-text student background
-        target_country: Target country for applications
-
-    Returns:
-        list of dicts with aspect description and suggested search query
-    """
-    # Note: This is a simplified version. In production, use an LLM API call
-    # For now, return structured placeholders demonstrating the pattern
-
-    aspects = []
-    background_lower = background.lower()
-
-    # Work/internship experience
-    if any(keyword in background_lower for keyword in ["intern", "work", "experience", "job"]):
-        aspects.append({
-            "aspect": "Professional work experience",
-            "search_angle": "internship and work experience",
-            "priority": 1
-        })
-
-    # Projects and publications
-    if any(keyword in background_lower for keyword in ["project", "github", "publication", "paper", "research"]):
-        aspects.append({
-            "aspect": "Technical projects and research",
-            "search_angle": "projects and research publications",
-            "priority": 2
-        })
-
-    # Leadership and awards
-    if any(keyword in background_lower for keyword in ["award", "competition", "hackathon", "lead", "president"]):
-        aspects.append({
-            "aspect": "Leadership and achievements",
-            "search_angle": "awards competitions and leadership",
-            "priority": 3
-        })
-
-    # Career goals
-    if any(keyword in background_lower for keyword in ["pm", "product manager", "cpo", "career", "goal"]):
-        aspects.append({
-            "aspect": "Career trajectory goals",
-            "search_angle": "career transition and goals",
-            "priority": 4
-        })
-
-    # Return top 3 aspects sorted by priority
-    aspects.sort(key=lambda x: x["priority"])
-    return aspects[:3]
-
-
-def generate_school_major_match_query(school_tier: str, major_field: str, target_country: str) -> str:
-    """Generate natural language query for school tier + major matching"""
-    tier_map = {
-        "top-tier": "top university",
-        "mid-tier": "mid-tier university",
-        "low-tier": "university",
-        "unknown": "university"
-    }
-
-    tier_str = tier_map.get(school_tier, "university")
-    major_str = major_field if major_field != "unknown" else "STEM"
-
-    query = f"{tier_str} {major_str} students admitted to {target_country} graduate programs 2024"
-
-    return query
-
-
-def generate_gpa_major_match_query(gpa_range: str, major_field: str, target_country: str) -> str:
-    """Generate natural language query for GPA + major matching"""
-    gpa_map = {
-        "high": "high GPA",
-        "medium": "medium GPA",
-        "low": "lower GPA",
-        "unknown": ""
-    }
-
-    gpa_str = gpa_map.get(gpa_range, "")
-    major_str = major_field if major_field != "unknown" else "STEM"
-
-    if gpa_str:
-        query = f"{gpa_str} {major_str} students successful {target_country} graduate admissions 2024"
-    else:
-        query = f"{major_str} students {target_country} graduate school admission cases 2024"
-
-    return query
-
-
-def generate_flexible_query(aspect: dict, target_country: str) -> str:
-    """
-    Generate flexible query based on AI-extracted aspect.
-    Pure AI-driven, no hard-coding.
-    """
-    search_angle = aspect.get("search_angle", "background")
-
-    query = f"students with {search_angle} admitted to {target_country} graduate programs 2024"
-
-    return query
-
-
-def _estimate_university_reputation(uni_name_lower: str) -> float:
-    """
-    Estimate university reputation score (0-100 scale) based on university name.
-    This is a simplified heuristic for scoring. In production, use actual ranking data.
-
-    Args:
-        uni_name_lower: University name in lowercase
-
-    Returns:
-        Reputation score (0-100)
-    """
-    # Top-tier universities (95-100)
-    top_tier_keywords = [
-        "stanford", "mit", "harvard", "berkeley", "cmu", "carnegie mellon",
-        "oxford", "cambridge", "imperial", "eth zurich",
-        "national university of singapore", "nus", "nanyang", "ntu",
-        "tsinghua", "peking", "hku", "university of hong kong",
-        "hkust", "hong kong university of science", "cuhk", "chinese university of hong kong"
-    ]
-
-    # High-tier universities (85-94)
-    high_tier_keywords = [
-        "cornell", "columbia", "princeton", "yale", "upenn", "pennsylvania",
-        "michigan", "ucla", "ucsd", "usc", "georgia tech",
-        "toronto", "waterloo", "mcgill", "ubc",
-        "cityu", "city university of hong kong", "polyu", "polytechnic university"
-    ]
-
-    # Mid-tier universities (70-84)
-    mid_tier_keywords = [
-        "washington", "wisconsin", "illinois", "texas", "boston university",
-        "northeastern", "purdue", "duke", "northwestern"
-    ]
-
-    # Check tier membership
-    for keyword in top_tier_keywords:
-        if keyword in uni_name_lower:
-            return 97.0
-
-    for keyword in high_tier_keywords:
-        if keyword in uni_name_lower:
-            return 89.0
-
-    for keyword in mid_tier_keywords:
-        if keyword in uni_name_lower:
-            return 77.0
-
-    # Default for other validated universities
-    return 70.0
-
-
-# ═══════════════════════════════════════════════════════════════
 # WORKFLOW ORCHESTRATION TOOLS
 # ═══════════════════════════════════════════════════════════════
 
@@ -601,96 +341,30 @@ def _estimate_university_reputation(uni_name_lower: str) -> float:
 async def start_and_select_universities(
     background: str,
     country: str,
+    strategy: str,
     selected_universities: Optional[List[str]] = None,
     optional_web_searches: Optional[List[dict]] = None
 ) -> dict:
     """
-    Step 1: Start consultation and select universities (Merged Step 1+2)
+    Start consultation and select universities with strategy.
 
-    PURPOSE: LLM analyzes student background and selects appropriate universities from target country.
-    No tier judgment required - LLM naturally selects universities across different levels.
-
-    TWO-CALL WORKFLOW:
-
-    CALL 1 (Exploration):
-    - Pass: background, country
-    - Returns: All universities in that country
-    - LLM reviews list and decides which universities to select
-
-    CALL 2 (Selection):
-    - Pass: background, country, selected_universities, optional_web_searches
-    - Returns: selection_token for next step
+    Two-call workflow: Call 1 explores all universities in country, Call 2 submits selection.
 
     Args:
-        background: Student background (GPA, university, major, internships, projects, goals, etc.)
-        country: Target country ("USA", "UK", "Hong Kong (SAR)", etc.)
-        selected_universities: List of university names (empty/None for Call 1, filled for Call 2)
-        optional_web_searches: 0-3 web searches to verify university tiers/fit if uncertain (Call 2 only)
-            Each: {"query": "...", "num_results": <1-25>, "key_findings": "..."}
+        background: Student profile (GPA, major, goals, experience)
+        country: Target country (e.g., "USA", "UK", "Hong Kong (SAR)")
+        strategy: Portfolio strategy - "conservative" or "aggressive"
+        selected_universities: University names list (None for Call 1, filled for Call 2)
+        optional_web_searches: 0-3 web searches to verify fit (Call 2 only)
 
     Returns:
-        Call 1: All universities list
-        Call 2: selection_token + selected universities + instructions for next step
+        Call 1: all_universities + instructions
+        Call 2: selection_token + next_step
     """
     # ═══════════════════════════════════════════════════════════════
-    # API KEY VALIDATION
+    # API KEY & TOOL PERMISSION VALIDATION
     # ═══════════════════════════════════════════════════════════════
-    import psycopg2
-    from fastmcp.server.dependencies import get_http_headers
-
-    # Get API key from headers
-    api_key = ""
-    try:
-        headers = get_http_headers()
-        auth_header = headers.get("authorization", "")
-        if auth_header.startswith("Bearer "):
-            api_key = auth_header[7:]
-    except:
-        api_key = os.getenv("SSE_API_KEY", "")
-
-    if not api_key or not api_key.startswith("sk_"):
-        raise ValueError("❌ Invalid or missing API key. Please provide a valid API key in Authorization header.")
-
-    # Check if super key
-    try:
-        conn = psycopg2.connect(
-            host=os.getenv("POSTGRES_HOST", "localhost"),
-            port=os.getenv("POSTGRES_PORT", "5432"),
-            dbname=os.getenv("POSTGRES_DB", "offeri"),
-            user=os.getenv("POSTGRES_USER", "offeri_user"),
-            password=os.getenv("POSTGRES_PASSWORD", "")
-        )
-        cursor = conn.cursor()
-
-        # Get user_id and check if super key
-        cursor.execute("""
-            SELECT user_id, is_super_key, is_active
-            FROM api_keys
-            WHERE id = %s
-        """, (api_key,))
-        result = cursor.fetchone()
-
-        if not result:
-            conn.close()
-            raise ValueError(f"❌ API key not found or invalid: {api_key[:20]}...")
-
-        user_id, is_super_key, is_active = result
-
-        if not is_active:
-            conn.close()
-            raise ValueError(f"❌ API key has been revoked. Please generate a new key at https://offeri.org/dashboard")
-
-        # All active API keys have unlimited access
-        conn.close()
-
-    except ValueError:
-        raise
-    except Exception as e:
-        print(f"⚠️ API key validation failed (database error): {e}")
-        pass
-
-    # ═══════════════════════════════════════════════════════════════
-    # END QUOTA VALIDATION
+    tier, allowed_tools = validate_api_key_and_tool("start_and_select_universities")
     # ═══════════════════════════════════════════════════════════════
 
     # Validate inputs
@@ -700,6 +374,34 @@ async def start_and_select_universities(
     if not country or not isinstance(country, str):
         raise ValueError("country is required and must be a string")
 
+    if strategy not in ["conservative", "aggressive"]:
+        raise ValueError("strategy must be 'conservative' or 'aggressive'")
+
+    # ═══════════════════════════════════════════════════════════════
+    # TYPE COERCION: Handle MCP serialization issues
+    # ═══════════════════════════════════════════════════════════════
+    # MCP may serialize None/empty list as strings, fix it here
+    import json
+
+    if isinstance(selected_universities, str):
+        if selected_universities == "" or selected_universities.lower() == "null":
+            selected_universities = None
+        else:
+            try:
+                selected_universities = json.loads(selected_universities)
+            except json.JSONDecodeError:
+                raise ValueError(f"Invalid selected_universities format: {selected_universities}")
+
+    if isinstance(optional_web_searches, str):
+        if optional_web_searches == "" or optional_web_searches.lower() == "null":
+            optional_web_searches = None
+        else:
+            try:
+                optional_web_searches = json.loads(optional_web_searches)
+            except json.JSONDecodeError:
+                raise ValueError(f"Invalid optional_web_searches format: {optional_web_searches}")
+    # ═══════════════════════════════════════════════════════════════
+
     # Get all universities in country
     all_universities = _list_universities(country)
 
@@ -708,33 +410,46 @@ async def start_and_select_universities(
         countries_str = ", ".join([f"{c['country']} ({c['count']})" for c in available[:10]])
         raise ValueError(f"Country '{country}' not found. Available: {countries_str}")
 
+    # Strategy ratios
+    strategy_ratios = {
+        "conservative": {"lottery": "10%", "reach": "30%", "target": "40%", "safety": "20%"},
+        "aggressive": {"lottery": "20%", "reach": "50%", "target": "20%", "safety": "10%"}
+    }
+    ratios = strategy_ratios[strategy]
+
     # CALL 1: Return all universities (exploration phase)
     if not selected_universities:
         return {
             "all_universities": all_universities,
             "total_universities": len(all_universities),
             "country": country,
+            "strategy": strategy,
             "instructions": f"""
-📍 COUNTRY: {country}
-📊 TOTAL UNIVERSITIES: {len(all_universities)}
+COUNTRY: {country}
+TOTAL UNIVERSITIES: {len(all_universities)}
+STRATEGY: {strategy.upper()}
 
 All universities in {country}:
-{chr(10).join([f"  • {uni}" for uni in all_universities[:50]])}
-{"  ... and more" if len(all_universities) > 50 else ""}
+{chr(10).join([f"  • {uni}" for uni in all_universities])}
 
-🎯 YOUR TASK: Select universities based on student background
+YOUR TASK: Select universities matching student's profile (max 14)
 
-SELECTION STRATEGY:
+SELECTION STRATEGY ({strategy.capitalize()}):
 1. Analyze student profile (GPA, background, goals)
-2. Select universities naturally across different levels (don't label reach/match/safety)
-3. Be comprehensive - include universities that fit student's profile
-4. Optional: Perform 0-3 web searches if uncertain about university tiers
+
+2. Build portfolio across difficulty levels:
+   - Lottery: {ratios['lottery']} (Dream schools, extremely competitive)
+   - Reach: {ratios['reach']} (Highly competitive, student slightly below average)
+   - Target: {ratios['target']} (Competitive match, student fits typical profile)
+   - Safety: {ratios['safety']} (Strong admission likelihood, student above average)
+
+3. Optional: 0-3 web searches if uncertain about specific universities
 
 NEXT STEP:
 Call start_and_select_universities() AGAIN with:
-- Same background and country
-- selected_universities: [list of chosen university names]
-- optional_web_searches: [...] (if you need to verify)
+- Same background, country, strategy
+- selected_universities: [chosen university names]
+- optional_web_searches: [...] (if needed)
             """,
             "next_step": "Call start_and_select_universities() again with selected_universities"
         }
@@ -762,6 +477,14 @@ Call start_and_select_universities() AGAIN with:
 
         search_count = len(optional_web_searches)
 
+    # Validate university count (max 14)
+    university_count = len(selected_universities)
+    if university_count > 14:
+        raise ValueError(
+            f"Too many universities: {university_count} universities.\n"
+            f"Maximum 14 universities allowed to avoid context overflow. Please reduce your selection."
+        )
+
     # Validate selected universities
     invalid_universities = [uni for uni in selected_universities if uni not in all_universities]
     if invalid_universities:
@@ -770,6 +493,7 @@ Call start_and_select_universities() AGAIN with:
     token = generate_token("selection", {
         "background": background,
         "country": country,
+        "strategy": strategy,
         "all_universities": all_universities,
         "selected_universities": selected_universities,
         "web_searches_completed": search_count,
@@ -781,12 +505,14 @@ Call start_and_select_universities() AGAIN with:
         "selected_universities": selected_universities,
         "university_count": len(selected_universities),
         "country": country,
+        "strategy": strategy,
         "web_searches_completed": search_count,
         "instructions": f"""
-✅ University selection complete. {'Used knowledge base only.' if search_count == 0 else f'Validated with {search_count} web search(es).'}
+University selection complete. {'Used knowledge base only.' if search_count == 0 else f'Validated with {search_count} web search(es).'}
 
-📊 SELECTION RESULTS:
+SELECTION RESULTS:
 - Country: {country}
+- Strategy: {strategy.capitalize()}
 - Selected universities: {len(selected_universities)}
 - Total available: {len(all_universities)}
 
@@ -794,7 +520,7 @@ Universities selected:
 {chr(10).join([f"  • {uni}" for uni in selected_universities[:20]])}
 {"  ... and more" if len(selected_universities) > 20 else ""}
 
-📋 NEXT STEP: Select relevant classifications
+NEXT STEP: Select relevant classifications
 
 Call select_classifications(selection_token) to view all 15 classification categories and choose relevant ones based on student background.
         """,
@@ -808,33 +534,39 @@ async def select_classifications(
     selected_classifications: Optional[List[str]] = None
 ) -> dict:
     """
-    Step 2: Select relevant classifications for program filtering
+    Select academic fields for program filtering.
 
-    PURPOSE: Display all 15 classifications and let LLM choose relevant ones based on student background.
-    No database query needed - directly shows all classification categories.
-
-    TWO-CALL WORKFLOW:
-
-    CALL 1 (Exploration):
-    - Pass: selection_token
-    - Returns: All 15 classification categories with descriptions
-    - LLM reviews and selects relevant classifications
-
-    CALL 2 (Selection):
-    - Pass: selection_token, selected_classifications
-    - Returns: classifications_token for next step
+    Two-call workflow: Call 1 shows all 15 classifications, Call 2 submits selection.
 
     Args:
         selection_token: From start_and_select_universities()
-        selected_classifications: List of classification names (empty/None for Call 1, filled for Call 2)
+        selected_classifications: Classification names (None for Call 1, filled for Call 2)
 
     Returns:
-        Call 1: All 15 classifications with descriptions
-        Call 2: classifications_token + selected classifications + instructions
+        Call 1: all_classifications + instructions
+        Call 2: classifications_token + next_step
     """
+    # API key validation
+    tier, allowed_tools = validate_api_key_and_tool("select_classifications")
+
+    # ═══════════════════════════════════════════════════════════════
+    # TYPE COERCION: Handle MCP serialization issues
+    # ═══════════════════════════════════════════════════════════════
+    import json
+    if isinstance(selected_classifications, str):
+        if selected_classifications == "" or selected_classifications.lower() == "null":
+            selected_classifications = None
+        else:
+            try:
+                selected_classifications = json.loads(selected_classifications)
+            except json.JSONDecodeError:
+                raise ValueError(f"Invalid selected_classifications format: {selected_classifications}")
+    # ═══════════════════════════════════════════════════════════════
+
     # Validate token
     selection_data = validate_token(selection_token, "selection")
     background = selection_data.get("background", "")
+    strategy = selection_data.get("strategy", "conservative")
     selected_universities = selection_data.get("selected_universities", [])
 
     # CALL 1: Return all classifications
@@ -861,21 +593,16 @@ async def select_classifications(
             "all_classifications": classification_list,
             "total_classifications": 15,
             "instructions": f"""
-📚 ALL 15 CLASSIFICATION CATEGORIES
+ALL 15 CLASSIFICATION CATEGORIES
 
 {chr(10).join([f"  {c['id']:2d}. {c['name']:40s} - {c['description']}" for c in classification_list])}
 
-🎯 YOUR TASK: Select relevant classifications based on student background
+YOUR TASK: Select relevant classifications based on student background
 
 SELECTION STRATEGY:
 1. PRIMARY: Direct match with student's major/field/career goals
 2. SECONDARY: Related/complementary fields student might consider
 3. Be inclusive but sensible - avoid obviously irrelevant fields
-
-💡 EXAMPLES:
-- CS student → ["Computing & Data Science", "Engineering", "Physical & Mathematical Sciences"]
-- Business student → ["Business & Management", "Finance & Economics", "Computing & Data Science"]
-- Biology student → ["Life Sciences", "Health Sciences & Medicine", "Environment & Sustainability"]
 
 NEXT STEP:
 Call select_classifications() AGAIN with:
@@ -897,6 +624,7 @@ Call select_classifications() AGAIN with:
 
     token = generate_token("classifications", {
         "background": background,
+        "strategy": strategy,
         "selected_universities": selected_universities,
         "selected_classifications": selected_classifications,
         "classification_count": len(selected_classifications)
@@ -907,796 +635,359 @@ Call select_classifications() AGAIN with:
         "selected_classifications": selected_classifications,
         "classification_count": len(selected_classifications),
         "instructions": f"""
-✅ Classification selection complete.
+Classification selection complete.
 
-📊 SELECTION RESULTS:
+SELECTION RESULTS:
 - Selected classifications: {len(selected_classifications)}
 - Classifications: {', '.join(selected_classifications[:5])}{"..." if len(selected_classifications) > 5 else ""}
 
-📋 NEXT STEP: Get filtered programs
+NEXT STEP: Process university programs
 
-Call get_filtered_programs(classifications_token) to retrieve all programs matching:
-- Selected universities ({len(selected_universities)})
-- Selected classifications ({len(selected_classifications)})
-- Using OR logic (programs with primary OR secondary classification match)
+Call process_university_programs(classifications_token) to begin university-by-university program filtering and selection.
         """,
-        "next_step": "Call get_filtered_programs(classifications_token)"
+        "next_step": "Call process_university_programs(classifications_token)"
     }
 
 
 @mcp.tool
-async def get_filtered_programs(
-    classifications_token: str
+async def process_university_programs(
+    classifications_token: str,
+    university_programs: Optional[Dict[str, List[int]]] = None
 ) -> dict:
     """
-    Step 3: Get programs filtered by selected classifications (with OR logic)
+    Filter and shortlist programs university-by-university.
 
-    PURPOSE: Retrieve all programs from selected universities that match selected classifications.
-    Uses OR logic: program is included if EITHER primary or secondary classification matches.
+    Iterative multi-call workflow processing one university per call to avoid context truncation.
 
     Args:
         classifications_token: From select_classifications()
+        university_programs: Dict mapping university name to selected program IDs (None for first call)
 
     Returns:
-        programs_token + programs by university + total count + instructions for next step
+        Current university programs + remaining_universities + instructions OR final programs_token
     """
+    # API key validation
+    tier, allowed_tools = validate_api_key_and_tool("process_university_programs")
+
+    # ═══════════════════════════════════════════════════════════════
+    # TYPE COERCION: Handle MCP serialization issues
+    # ═══════════════════════════════════════════════════════════════
+    import json
+    if isinstance(university_programs, str):
+        if university_programs == "" or university_programs.lower() == "null":
+            university_programs = None
+        else:
+            try:
+                university_programs = json.loads(university_programs)
+            except json.JSONDecodeError:
+                raise ValueError(f"Invalid university_programs format: {university_programs}")
+    # ═══════════════════════════════════════════════════════════════
+
     # Validate token
     classifications_data = validate_token(classifications_token, "classifications")
     background = classifications_data.get("background", "")
+    strategy = classifications_data.get("strategy", "conservative")
     selected_universities = classifications_data.get("selected_universities", [])
     selected_classifications = classifications_data.get("selected_classifications", [])
 
     if not selected_universities:
-        raise ValueError("No universities found in token. Please call select_classifications() first.")
+        raise ValueError("No universities found in token.")
 
     if not selected_classifications:
-        raise ValueError("No classifications found in token. Please call select_classifications() first.")
+        raise ValueError("No classifications found in token.")
 
-    # Get programs for each university using OR logic
-    all_programs = {}
-    total_programs = 0
-    classification_stats = {}
+    # Track processed universities
+    if university_programs is None:
+        university_programs = {}
 
-    for uni in selected_universities:
-        programs = _search_programs(uni, classification_filters=selected_classifications)
-        if programs:
-            all_programs[uni] = programs
-            total_programs += len(programs)
+    processed_universities = list(university_programs.keys())
+    remaining_universities = [uni for uni in selected_universities if uni not in processed_universities]
 
-            # Track both primary and secondary classification distribution
-            for prog in programs:
-                primary = prog.get("classification")
-                secondary = prog.get("secondary_classification")
+    # If all universities processed, generate final token
+    if not remaining_universities:
+        # Calculate total programs
+        total_programs = sum(len(programs) for programs in university_programs.values())
 
-                if primary:
-                    classification_stats[primary] = classification_stats.get(primary, 0) + 1
-                if secondary:
-                    classification_stats[secondary] = classification_stats.get(secondary, 0) + 1
-
-    token = generate_token("programs", {
-        "background": background,
-        "universities": selected_universities,
-        "all_programs": all_programs,
-        "total_programs": total_programs,
-        "selected_classifications": selected_classifications,
-        "classification_statistics": classification_stats
-    })
-
-    return {
-        "programs_token": token,
-        "programs_by_university": all_programs,
-        "total_programs": total_programs,
-        "universities_count": len(all_programs),
-        "selected_classifications": selected_classifications,
-        "classification_statistics": classification_stats,
-        "instructions": f"""
-✅ CLASSIFICATION FILTERING COMPLETE (OR LOGIC APPLIED)
-
-📊 RESULTS:
-- Universities: {len(selected_universities)}
-- Selected classifications: {len(selected_classifications)}
-- Total programs retrieved: {total_programs}
-- OR Logic: Programs included if PRIMARY or SECONDARY classification matches
-
-🏷️  CLASSIFICATION DISTRIBUTION (Primary + Secondary):
-{chr(10).join([f"  • {name}: {count} programs" for name, count in sorted(classification_stats.items(), key=lambda x: x[1], reverse=True)[:10]])}
-{"  ... and more" if len(classification_stats) > 10 else ""}
-
-📋 NEXT STEP: NAME-BASED SCREENING
-
-YOUR TASK: Review program NAMES and remove irrelevant ones
-
-STRATEGY:
-- Remove programs with misleading names (even if classification matches)
-- Keep programs that align with student's specific interests and goals
-- Include borderline cases (will be validated in next step)
-- Philosophy: 宁少不多 (fewer but better matches)
-
-Call shortlist_programs_by_name(shortlisted_by_university, programs_token)
-where shortlisted_by_university = {{"University Name": [program_id1, program_id2, ...], ...}}
-        """,
-        "next_step": "Call shortlist_programs_by_name(shortlisted_by_university, programs_token)"
-    }
-
-
-@mcp.tool
-async def start_consultation(
-    background: str,
-    tier_assessment: dict,
-    web_searches: Optional[List[dict]] = None,
-    tier: str = 'basic'
-) -> dict:
-    """
-    Step 1: Start consultation session
-
-    PURPOSE: Determine what tier of schools the student can target (e.g., Top 10, Top 30, Top 50)
-
-    ⚠️ CRITICAL WORKFLOW - YOU MUST FOLLOW THIS ORDER:
-
-    STEP 1: ANALYZE FIRST (using your knowledge base)
-    - Analyze GPA, school tier, major, internships, projects, awards
-    - Make initial tier judgment based on your knowledge (up to January 2025)
-    - Prepare tier_assessment dict with your analysis
-
-    STEP 2: DECIDE IF YOU NEED TO SEARCH (0-3 times max)
-    - ✅ Search if: Borderline GPA for target tier, unique compensating factors, 2024-2025 trend uncertainties
-    - ❌ DO NOT search if: Obviously strong profile or obviously weak profile
-    - If searching: Find similar admission cases to validate tier judgment
-    - Use your built-in web search capability
-
-    STEP 3: CALL THIS TOOL
-    - Submit background + tier_assessment + optional web_searches
-
-    Search query construction (only if uncertain):
-    - Include: student's school tier, GPA range, major field, key experience type
-    - Include: target country, target tier
-    - Example pattern: "[School Tier] [Major] [GPA Range] [Key Experience] admitted [Target Country] [Tier] programs"
-
-    Args:
-        background: Student background (free text - GPA, university, internships, projects, etc.)
-        tier_assessment: REQUIRED dict with your tier judgment:
-            {
-                "target_tier_range": "Top 20-50",  # Overall target range
-                "reach_tier": "Top 10-20",         # Ambitious schools
-                "match_tier": "Top 20-40",         # Realistic schools
-                "safety_tier": "Top 40-60",        # Safe schools
-                "key_strengths": ["Industry internship", "Strong projects", "Research publications", ...],
-                "key_weaknesses": ["Below average GPA", "Limited research experience", ...]
-                "career_clarity": "high",  # high/medium/low - affects ranking weights
-                    # high: Clear career goals/interests (e.g., "Machine learning research", "Corporate strategy")
-                    #       → Prioritize program fit over university reputation
-                    # medium: General direction (e.g., "Technology sector", "Finance industry")
-                    #       → Balanced weights
-                    # low: Uncertain/exploring (e.g., "Still deciding", "Keeping options open")
-                    #       → Prioritize university reputation over program fit
-                "reasoning": "Example: Strong technical background but borderline GPA, compensated by internships..."
-            }
-        web_searches: Optional list of 0-3 web search results (using your built-in search)
-            Each: {"query": "...", "num_results": <1-25>, "key_findings": "..."}
-            ONLY include if genuinely uncertain after knowledge-based analysis
-        tier: Payment tier - 'basic' ($9) or 'advanced' ($49.99). Default: 'basic'
-            - 'basic': Workflow stops after validation, saves state for potential upgrade
-            - 'advanced': Complete workflow with deep research (40+ Exa searches)
-
-    Returns:
-        consultation_token + validated tier assessment + next_step instructions
-    """
-    # ═══════════════════════════════════════════════════════════════
-    # API KEY VALIDATION
-    # ═══════════════════════════════════════════════════════════════
-    import psycopg2
-    from fastmcp.server.dependencies import get_http_headers
-
-    # Get API key from headers
-    api_key = ""
-    try:
-        headers = get_http_headers()
-        auth_header = headers.get("authorization", "")
-        if auth_header.startswith("Bearer "):
-            api_key = auth_header[7:]
-    except:
-        api_key = os.getenv("SSE_API_KEY", "")
-
-    if not api_key or not api_key.startswith("sk_"):
-        raise ValueError("❌ Invalid or missing API key. Please provide a valid API key in Authorization header.")
-
-    # Check if super key
-    try:
-        conn = psycopg2.connect(
-            host=os.getenv("POSTGRES_HOST", "localhost"),
-            port=os.getenv("POSTGRES_PORT", "5432"),
-            dbname=os.getenv("POSTGRES_DB", "offeri"),
-            user=os.getenv("POSTGRES_USER", "offeri_user"),
-            password=os.getenv("POSTGRES_PASSWORD", "")
-        )
-        cursor = conn.cursor()
-
-        # Get user_id and check if super key
-        cursor.execute("""
-            SELECT user_id, is_super_key, is_active
-            FROM api_keys
-            WHERE id = %s
-        """, (api_key,))
-        result = cursor.fetchone()
-
-        if not result:
-            conn.close()
-            raise ValueError(f"❌ API key not found or invalid: {api_key[:20]}...")
-
-        user_id, is_super_key, is_active = result
-
-        if not is_active:
-            conn.close()
-            raise ValueError(f"❌ API key has been revoked. Please generate a new key at https://offeri.org/dashboard")
-
-        # All active API keys have unlimited access
-        conn.close()
-
-    except ValueError:
-        # Re-raise validation errors (quota exceeded, invalid key, etc.)
-        raise
-    except Exception as e:
-        # Log database errors but don't block (fail-open for reliability)
-        print(f"⚠️ API key validation failed (database error): {e}")
-        pass
-
-    # ═══════════════════════════════════════════════════════════════
-    # END QUOTA VALIDATION
-    # ═══════════════════════════════════════════════════════════════
-
-    # Validate tier_assessment
-    if not tier_assessment or not isinstance(tier_assessment, dict):
-        raise ValueError("tier_assessment is required and must be a dict")
-
-    required_fields = ["target_tier_range", "reach_tier", "match_tier", "safety_tier", "career_clarity", "reasoning"]
-    missing_fields = [field for field in required_fields if field not in tier_assessment]
-    if missing_fields:
-        raise ValueError(f"tier_assessment missing required fields: {missing_fields}")
-
-    # Validate career_clarity value
-    career_clarity = tier_assessment.get("career_clarity", "").lower()
-    if career_clarity not in ["high", "medium", "low"]:
-        raise ValueError(f"career_clarity must be 'high', 'medium', or 'low'. You provided: '{tier_assessment.get('career_clarity')}'")
-
-    # Validate optional searches
-    search_count = 0
-    if web_searches:
-        if not isinstance(web_searches, list):
-            raise ValueError("web_searches must be a list")
-
-        if len(web_searches) > 3:
-            raise ValueError(f"Maximum 3 web searches allowed. You provided {len(web_searches)}.")
-
-        for i, search in enumerate(web_searches):
-            if not isinstance(search, dict) or "query" not in search or "num_results" not in search:
-                raise ValueError(f"Search #{i+1} must be a dict with 'query' and 'num_results' fields")
-
-            num_results = search["num_results"]
-            if not isinstance(num_results, int) or num_results < 1 or num_results > 25:
-                raise ValueError(f"Search #{i+1}: num_results must be 1-25. You provided {num_results}")
-
-        search_count = len(web_searches)
-
-    token = generate_token("consultation", {
-        "background": background,
-        "tier_assessment": tier_assessment,
-        "web_searches_completed": search_count,
-        "web_searches_data": web_searches or [],
-        "tier": tier  # 'basic' or 'advanced'
-    })
-
-    return {
-        "consultation_token": token,
-        "tier_assessment": tier_assessment,
-        "web_searches_completed": search_count,
-        "instructions": f"""
-✅ Tier assessment complete. {'Used knowledge base only.' if search_count == 0 else f'Validated with {search_count} admission case search(es).'}
-
-📊 TIER ASSESSMENT RESULTS:
-- Target Range: {tier_assessment.get('target_tier_range', 'N/A')}
-- Reach: {tier_assessment.get('reach_tier', 'N/A')}
-- Match: {tier_assessment.get('match_tier', 'N/A')}
-- Safety: {tier_assessment.get('safety_tier', 'N/A')}
-
-{'🎯 Knowledge-First: Profile clearly maps to known tier ranges.' if search_count == 0 else f'🔍 Case Validation: Confirmed tier judgment with {search_count} similar case(s).'}
-
-Next: Call explore_universities(country, consultation_token)
-        """,
-        "next_step": "Call explore_universities(country, consultation_token)"
-    }
-
-
-@mcp.tool
-async def explore_universities(
-    country: str,
-    consultation_token: str
-) -> dict:
-    """
-    Step 2: Get all universities in target country
-    
-    Args:
-        country: "USA", "UK", "Hong Kong (SAR)", etc.
-        consultation_token: From start_consultation()
-    
-    Returns:
-        exploration_token + list of all universities
-    """
-    consultation_data = validate_token(consultation_token, "consultation")
-
-    # Extract career_clarity and tier for later use
-    tier_assessment = consultation_data.get("tier_assessment", {})
-    career_clarity = tier_assessment.get("career_clarity", "medium")
-    tier = consultation_data.get("tier", "basic")  # Extract tier
-
-    universities = _list_universities(country)
-
-    if not universities:
-        available = _get_available_countries()
-        countries_str = ", ".join([f"{c['country']} ({c['count']})" for c in available[:10]])
-        raise ValueError(f"Country '{country}' not found. Available: {countries_str}")
-
-    token = generate_token("exploration", {
-        "country": country,
-        "universities": universities,
-        "total_universities": len(universities),
-        "career_clarity": career_clarity,  # Pass through for scoring
-        "tier": tier  # Pass through tier
-    })
-    
-    return {
-        "exploration_token": token,
-        "universities": universities,
-        "total_count": len(universities),
-        "instructions": """
-Review university list. Select ALL appropriate ones based on:
-- School tier matches student credentials?
-- Values student's strengths (internships/projects/awards)?
-- Supports student's career goals?
-
-💡 Selection Strategy:
-- Be comprehensive (not just "famous Top 20")
-- Consider fit over fame
-- Include reach/match/safety schools across the tier spectrum
-
-Next: Call get_university_programs(universities, exploration_token) with your selected universities
-        """,
-        "next_step": "Call get_university_programs(universities, exploration_token)"
-    }
-
-
-@mcp.tool
-async def get_university_programs(
-    universities: List[str],
-    selected_classifications: List[str],
-    exploration_token: str
-) -> dict:
-    """
-    Step 3: Get programs filtered by classifications (NO BATCH PROCESSING)
-
-    🏷️ WORKFLOW:
-    1. LLM receives list of universities from explore_universities()
-    2. LLM calls THIS tool to get all available classifications for those universities
-    3. LLM reviews classifications and chooses relevant ones based on student background
-    4. LLM calls this tool AGAIN with selected_classifications to retrieve filtered programs
-    5. Proceed to TWO-PASS name screening (shortlist_programs_by_name)
-
-    Args:
-        universities: List of ALL selected university names (no limit)
-        selected_classifications: List of classification names to filter by
-            - Pass empty list [] on FIRST call to get available classifications
-            - Pass selected classifications on SECOND call to get filtered programs
-        exploration_token: From explore_universities()
-
-    Returns:
-        - First call (selected_classifications=[]): Available classifications with counts
-        - Second call (with classifications): programs_token + filtered programs
-
-    Example workflow:
-        # Call 1: Get classifications
-        result1 = get_university_programs(
-            universities=["CMU", "Stanford", "MIT"],
-            selected_classifications=[],  # Empty = get classifications
-            exploration_token="..."
-        )
-        # Returns: {"Computer Science & IT": 450, "Management": 200, ...}
-
-        # Call 2: Get programs with selected classifications
-        result2 = get_university_programs(
-            universities=["CMU", "Stanford", "MIT"],
-            selected_classifications=["Computer Science & IT", "Electrical Engineering"],
-            exploration_token="..."
-        )
-        # Returns: programs_token + filtered programs
-    """
-    exploration_data = validate_token(exploration_token, "exploration")
-    career_clarity = exploration_data.get("career_clarity", "medium")
-    tier = exploration_data.get("tier", "basic")
-
-    if not universities or not isinstance(universities, list):
-        raise ValueError("You must provide a list of university names")
-
-    if not isinstance(selected_classifications, list):
-        raise ValueError("selected_classifications must be a list (use [] to get available classifications)")
-
-    # FIRST CALL: Return available classifications
-    if len(selected_classifications) == 0:
-        classifications = _get_classifications_for_universities(universities)
+        token = generate_token("programs", {
+            "background": background,
+            "strategy": strategy,
+            "universities": selected_universities,
+            "university_programs": university_programs,
+            "total_programs": total_programs,
+            "selected_classifications": selected_classifications
+        })
 
         return {
-            "available_classifications": classifications,
-            "total_classifications": len(classifications),
-            "total_programs": sum(classifications.values()),
+            "programs_token": token,
+            "total_programs": total_programs,
+            "universities_processed": len(university_programs),
             "instructions": f"""
-📊 CLASSIFICATION ANALYSIS COMPLETE
+ALL UNIVERSITIES PROCESSED
 
-Found {len(classifications)} unique classifications across {len(universities)} universities:
+RESULTS:
+- Universities: {len(university_programs)}
+- Total programs selected: {total_programs}
 
-{chr(10).join([f"  • {name}: {count} programs" for name, count in list(classifications.items())[:15]])}
-{"  ... and more" if len(classifications) > 15 else ""}
+NEXT STEP: Analyze and shortlist programs
 
-🎯 YOUR TASK: Select relevant classifications based on student background
-
-SELECTION STRATEGY:
-1. PRIMARY classifications: Direct match with student's major/field
-   Example: CS student → ["Computer Science & IT", "Electrical & Electronics Engineering"]
-   Example: Business student → ["Management & Administration", "Finance, Banking & Insurance"]
-   Example: Liberal Arts → ["Literature & Linguistics", "Philosophy, Theology & Media"]
-
-2. SECONDARY classifications: Related/complementary fields
-   Example: CS student might also consider ["Mathematics", "Statistics"]
-   Example: Research-oriented might include research-heavy interdisciplinary fields
-
-3. AVOID: Obviously irrelevant fields
-   Example: CS student should NOT select ["Music & Performing Arts", "Veterinary"]
-
-⚠️ IMPORTANT: Be inclusive but sensible
-- Research students: Include research-focused classifications
-- Career students: Include professional/applied classifications
-- Liberal Arts: Don't limit to humanities - interdisciplinary programs matter
-
-📋 NEXT STEP:
-Call get_university_programs() AGAIN with your selected classifications:
-
-get_university_programs(
-    universities={universities},
-    selected_classifications=["Classification 1", "Classification 2", ...],
-    exploration_token="{exploration_token}"
-)
+Call analyze_and_shortlist(programs_token, university_analyses) to begin university-by-university analysis and shortlisting.
             """,
-            "next_step": "Review classifications and call this tool again with selected_classifications"
+            "next_step": "Call analyze_and_shortlist(programs_token, university_analyses)"
         }
 
-    # SECOND CALL: Return filtered programs
-    all_programs = {}
-    total_programs = 0
-    classification_stats = {}
+    # Process next university
+    current_university = remaining_universities[0]
 
-    for uni in universities:
-        programs = _search_programs(uni, classification_filters=selected_classifications)
-        if programs:
-            all_programs[uni] = programs
-            total_programs += len(programs)
+    # Get filtered programs for current university
+    programs = _search_programs(current_university, classification_filters=selected_classifications)
 
-            # Track classification distribution
-            for prog in programs:
-                class_name = prog.get("classification", "Unknown")
-                classification_stats[class_name] = classification_stats.get(class_name, 0) + 1
+    if not programs:
+        # Skip universities with no matching programs
+        return {
+            "current_university": current_university,
+            "programs": [],
+            "program_count": 0,
+            "remaining_universities": remaining_universities[1:],
+            "remaining_count": len(remaining_universities) - 1,
+            "instructions": f"""
+{current_university}: NO PROGRAMS MATCH
 
-    token = generate_token("programs", {
-        "universities": universities,
-        "all_programs": all_programs,
-        "total_programs": total_programs,
-        "career_clarity": career_clarity,
-        "tier": tier,
-        "selected_classifications": selected_classifications,
-        "classification_statistics": classification_stats
-    })
+No programs found matching selected classifications.
+
+NEXT STEP: Continue to next university
+
+Call process_university_programs(classifications_token, university_programs) again with:
+- university_programs = {university_programs | {current_university: []}}
+
+WARNING: DO NOT SKIP AHEAD. Process remaining {len(remaining_universities) - 1} universities before proceeding.
+            """
+        }
+
+    # Format programs for display
+    programs_display = "\n".join([f"  • [{p['id']}] {p['name']} ({p['degree']})" for p in programs])
 
     return {
-        "programs_token": token,
-        "programs_by_university": all_programs,
-        "total_programs": total_programs,
-        "universities_count": len(all_programs),
-        "selected_classifications": selected_classifications,
-        "classification_statistics": classification_stats,
+        "current_university": current_university,
+        "programs": programs,
+        "program_count": len(programs),
+        "remaining_universities": remaining_universities[1:],
+        "remaining_count": len(remaining_universities) - 1,
         "instructions": f"""
-✅ CLASSIFICATION FILTERING COMPLETE
+{current_university} - {len(programs)} PROGRAMS FOUND
 
-📊 RESULTS:
-- Universities: {len(universities)}
-- Selected classifications: {len(selected_classifications)}
-- Total programs retrieved: {total_programs}
+{programs_display}
 
-🏷️  CLASSIFICATION DISTRIBUTION:
-{chr(10).join([f"  • {name}: {count} programs" for name, count in sorted(classification_stats.items(), key=lambda x: x[1], reverse=True)])}
-
-📋 NEXT STEP: TWO-PASS NAME SCREENING
-
-PASS 1 - Remove Obvious Mismatches (排除法):
-- Review program NAMES carefully
-- Remove programs with misleading names even if classification seems right
-- Example: Remove "Art Technology" if student wants pure CS (even if classified as CS)
-- Philosophy: 宁少不多 (fewer but better matches)
-
-PASS 2 - Select Relevant Programs (选择法):
-- From remaining programs, positively SELECT those matching student profile
-- Consider: Specific interests, career goals, research vs coursework preference
+YOUR TASK: Review program names and select relevant ones for this university
+- Remove misleading programs even if classification matches
+- Select programs matching student's profile and goals
 - Include borderline cases (will be validated in next step)
 
-Call shortlist_programs_by_name(shortlisted_by_university, programs_token)
-        """,
-        "next_step": "Call shortlist_programs_by_name(shortlisted_by_university, programs_token)"
+NEXT STEP: Submit selection for {current_university}
+
+Call process_university_programs(classifications_token, university_programs) again with:
+- university_programs = {{"{current_university}": <list of selected program IDs>}} | {university_programs}
+
+WARNING: DO NOT SKIP AHEAD. Process remaining {len(remaining_universities) - 1} universities before proceeding.
+        """
     }
 
 
 @mcp.tool
-async def shortlist_programs_by_name(
-    shortlisted_by_university: Dict[str, List[int]],
-    programs_token: str
+async def analyze_and_shortlist(
+    programs_token: str,
+    university_analyses: Optional[Dict[str, dict]] = None
 ) -> dict:
     """
-    Step 4: Shortlist programs by name analysis (PASS 2 ONLY)
+    Analyze programs and shortlist per university with student profile research.
 
-    This is PASS 2 of TWO-PASS screening (classifications already filtered in Step 3):
-    - PASS 1 (Tool 3): Classification filtering
-    - PASS 2 (THIS TOOL): Name-based selection
+    Iterative multi-call workflow processing one university per call.
 
-    YOUR TASK: Review program NAMES and select those matching student profile
-    - Remove misleading program names even if classification seems right
-    - Select programs that align with specific interests, career goals
-    - Include borderline cases (will be validated in Step 5)
+    IMPORTANT: Only send analysis for the CURRENT university in each call.
+    The server automatically merges with previous analyses.
 
     Args:
-        shortlisted_by_university: Dict mapping university name to list of program IDs
-            Example: {
-                "CMU": [123, 456, 789],
-                "Stanford": [234, 567],
-                ...
-            }
-        programs_token: From get_university_programs()
+        programs_token: From process_university_programs() or previous analyze_and_shortlist()
+        university_analyses: Dict with ONLY current university's analysis (not all previous ones)
+                           Format: {"University Name": {"shortlisted_programs": [...], "program_notes": {...}}}
 
     Returns:
-        shortlist_token + statistics + instructions for Step 5
+        Current university analysis + remaining_universities + instructions OR final analysis_token
+
+    Example workflow:
+        Call 1: analyze_and_shortlist(token, {"Stanford": {...}})
+        Call 2: analyze_and_shortlist(token_from_call1, {"Berkeley": {...}})
+        Call N: analyze_and_shortlist(token_from_callN-1, {"Last Uni": {...}})
     """
-    programs_data = validate_token(programs_token, "programs")
-    career_clarity = programs_data.get("career_clarity", "medium")
-    tier = programs_data.get("tier", "basic")
+    # API key validation
+    tier, allowed_tools = validate_api_key_and_tool("analyze_and_shortlist")
 
-    if not shortlisted_by_university or not isinstance(shortlisted_by_university, dict):
-        raise ValueError("You must provide shortlisted_by_university as a dict")
+    # ═══════════════════════════════════════════════════════════════
+    # TYPE COERCION: Handle MCP serialization issues
+    # ═══════════════════════════════════════════════════════════════
+    import json
+    if isinstance(university_analyses, str):
+        if university_analyses == "" or university_analyses.lower() == "null":
+            university_analyses = None
+        else:
+            try:
+                university_analyses = json.loads(university_analyses)
+            except json.JSONDecodeError:
+                raise ValueError(f"Invalid university_analyses format: {university_analyses}")
+    # ═══════════════════════════════════════════════════════════════
 
-    total_shortlisted = sum(len(ids) for ids in shortlisted_by_university.values())
+    # Validate token (accepts both "programs" and "accumulation" types)
+    token_data = _active_tokens.get(programs_token)
+    if not token_data:
+        raise ValueError("Invalid or expired token")
 
-    if total_shortlisted == 0:
-        raise ValueError("You must shortlist at least some programs. Did you review the program names?")
+    token_type = token_data.get("type")
+    if token_type == "programs":
+        # First call: extract from programs token
+        programs_data = validate_token(programs_token, "programs")
+        accumulated_analyses = {}  # No history yet
+    elif token_type == "accumulation":
+        # Subsequent calls: extract from accumulation token
+        programs_data = validate_token(programs_token, "accumulation")
+        accumulated_analyses = programs_data.get("accumulated_analyses", {})
+    else:
+        raise ValueError(f"Invalid token type: {token_type}. Expected 'programs' or 'accumulation'")
 
-    token = generate_token("shortlist", {
-        "universities": list(shortlisted_by_university.keys()),
-        "shortlisted_by_university": shortlisted_by_university,
-        "total_shortlisted": total_shortlisted,
-        "career_clarity": career_clarity,
-        "tier": tier
+    background = programs_data.get("background", "")
+    strategy = programs_data.get("strategy", "conservative")
+    universities = programs_data.get("universities", [])
+    university_programs = programs_data.get("university_programs", {})
+
+    if not universities:
+        raise ValueError("No universities found in token.")
+
+    # MERGE: Combine accumulated history with new submission (only current university)
+    if university_analyses:
+        # Validate: should only contain 1 university
+        if len(university_analyses) > 1:
+            raise ValueError(
+                f"Submit only ONE university per call. You submitted {len(university_analyses)} universities: {list(university_analyses.keys())}\n"
+                f"The server will merge analyses automatically."
+            )
+        accumulated_analyses.update(university_analyses)
+
+    processed_universities = list(accumulated_analyses.keys())
+    remaining_universities = [uni for uni in universities if uni not in processed_universities]
+
+    # If all universities processed, generate final token
+    if not remaining_universities:
+        # Calculate total programs
+        total_programs = sum(len(analysis.get("shortlisted_programs", [])) for analysis in accumulated_analyses.values())
+
+        token = generate_token("analysis", {
+            "background": background,
+            "strategy": strategy,
+            "universities": universities,
+            "university_analyses": accumulated_analyses,
+            "total_programs": total_programs
+        })
+
+        return {
+            "analysis_token": token,
+            "total_programs_shortlisted": total_programs,
+            "universities_analyzed": len(accumulated_analyses),
+            "instructions": f"""
+ALL UNIVERSITIES ANALYZED
+
+RESULTS:
+- Universities: {len(accumulated_analyses)}
+- Total programs shortlisted: {total_programs}
+
+NEXT STEP: Select final programs
+
+Call select_final_programs(analysis_token, final_programs) to choose final programs based on {strategy} strategy.
+            """,
+            "next_step": "Call select_final_programs(analysis_token, final_programs)"
+        }
+
+    # Generate accumulation token for next call
+    accumulation_token = generate_token("accumulation", {
+        "background": background,
+        "strategy": strategy,
+        "universities": universities,
+        "university_programs": university_programs,
+        "accumulated_analyses": accumulated_analyses
     })
+
+    # Process next university
+    current_university = remaining_universities[0]
+    current_programs = university_programs.get(current_university, [])
+
+    if not current_programs:
+        # Skip universities with no programs
+        return {
+            "accumulation_token": accumulation_token,
+            "current_university": current_university,
+            "program_count": 0,
+            "processed_count": len(accumulated_analyses),
+            "remaining_universities": remaining_universities[1:],
+            "remaining_count": len(remaining_universities) - 1,
+            "instructions": f"""
+{current_university}: NO PROGRAMS
+
+This university has no programs to analyze.
+
+NEXT STEP: Continue to next university
+
+Call analyze_and_shortlist(accumulation_token, university_analyses) again with:
+- accumulation_token = "{accumulation_token}"
+- university_analyses = {{"{current_university}": {{"shortlisted_programs": [], "program_notes": {{}}}}}}
+
+WARNING: DO NOT SKIP AHEAD. Process remaining {len(remaining_universities) - 1} universities before proceeding.
+            """
+        }
+
+    # Get program details
+    program_details = _get_program_details_batch(current_programs)
+    programs_display = "\n".join([
+        f"  • [{p['program_id']}] {p['program_name']} ({p['degree_type']})"
+        for p in program_details
+    ])
 
     return {
-        "shortlist_token": token,
-        "shortlisted_by_university": shortlisted_by_university,
-        "total_shortlisted": total_shortlisted,
-        "universities_count": len(shortlisted_by_university),
+        "accumulation_token": accumulation_token,
+        "current_university": current_university,
+        "programs": program_details,
+        "program_count": len(program_details),
+        "processed_count": len(accumulated_analyses),
+        "remaining_universities": remaining_universities[1:],
+        "remaining_count": len(remaining_universities) - 1,
         "instructions": f"""
-✅ NAME SCREENING COMPLETE: {total_shortlisted} programs from {len(shortlisted_by_university)} universities
+{current_university} - {len(program_details)} PROGRAMS
 
-📋 NEXT STEP: Single-round validation with conditional web search
+{programs_display}
 
-YOUR TASK: For each program, use YOUR OWN KNOWLEDGE first:
-1. Evaluate program features (curriculum, focus, teaching style)
-2. Identify target student profile (what background does this program seek?)
-3. Match against student's background and goals
+YOUR TASK: Research and shortlist programs for this university
 
-ONLY SEARCH IF UNCERTAIN:
-- If you don't know the program well → Search web for program details
-- Query: "[University] [Program Name] target audience curriculum student experience"
-- If you DO know the program → Skip search, use your knowledge
+1. RESEARCH (optional, 0-3 web searches if uncertain about fit):
+   - Research typical student profiles or career outcomes if needed
+   - Keep findings brief (for internal decision-making only)
 
-FINAL DECISION: Keep or remove based on:
-- Program-student fit
-- Target audience match
-- Career/research goal alignment
+2. SHORTLIST: Select programs matching student's profile
 
-Call validate_programs_with_web(web_validations, shortlist_token)
-        """,
-        "next_step": "Call validate_programs_with_web(web_validations, shortlist_token)"
+3. WRITE NOTES: For each shortlisted program, write 20-40 word note explaining fit
+   - Format: {{"program_id": {{"note": "Typical cohort: ..., Career outcomes: ..."}}}}
+   - Focus on why this program fits THIS student's background/goals
+
+NEXT STEP: Submit analysis for {current_university}
+
+Call analyze_and_shortlist(accumulation_token, university_analyses) with:
+- accumulation_token = "{accumulation_token}"
+- university_analyses = {{"{current_university}": {{
+    "shortlisted_programs": [list of selected program IDs],
+    "program_notes": {{"program_id": {{"note": "20-40 words why this program fits"}}}},
+    "optional_web_searches": [optional: 0-3 searches if needed]
+  }}}}
+
+IMPORTANT: Only send data for {current_university}, not previous universities.
+
+Progress: {len(accumulated_analyses)} done, {len(remaining_universities)} remaining
+        """
     }
-
-
-@mcp.tool
-async def validate_programs_with_web(
-    validated_programs: Dict[str, List[int]],
-    shortlist_token: str,
-    optional_web_searches: Optional[Dict[str, dict]] = None
-) -> dict:
-    """
-    Step 5: Single-round validation with conditional web search
-
-    🎯 SIMPLIFIED WORKFLOW (v1.09):
-    Merged Round 3 (career-clarity filtering) + Round 4 (web search) into ONE round.
-
-    YOUR TASK:
-    1. Review shortlisted programs using your own knowledge FIRST
-    2. Consider career clarity from consultation:
-       - career_clarity = "high": Strictly match career direction, remove misaligned programs
-       - career_clarity = "low": Prioritize university reputation over program fit
-       - career_clarity = "medium": Balance both fit and reputation
-    3. For programs where you're UNCERTAIN about fit/target audience, optionally search web
-    4. Return final validated program IDs per university
-
-    Args:
-        validated_programs: Dict mapping university name to final program IDs
-            Example: {
-                "CMU": [123, 456],
-                "Stanford": [789, 234],
-                ...
-            }
-
-        shortlist_token: From shortlist_programs_by_name()
-
-        optional_web_searches: OPTIONAL dict with web searches for programs you're uncertain about
-            Example: {
-                "CMU MISM (123)": {
-                    "query": "CMU MISM target audience ideal candidates background",
-                    "num_results": 5,
-                    "findings": "Based on web search: Program targets...",
-                    "reasoning": "Searched because unclear if business background required"
-                },
-                "Stanford MSCS (789)": {
-                    "skipped": true,
-                    "known_info": "Standard CS MS program, targets strong CS undergrads",
-                    "reasoning": "Well-known program, no search needed"
-                }
-            }
-
-            ⚠️ ONLY include programs where you need external validation
-            - Skip search if you know the program well
-            - Query pattern: "[University] [Program Name] target audience ideal candidates"
-            - num_results: 3-8 (defaults to 5)
-
-    Returns:
-        validation_token + statistics + next_step instructions
-    """
-    shortlist_data = validate_token(shortlist_token, "shortlist")
-    career_clarity = shortlist_data.get("career_clarity", "medium")
-    tier = shortlist_data.get("tier", "basic")
-    expected_unis = shortlist_data["universities"]
-
-    if not validated_programs or not isinstance(validated_programs, dict):
-        raise ValueError("You must provide validated_programs as a dict")
-
-    # Validate university names
-    current_unis = set(validated_programs.keys())
-    invalid_unis = [uni for uni in current_unis if uni not in expected_unis]
-    if invalid_unis:
-        raise ValueError(
-            f"Invalid university names: {invalid_unis}\n\n"
-            f"These universities were not in your shortlist.\n"
-            f"Valid university names: {expected_unis}\n\n"
-            f"Tip: Copy exact names from shortlist_programs_by_name response."
-        )
-
-    # Collect all final program IDs and validate
-    all_final_ids = []
-    errors = []
-
-    for uni, program_ids in validated_programs.items():
-        if not isinstance(program_ids, list):
-            errors.append(f"• {uni}: program_ids must be a list")
-            continue
-
-        if len(program_ids) == 0:
-            errors.append(f"• {uni}: empty program list (must select at least one program)")
-            continue
-
-        all_final_ids.extend(program_ids)
-
-    if errors:
-        error_msg = f"Found {len(errors)} validation error(s):\n\n" + "\n".join(errors)
-        error_msg += "\n\n💡 Tip: Fix all errors listed above and retry."
-        raise ValueError(error_msg)
-
-    if len(all_final_ids) == 0:
-        raise ValueError("No programs validated. You must select at least one program per university.")
-
-    # Count web searches if provided
-    total_searches = 0
-    total_skipped = 0
-    if optional_web_searches:
-        for search_data in optional_web_searches.values():
-            if search_data.get("skipped", False):
-                total_skipped += 1
-            else:
-                total_searches += 1
-
-    token = generate_token("validation", {
-        "validated_universities": list(current_unis),
-        "final_program_ids": all_final_ids,
-        "validated_programs": validated_programs,
-        "web_searches": optional_web_searches or {},
-        "career_clarity": career_clarity,
-        "tier": tier
-    })
-
-    # BASIC TIER: Save state to consultation_states table for potential upgrade
-    consultation_state_id = None
-    if tier == 'basic':
-        import psycopg2
-        import json
-        from datetime import datetime
-
-        try:
-            # Get user_id from API key
-            headers = get_http_headers()
-            auth_header = headers.get("authorization", "")
-            api_key = auth_header[7:] if auth_header.startswith("Bearer ") else ""
-
-            conn = psycopg2.connect(
-                host=os.getenv("POSTGRES_HOST", "localhost"),
-                port=os.getenv("POSTGRES_PORT", "5432"),
-                dbname=os.getenv("POSTGRES_DB", "offeri"),
-                user=os.getenv("POSTGRES_USER", "offeri_user"),
-                password=os.getenv("POSTGRES_PASSWORD", "")
-            )
-            cursor = conn.cursor()
-
-            # Get user_id from API key (mcp_usage table)
-            cursor.execute("SELECT user_id FROM mcp_usage WHERE id = %s", (api_key,))
-            result = cursor.fetchone()
-            user_id = result[0] if result else "unknown"
-
-            # Generate unique consultation_state_id
-            import uuid
-            consultation_state_id = f"cs_{uuid.uuid4().hex[:16]}"
-
-            # Save complete workflow state
-            workflow_data = {
-                "validation_token": token,
-                "validated_programs": validated_programs,
-                "total_programs": len(all_final_ids),
-                "universities": list(current_unis),
-                "career_clarity": career_clarity,
-                "timestamp": datetime.utcnow().isoformat()
-            }
-
-            cursor.execute("""
-                INSERT INTO consultation_states (id, user_id, tier, workflow_step, workflow_data)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (consultation_state_id, user_id, 'basic', 'validation_complete', json.dumps(workflow_data)))
-
-            conn.commit()
-            conn.close()
-
-            logger.info(f"💾 BASIC tier: Saved consultation state {consultation_state_id} for user {user_id}")
-        except Exception as e:
-            logger.error(f"Failed to save consultation state: {e}")
-            # Don't fail the workflow if state saving fails
-
-    response = {
-        "validation_token": token,
-        "universities_validated": len(validated_programs),
-        "total_programs_validated": len(all_final_ids),
-        "web_searches_performed": total_searches,
-        "programs_validated_with_knowledge": total_skipped,
-        "message": f"✅ Validated {len(all_final_ids)} programs from {len(validated_programs)} universities\n({total_searches} web searches, {total_skipped} validated with own knowledge)",
-    }
-
-    if tier == 'basic':
-        response["consultation_state_id"] = consultation_state_id
-        response["tier"] = "basic"
-        response["upgrade_available"] = True
-        response["message"] += f"\n\n💡 BASIC TIER ($9): Consultation complete!\n📋 State saved: {consultation_state_id}\n🚀 Want deep research (40+ Exa searches)? Upgrade to Advanced for $39.99\n   → Call upgrade_to_advanced('{consultation_state_id}')"
-        response["next_step"] = "Basic tier complete. User can upgrade to advanced tier."
-    else:
-        response["next_step"] = "Call score_and_rank_programs(validation_token)"
-
-    return response
 
 
 @mcp.tool
@@ -1707,14 +998,20 @@ async def upgrade_to_advanced(
     Upgrade from basic tier to advanced tier
 
     Loads saved workflow state from PostgreSQL and resumes execution
-    from score_and_rank_programs() → generate_final_report() with Exa research
+    from analyze_programs_by_university() → generate_final_report_advanced() with Exa research
 
     Args:
         consultation_state_id: State ID from basic tier (format: cs_xxxxx)
 
     Returns:
-        Validation token to continue workflow with score_and_rank_programs()
+        Validation token to continue workflow with analyze_programs_by_university()
     """
+    # ═══════════════════════════════════════════════════════════════
+    # API KEY & TOOL PERMISSION VALIDATION
+    # ═══════════════════════════════════════════════════════════════
+    tier_from_key, allowed_tools = validate_api_key_and_tool("upgrade_to_advanced")
+    # ═══════════════════════════════════════════════════════════════
+
     import psycopg2
     import json
     from datetime import datetime
@@ -1741,7 +1038,7 @@ async def upgrade_to_advanced(
         if not result:
             conn.close()
             raise ValueError(
-                f"❌ Consultation state not found: {consultation_state_id}\n\n"
+                f"Consultation state not found: {consultation_state_id}\n\n"
                 f"This state ID may be invalid, expired, or already used.\n"
                 f"Please start a new basic consultation."
             )
@@ -1752,7 +1049,7 @@ async def upgrade_to_advanced(
         if expires_at < datetime.utcnow():
             conn.close()
             raise ValueError(
-                f"❌ Consultation state expired: {consultation_state_id}\n\n"
+                f"Consultation state expired: {consultation_state_id}\n\n"
                 f"Created: {created_at}\n"
                 f"Expired: {expires_at}\n\n"
                 f"Consultation states are valid for 7 days. Please start a new basic consultation."
@@ -1762,7 +1059,7 @@ async def upgrade_to_advanced(
         if tier != 'basic':
             conn.close()
             raise ValueError(
-                f"❌ Invalid upgrade request: {consultation_state_id}\n\n"
+                f"Invalid upgrade request: {consultation_state_id}\n\n"
                 f"This consultation state is for tier '{tier}', not 'basic'.\n"
                 f"Only basic tier consultations can be upgraded to advanced."
             )
@@ -1771,7 +1068,7 @@ async def upgrade_to_advanced(
         if workflow_step != 'validation_complete':
             conn.close()
             raise ValueError(
-                f"❌ Invalid workflow state: {consultation_state_id}\n\n"
+                f"Invalid workflow state: {consultation_state_id}\n\n"
                 f"Current workflow step: {workflow_step}\n"
                 f"Expected: validation_complete\n\n"
                 f"This consultation is not ready for upgrade."
@@ -1786,7 +1083,7 @@ async def upgrade_to_advanced(
         if not validation_token:
             conn.close()
             raise ValueError(
-                f"❌ Invalid consultation state: {consultation_state_id}\n\n"
+                f"Invalid consultation state: {consultation_state_id}\n\n"
                 f"Missing validation_token in workflow_data.\n"
                 f"This state may be corrupted. Please start a new basic consultation."
             )
@@ -1801,7 +1098,7 @@ async def upgrade_to_advanced(
         conn.commit()
         conn.close()
 
-        logger.info(f"🚀 UPGRADE: {consultation_state_id} upgraded from basic to advanced for user {user_id}")
+        logger.info(f"UPGRADE: {consultation_state_id} upgraded from basic to advanced for user {user_id}")
 
         return {
             "upgraded": True,
@@ -1810,538 +1107,359 @@ async def upgrade_to_advanced(
             "total_programs": total_programs,
             "universities": len(universities),
             "message": f"""
-✅ Successfully upgraded to Advanced tier!
+Successfully upgraded to Advanced tier!
 
-📊 Consultation Details:
+Consultation Details:
    • State ID: {consultation_state_id}
    • Programs validated: {total_programs}
    • Universities: {len(universities)}
    • Created: {created_at}
 
-🎯 Next Step:
-   Call score_and_rank_programs(validation_token) to continue the workflow.
+Next Step:
+   Call analyze_programs_by_university(validation_token, university_analyses) to continue the workflow.
 
-   This will rank your {total_programs} validated programs and prepare them for
-   deep Exa research (40+ searches) in the final report generation.
+   Process each university with 2-round screening and collect structured analysis
+   (career outcomes + target student profile) for your {total_programs} validated programs.
             """,
-            "next_step": f"Call score_and_rank_programs('{validation_token}')"
+            "next_step": f"Call analyze_programs_by_university('{validation_token}', university_analyses)"
         }
 
     except psycopg2.Error as e:
         logger.error(f"PostgreSQL error in upgrade_to_advanced: {e}")
         raise ValueError(
-            f"❌ Database error while loading consultation state.\n\n"
+            f"Database error while loading consultation state.\n\n"
             f"Error: {str(e)}\n\n"
             f"Please contact support at lyrica2333@gmail.com"
         )
     except json.JSONDecodeError as e:
         logger.error(f"JSON decode error in upgrade_to_advanced: {e}")
         raise ValueError(
-            f"❌ Corrupted consultation state: {consultation_state_id}\n\n"
+            f"Corrupted consultation state: {consultation_state_id}\n\n"
             f"Unable to parse workflow data. Please start a new basic consultation."
         )
     except Exception as e:
         logger.error(f"Unexpected error in upgrade_to_advanced: {e}")
         raise ValueError(
-            f"❌ Unexpected error while upgrading consultation.\n\n"
+            f"Unexpected error while upgrading consultation.\n\n"
             f"Error: {str(e)}\n\n"
             f"Please contact support at lyrica2333@gmail.com"
         )
 
 
 @mcp.tool
-async def score_and_rank_programs(
-    validation_token: str
+async def select_final_programs(
+    analysis_token: str,
+    final_programs: List[int]
 ) -> dict:
     """
-    Step 6: Score and rank all validated programs
+    Select final programs for report based on strategy ratio.
 
     Args:
-        validation_token: From validate_programs_with_web()
+        analysis_token: From analyze_and_shortlist()
+        final_programs: List of program IDs (10-30 programs)
 
     Returns:
-        ranking_token + top programs + required Exa search count for detailed research
+        selection_token + statistics + next_step
     """
-    validation_data = validate_token(validation_token, "validation")
-    career_clarity = validation_data.get("career_clarity", "medium")
-    tier = validation_data.get("tier", "advanced")  # Should be 'advanced' here
+    # API key validation
+    tier, allowed_tools = validate_api_key_and_tool("select_final_programs")
 
-    final_ids = validation_data["final_program_ids"]
-    universities_count = len(validation_data.get("validated_universities", []))
+    # ═══════════════════════════════════════════════════════════════
+    # TYPE COERCION: Handle MCP serialization issues
+    # ═══════════════════════════════════════════════════════════════
+    import json
+    if isinstance(final_programs, str):
+        try:
+            final_programs = json.loads(final_programs)
+        except json.JSONDecodeError:
+            raise ValueError(f"Invalid final_programs format: {final_programs}")
+    # ═══════════════════════════════════════════════════════════════
 
-    # Get program details
-    programs = _get_program_details_batch(final_ids)
+    # Validate token
+    analysis_data = validate_token(analysis_token, "analysis")
+    background = analysis_data.get("background", "")
+    strategy = analysis_data.get("strategy", "conservative")
+    university_analyses = analysis_data.get("university_analyses", {})
+    total_available = analysis_data.get("total_programs", 0)
+    universities = analysis_data.get("universities", [])
 
-    # Calculate weighted scores based on career clarity
-    # Career clarity affects weight distribution between reputation and program fit
-
-    # Define scoring weights based on career clarity
-    if career_clarity == "high":
-        reputation_weight = 0.3
-        fit_weight = 0.7
-    elif career_clarity == "low":
-        reputation_weight = 0.7
-        fit_weight = 0.3
-    else:  # medium
-        reputation_weight = 0.5
-        fit_weight = 0.5
-
-    # Score each program
-    for program in programs:
-        # Simple reputation score based on university tier (0-100 scale)
-        # This is a simplified proxy - in production would use actual rankings
-        uni_name = program["university_name"].lower()
-        reputation_score = _estimate_university_reputation(uni_name)
-
-        # Simple fit score based on program characteristics (0-100 scale)
-        # Programs that passed Exa validation are already relevant, so base score is high
-        fit_score = 85  # Base score for validated programs
-
-        # Calculate weighted final score
-        program["reputation_score"] = reputation_score
-        program["fit_score"] = fit_score
-        program["score"] = reputation_score * reputation_weight + fit_score * fit_weight
-
-    # Sort by score descending
-    programs.sort(key=lambda x: x["score"], reverse=True)
-
-    # Assign ranks
-    for i, program in enumerate(programs):
-        program["rank"] = i + 1
-    
-    # Determine report format
-    if universities_count >= 7:
-        report_format = "TOP_20"
-        detailed_count = 10  # Tier 1: Full Exa research
-        concise_count = 10   # Tier 2: Concise summaries (LLM knowledge allowed)
-        required_searches = 20  # Tier 1 only: 10 programs × 2 searches = 20 (v1.09)
+    # Dynamic minimum programs based on university count
+    university_count = len(universities)
+    if university_count <= 7:
+        min_programs = 10
+        range_guidance = "at least 10 programs (fewer universities, focused selection)"
     else:
-        report_format = "TOP_10"
-        detailed_count = 5   # Tier 1: Full Exa research
-        concise_count = 0    # No Tier 2 for small selection
-        required_searches = 10  # 5 programs × 2 searches = 10 (v1.09)
+        min_programs = 20
+        range_guidance = "at least 20 programs (more universities, broader coverage)"
 
-    top_programs = programs[:detailed_count + concise_count]
+    # Strategy ratios for guidance
+    strategy_ratios = {
+        "conservative": {"lottery": "10%", "reach": "30%", "target": "40%", "safety": "20%"},
+        "aggressive": {"lottery": "20%", "reach": "50%", "target": "20%", "safety": "10%"}
+    }
+    ratios = strategy_ratios[strategy]
 
-    token = generate_token("ranking", {
-        "report_format": report_format,
-        "detailed_tier_count": detailed_count,
-        "concise_tier_count": concise_count,  # v1.15: Added for Tier 2
-        "required_exa_searches": required_searches,
-        "top_programs": top_programs,
-        "total_universities_validated": universities_count,
-        "career_clarity": career_clarity,
-        "reputation_weight": reputation_weight,
-        "fit_weight": fit_weight,
-        "tier": tier
+    # Validate final_programs
+    if not final_programs or not isinstance(final_programs, list):
+        raise ValueError("final_programs must be a non-empty list")
+
+    program_count = len(final_programs)
+
+    # Validate minimum only (no upper limit)
+    if program_count < min_programs:
+        raise ValueError(
+            f"Too few programs: {program_count} programs.\n"
+            f"With {university_count} universities, select at least {min_programs} programs from {total_available} analyzed programs.\n"
+            f"Recommended: {range_guidance}"
+        )
+
+    # Generate selection token
+    token = generate_token("selection", {
+        "background": background,
+        "strategy": strategy,
+        "final_programs": final_programs,
+        "program_count": program_count,
+        "university_analyses": university_analyses
     })
-    
+
     return {
-        "ranking_token": token,
-        "report_format": report_format,
-        "detailed_tier_programs": detailed_count,
-        "concise_tier_programs": concise_count,  # v1.15: Fixed to use concise_count
-        "total_top_programs": len(top_programs),
-        "required_exa_searches": required_searches,
-        "top_programs": top_programs,
+        "selection_token": token,
+        "program_count": program_count,
+        "strategy": strategy,
+        "university_count": university_count,
+        "program_range": range_guidance,
         "instructions": f"""
-✅ Scored and ranked all programs.
+FINAL PROGRAMS SELECTED
 
-Report format: {report_format}
-- Tier 1 (detailed): {detailed_count} programs
-- Tier 2 (concise): {concise_count} programs
+RESULTS:
+- Universities: {university_count}
+- Programs selected: {program_count}
+- Recommended range: {range_guidance}
+- Strategy: {strategy.capitalize()}
+- Recommended distribution:
+  - Lottery: {ratios['lottery']}
+  - Reach: {ratios['reach']}
+  - Target: {ratios['target']}
+  - Safety: {ratios['safety']}
 
-📋 TWO-TIER RESEARCH WORKFLOW (v1.09):
+NEXT STEP: Generate final report
 
-TIER 1 (Detailed Research) - {detailed_count} programs:
-- Perform 2 Exa searches per program (curriculum + career outcomes)
-- Focus on program features, student experience, and suitability analysis
-- NO searches for tuition/timeline/costs (those change frequently)
-- Total: {required_searches} Exa searches required
+ALL TIERS: First call generate_final_report(selection_token, program_analyses)
 
-TIER 2 (Concise Summary) - {concise_count} programs:
-- NO Exa searches required (use your knowledge base up to Jan 2025)
-- Provide concise summary with 3 fields:
-  * quick_facts: Basic info (duration, format, study mode)
-  * fit_reasoning: Why recommend for this student
-  * application_notes: Key application requirements
-- Source: mark as "llm_knowledge"
-
-🎯 Tier 1 Search Strategy:
-1. FIRST: Check if you already know the program well
-2. IF uncertain: Use Exa MCP (mcp__exa__web_search_exa)
-3. IF Exa returns no useful results: Use your own knowledge
-4. ALWAYS fill "findings" field with detailed content (min 50 chars)
-
-For EACH of the top {detailed_count} programs (Tier 1), do EXACTLY 2 Exa searches:
-
-🔍 Search 1: Curriculum & Program Structure (6-8 results)
-Query: "[University] [Program] curriculum courses structure faculty specializations"
-
-Recommended Exa MCP Parameters:
-mcp__exa__web_search_exa(
-    query="<constructed query>",
-    numResults=7,
-    useAutoprompt=true,
-    searchType="auto",
-    includeDomains=["<university_domain>"],  # Use university domain for authoritative info
-    useHighlights=true,               # CRITICAL: Reduce tokens
-    highlightNumSentences=8,
-    highlightPerUrl=6
-)
-
-Then fill findings field:
-- If Exa found info: "findings": "Based on Exa search: Core courses include X, Y, Z. Specializations in..."
-- If Exa failed OR you know the program: "findings": "Based on general knowledge: Program covers..."
-
-🔍 Search 2: Career Outcomes & Student Experience (6-8 results)
-Query: "[University] [Program] career outcomes employment alumni student experience reviews"
-
-Recommended Exa MCP Parameters:
-mcp__exa__web_search_exa(
-    query="<constructed query>",
-    numResults=7,
-    useAutoprompt=true,
-    searchType="auto",
-    # NO includeDomains - need diverse sources (official stats + student reviews + career reports)
-    useHighlights=true,               # CRITICAL: Reduce tokens
-    highlightNumSentences=8,
-    highlightPerUrl=6
-)
-
-Then fill findings field:
-- If Exa found info: "findings": "Based on Exa search: 95% employment rate, avg salary $X, top employers..."
-- If Exa failed OR you know the program: "findings": "Based on general knowledge: Strong career outcomes..."
-
-⚠️ CONDITIONAL SEARCHING (v1.09 key feature):
-- SKIP search if you have sufficient knowledge about the program
-- Mark as source="llm_knowledge" when using your knowledge
-- Mark as source="exa" when using Exa search results
-- This reduces costs while maintaining quality
-
-Total: {required_searches} Exa searches maximum ({detailed_count} programs × 2 searches)
-Actual searches may be fewer if you know programs well!
-
-Work systematically:
-1. Complete all Tier 1 programs (0-2 searches each): Program #1 → #2 → ... → #{detailed_count}
-2. Then provide Tier 2 concise summaries (knowledge-based): Program #{detailed_count+1} → ... → #{detailed_count + concise_count}
-3. Call generate_final_report(detailed_research, ranking_token, concise_research)
+The function will return:
+- Basic tier: Report markdown (consultation complete)
+- Advanced tier: Report markdown + can_generate_advanced=true
+  → Then call generate_final_report_advanced(selection_token, program_research)
+- Upgrade tier: Report markdown + consultation_state_id
+  → Then call upgrade_to_advanced(consultation_state_id) first
+  → Then call generate_final_report_advanced(selection_token, program_research)
         """,
-        "next_step": f"Complete {required_searches} Exa searches for Tier 1, then provide Tier 2 summaries, then call generate_final_report()"
+        "next_step": "Call generate_final_report(selection_token, program_analyses) [ALL TIERS]"
     }
 
 
 @mcp.tool
 async def generate_final_report(
-    detailed_program_research: List[dict],
-    ranking_token: str,
-    concise_program_research: Optional[List[dict]] = None
+    selection_token: str,
+    program_analyses: List[dict]
 ) -> dict:
     """
-    Step 7: Generate comprehensive two-tier report (v1.09)
+    Generate Basic tier report using LLM knowledge.
 
-    Focus: Program features, student experience, and suitability analysis
-    NO searches for tuition/timeline/costs (those change frequently and are not program-specific)
+    ALL TIERS (basic/advanced/upgrade) must call this first.
 
     Args:
-        detailed_program_research: Tier 1 programs with 2 Exa searches each
-            Each: {
-                "program_id": 123,
-                "exa_searches": [
-                    {
-                        "query": "CMU MISM curriculum courses structure faculty",
-                        "num_results": 7,
-                        "findings": "Based on Exa search: Core courses include analytics, business intelligence...",
-                        "source": "exa"  # Optional: "exa" or "llm_knowledge"
-                    },
-                    {
-                        "query": "CMU MISM career outcomes employment alumni experience",
-                        "num_results": 7,
-                        "findings": "Based on Exa search: 95% employment rate, avg salary $120k, top employers...",
-                        "source": "exa"
-                    }
-                ],
-                "analysis": {
-                    "program_features": "Description of unique program characteristics, curriculum structure, faculty expertise...",
-                    "student_experience": "What it's like to study in this program, learning format, intensity, culture...",
-                    "suitability_analysis": "Why this program matches the student's background, goals, and profile..."
-                }
-            }
-
-        ⚠️ CRITICAL: "findings" field is REQUIRED and MUST be non-empty (min 50 chars)
-        - FIRST: Check if you know the program well
-        - IF uncertain: Use Exa MCP search (mcp__exa__web_search_exa)
-        - IF Exa returns no useful results: Use your own knowledge and mark source="llm_knowledge"
-        - NEVER submit empty findings or skip this field
-
-        ⚠️ CONDITIONAL SEARCHING (v1.09):
-        - You can skip searches for well-known programs
-        - Mark source="llm_knowledge" when using your knowledge
-        - This reduces costs while maintaining quality
-
-        concise_program_research: Tier 2 programs with concise summaries (TOP_20 format only)
-            Each: {
-                "program_id": 456,
-                "summary": {
-                    "quick_facts": "1-year MS, STEM-designated, full-time/part-time options",
-                    "fit_reasoning": "Strong PM training with tech emphasis, matches Google PM experience. Industry partnerships.",
-                    "application_notes": "Typical deadlines Jan-Mar, requires statement of purpose, GRE optional, 3.0+ GPA recommended"
-                },
-                "source": "llm_knowledge"
-            }
-
-        ⚠️ TIER 2 REQUIREMENTS:
-        - Required when report_format="TOP_20" (≥7 universities selected)
-        - NO Exa searches needed - use your knowledge base
-        - Each field in summary must be ≥30 characters
-        - quick_facts: Basic program facts (duration, format, study mode)
-        - fit_reasoning: Why suitable for this student's profile
-        - application_notes: Key application requirements (NO specific dates)
-
-        ranking_token: From score_and_rank_programs()
+        selection_token: From select_final_programs()
+        program_analyses: List of program analyses
+            Each: {"program_id": int, "analysis": {"program_features": str, "student_experience": str, "suitability_analysis": str}}
 
     Returns:
-        Validation confirmation + instructions to generate report
+        - report_markdown: The generated report
+        - key_type: "basic" / "advanced" / "upgrade"
+        - can_generate_advanced: Whether this key can call generate_final_report_advanced
+        - consultation_state_id: State ID for upgrade tier (if key_type == "upgrade")
     """
-    ranking_data = validate_token(ranking_token, "ranking")
+    # API key validation
+    tier, allowed_tools = validate_api_key_and_tool("generate_final_report")
 
-    report_format = ranking_data["report_format"]
-    detailed_count = ranking_data["detailed_tier_count"]
-    concise_count = ranking_data.get("concise_tier_count", 0)  # v1.15: Get Tier 2 count
-    required_searches = ranking_data["required_exa_searches"]
+    # ═══════════════════════════════════════════════════════════════
+    # TYPE COERCION: Handle MCP serialization issues
+    # ═══════════════════════════════════════════════════════════════
+    import json
+    if isinstance(program_analyses, str):
+        try:
+            program_analyses = json.loads(program_analyses)
+        except json.JSONDecodeError:
+            raise ValueError(f"Invalid program_analyses format: {program_analyses}")
+    # ═══════════════════════════════════════════════════════════════
 
-    # v1.15: Validate Tier 1 (detailed) count based on token contract
-    if not detailed_program_research or len(detailed_program_research) != detailed_count:
-        raise ValueError(
-            f"Tier 1 (detailed): Expected {detailed_count} programs, got {len(detailed_program_research) if detailed_program_research else 0}.\n\n"
-            f"You must provide research for EXACTLY {detailed_count} Tier 1 programs with full Exa searches."
-        )
+    # Extract data from selection token
+    selection_data = validate_token(selection_token, "selection")
+    background = selection_data.get("background", "")
+    strategy = selection_data.get("strategy", "conservative")
+    final_programs = selection_data.get("final_programs", [])
+    program_count = selection_data.get("program_count", 0)
+    university_analyses = selection_data.get("university_analyses", {})
 
-    # v1.15: Validate Tier 2 (concise) only if report_format requires it
-    if concise_count > 0:
-        if not concise_program_research:
-            raise ValueError(
-                f"Tier 2 (concise): {report_format} format requires Tier 2 summaries.\n\n"
-                f"Provide concise_program_research with {concise_count} programs.\n\n"
-                f"Tier 2 does NOT require Exa searches - use your knowledge base."
-            )
-        if len(concise_program_research) != concise_count:
-            raise ValueError(
-                f"Tier 2 (concise): Expected {concise_count} programs, got {len(concise_program_research)}."
-            )
+    # Validate program_analyses structure
+    if not program_analyses or not isinstance(program_analyses, list):
+        raise ValueError("program_analyses must be a non-empty list")
 
-    total_searches = 0
-    validation_results = []
-    
-    for i, research in enumerate(detailed_program_research):
-        program_id = research.get("program_id")
-        exa_searches = research.get("exa_searches", [])
-        dimensions = research.get("dimensions", {})
-        
-        if not program_id:
-            raise ValueError(f"Research #{i+1}: missing program_id")
+    # Validate each analysis has required fields
+    for i, analysis in enumerate(program_analyses):
+        if "program_id" not in analysis or "analysis" not in analysis:
+            raise ValueError(f"program_analyses[{i}] missing 'program_id' or 'analysis' field")
 
-        if len(exa_searches) != 2:
-            raise ValueError(f"Program {program_id}: must have EXACTLY 2 Exa searches (v1.09). You provided {len(exa_searches)}.")
-
-        # Validate each search with flexible result count (6-8 results)
-        search_names = ["Curriculum & Structure", "Career Outcomes & Experience"]
-
-        # Collect errors for this program instead of failing immediately
-        program_errors = []
-
-        for j, search in enumerate(exa_searches):
-            if not isinstance(search, dict):
-                program_errors.append(f"Program {program_id}, Search #{j+1} ({search_names[j]}): must be a dict")
-                continue
-
-            # Check source to determine validation rules
-            source = search.get("source", "exa")  # Default to "exa" if not specified
-
-            # Validate source field
-            valid_sources = ["exa", "llm_knowledge"]
-            if source not in valid_sources:
-                program_errors.append(
-                    f"Program {program_id}, Search #{j+1} ({search_names[j]}): "
-                    f"'source' must be one of {valid_sources}. You provided: {source}"
+        analysis_content = analysis["analysis"]
+        required_fields = ["program_features", "student_experience", "suitability_analysis"]
+        for field in required_fields:
+            if field not in analysis_content:
+                raise ValueError(f"program_analyses[{i}].analysis missing '{field}' field")
+            if len(analysis_content[field]) < 100:
+                raise ValueError(
+                    f"program_analyses[{i}].analysis.{field} must be ≥100 characters. "
+                    f"Current: {len(analysis_content[field])} characters"
                 )
-                continue
 
-            # Conditional validation based on source
-            if source == "llm_knowledge":
-                # For LLM knowledge: only validate findings, skip num_results/query
-                if "findings" not in search:
-                    program_errors.append(
-                        f"Program {program_id}, Search #{j+1} ({search_names[j]}): "
-                        f"missing 'findings' field (required for source=llm_knowledge)"
-                    )
-                    continue
-            else:  # source == "exa"
-                # For Exa search: validate num_results
-                if "num_results" not in search:
-                    program_errors.append(
-                        f"Program {program_id}, Search #{j+1} ({search_names[j]}): "
-                        f"missing 'num_results' field (required for source=exa)"
-                    )
-                    continue
+    # Generate basic report markdown (placeholder for now - LLM will generate)
+    report_markdown = f"""# Study Abroad Consultation Report
 
-                actual = search["num_results"]
-                if not (5 <= actual <= 8):  # Relaxed to 5-8
-                    program_errors.append(
-                        f"Program {program_id}, Search #{j+1} ({search_names[j]}): "
-                        f"num_results must be 5-8. You provided {actual}"
-                    )
-                    continue
+## Basic Tier Report
 
-                total_searches += 1
+Total Programs: {len(program_analyses)}
 
-            # Validate findings field (required for both sources)
-            if "findings" not in search:
-                program_errors.append(
-                    f"Program {program_id}, Search #{j+1} ({search_names[j]}): "
-                    f"missing 'findings' field"
-                )
-                continue
+(Report content will be generated by LLM based on program_analyses)
+"""
 
-            findings = search["findings"]
-            if not findings or not isinstance(findings, str):
-                program_errors.append(
-                    f"Program {program_id}, Search #{j+1} ({search_names[j]}): "
-                    f"'findings' must be a non-empty string"
-                )
-                continue
+    # Determine tier-specific behavior
+    can_generate_advanced = tier in ["advanced", "upgrade"]
+    consultation_state_id = None
 
-            # Ensure findings has substantial content (at least 50 characters)
-            if len(findings.strip()) < 50:
-                program_errors.append(
-                    f"Program {program_id}, Search #{j+1} ({search_names[j]}): "
-                    f"'findings' too short ({len(findings.strip())} chars). Provide detailed findings (min 50 chars)."
-                )
-                continue
+    # For "upgrade" tier, save consultation state to PostgreSQL
+    if tier == "upgrade":
+        import uuid
+        import psycopg2
 
-        # Add program-level errors to global error list
-        if program_errors:
-            errors.extend(program_errors)
+        consultation_state_id = f"cs_{uuid.uuid4().hex[:12]}"
 
-        # v1.09: Validate new analysis structure (3 sections instead of 6 dimensions)
-        analysis = research.get("analysis", {})
-        if not isinstance(analysis, dict):
-            errors.append(f"Program {program_id}: 'analysis' must be a dict")
-        else:
-            required_sections = ["program_features", "student_experience", "suitability_analysis"]
-            missing_sections = [sec for sec in required_sections if sec not in analysis]
-            if missing_sections:
-                errors.append(f"Program {program_id}: missing analysis sections: {missing_sections}")
+        try:
+            conn = get_pg_connection()
+            cursor = conn.cursor()
 
-            # Validate each section has substantial content
-            for section in required_sections:
-                if section in analysis:
-                    content = analysis[section]
-                    if not isinstance(content, str):
-                        errors.append(f"Program {program_id}: '{section}' must be a string")
-                    elif len(content.strip()) < 100:
-                        errors.append(
-                            f"Program {program_id}: '{section}' too short ({len(content.strip())} chars, need ≥100). "
-                            f"Provide more detailed analysis."
-                        )
+            # Save consultation state
+            cursor.execute("""
+                INSERT INTO consultation_states
+                (consultation_state_id, user_id, background, strategy, universities, final_programs, university_analyses, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+            """, (
+                consultation_state_id,
+                _current_user_id,
+                background,
+                strategy,
+                json.dumps(list(university_analyses.keys())),
+                json.dumps(final_programs),
+                json.dumps(university_analyses)
+            ))
 
-        # Only add to validation results if no errors for this program
-        if not any(err.startswith(f"Program {program_id}:") for err in errors):
-            validation_results.append({
-                "program_id": program_id,
-                "tier": 1,
-                "exa_searches_count": len(exa_searches),
-                "analysis_complete": True
-            })
+            conn.commit()
+            conn.close()
 
-    # v1.15: Validate Tier 2 (concise) programs - RELAXED validation
-    if concise_program_research:
-        for i, research in enumerate(concise_program_research):
-            program_id = research.get("program_id")
-            summary = research.get("summary", {})
-            source = research.get("source", "")
+            logger.info(f"CONSULTATION STATE SAVED: {consultation_state_id} for user {_current_user_id}")
 
-            if not program_id:
-                errors.append(f"Tier 2 Research #{i+1}: missing program_id")
-                continue
+        except psycopg2.Error as e:
+            logger.error(f"PostgreSQL error saving consultation state: {e}")
+            raise ValueError(f"Failed to save consultation state: {str(e)}")
 
-            if not summary or not isinstance(summary, dict):
-                errors.append(f"Tier 2 Program {program_id}: missing or invalid 'summary' dict")
-                continue
+    # Return unified response
+    result = {
+        "report_generated": True,
+        "report_markdown": report_markdown,
+        "programs_analyzed": len(program_analyses),
+        "key_type": tier,
+        "can_generate_advanced": can_generate_advanced,
+        "instructions": f"""
+BASIC REPORT GENERATED
 
-            # Check required fields in summary
-            required_fields = ["quick_facts", "fit_reasoning", "application_notes"]
-            tier2_errors = []
-            for field in required_fields:
-                if field not in summary or not summary[field]:
-                    tier2_errors.append(f"Tier 2 Program {program_id}: missing '{field}' in summary")
-                elif not isinstance(summary[field], str):
-                    tier2_errors.append(f"Tier 2 Program {program_id}: '{field}' must be a string")
-                elif len(summary[field].strip()) < 30:
-                    tier2_errors.append(
-                        f"Tier 2 Program {program_id}: '{field}' too short ({len(summary[field].strip())} chars, need ≥30)"
-                    )
+KEY INFO:
+- Tier: {tier}
+- Programs: {len(program_analyses)}
+- Can generate advanced: {can_generate_advanced}
+"""
+    }
 
-            # Optional: validate source if provided
-            if source and source not in ["llm_knowledge", "exa"]:
-                tier2_errors.append(f"Tier 2 Program {program_id}: source must be 'llm_knowledge' or 'exa'. You provided: {source}")
+    # Add consultation_state_id for upgrade tier
+    if tier == "upgrade":
+        result["consultation_state_id"] = consultation_state_id
+        result["instructions"] += f"""
+UPGRADE TIER:
+- Consultation state saved: {consultation_state_id}
+- To generate advanced report:
+  1. Call upgrade_to_advanced(consultation_state_id="{consultation_state_id}")
+  2. Then call generate_final_report_advanced(selection_token, program_research)
+"""
+    elif tier == "advanced":
+        result["instructions"] += """
+ADVANCED TIER:
+- You can now directly call generate_final_report_advanced(selection_token, program_research)
+- Use 2 Exa searches per program (curriculum + career outcomes)
+"""
 
-            if tier2_errors:
-                errors.extend(tier2_errors)
-            else:
-                validation_results.append({
-                    "program_id": program_id,
-                    "tier": 2,
-                    "summary_complete": True
-                })
+    return result
 
-    # v1.09: Flexible validation - allow fewer searches if LLM used own knowledge
-    if total_searches > required_searches:
-        errors.append(f"Too many Exa searches: Expected maximum {required_searches}, but you provided {total_searches}")
 
-    # Throw all collected errors at once
-    if errors:
-        error_count = len(errors)
-        error_summary = f"Found {error_count} validation error(s):\n\n"
-        for idx, err in enumerate(errors, 1):
-            error_summary += f"{idx}. {err}\n"
-        error_summary += f"\n💡 Fix all {error_count} errors above and resubmit."
-        raise ValueError(error_summary)
+@mcp.tool
+async def generate_final_report_advanced(
+    selection_token: str,
+    program_research: List[dict]
+) -> dict:
+    """
+    Generate Advanced tier report with Exa research.
+
+    Args:
+        selection_token: From select_final_programs()
+        program_research: Program research with Exa searches and analyses
+
+    Returns:
+        Report completion message
+    """
+    # API key validation
+    tier, allowed_tools = validate_api_key_and_tool("generate_final_report_advanced")
+
+    # ═══════════════════════════════════════════════════════════════
+    # TYPE COERCION: Handle MCP serialization issues
+    # ═══════════════════════════════════════════════════════════════
+    import json
+    if isinstance(program_research, str):
+        try:
+            program_research = json.loads(program_research)
+        except json.JSONDecodeError:
+            raise ValueError(f"Invalid program_research format: {program_research}")
+    # ═══════════════════════════════════════════════════════════════
+
+    # Extract data from selection token
+    selection_data = validate_token(selection_token, "selection")
 
     return {
         "report_generated": True,
-        "report_format": report_format,
-        "tier1_programs": detailed_count,
-        "tier2_programs": concise_count,
-        "total_exa_searches_validated": total_searches,
-        "validation": validation_results,
-        "message": f"""
-✅ All validations passed! Generate the comprehensive report now.
+        "programs_analyzed": len(program_research),
+        "message": """Report ready for generation.
 
-Report structure (v1.09):
-- TIER 1: {detailed_count} programs with 3-section analysis (program features, student experience, suitability)
-- TIER 2: {concise_count} programs with concise summaries (knowledge-based)
-- Final section: Application strategy
-
-Output in user's language (Chinese if they wrote in Chinese, English if English).
-
-Focus on:
-1. Program features: Unique characteristics, curriculum, faculty, specializations
-2. Student experience: Learning format, intensity, culture, day-to-day experience
-3. Suitability: Why this program matches the student's background, goals, and profile
-
-DO NOT include tuition/timeline/costs (those change frequently and are not program-specific).
-        """
+INSTRUCTIONS:
+- Programs to analyze: {} programs
+- Each program: 200-400 words with Exa research findings
+- Output in user's language
+- DO NOT include tuition/timeline/costs
+- Focus on program characteristics and student fit
+        """.format(len(program_research))
     }
 
-
-# ═══════════════════════════════════════════════════════════════
-# UTILITY TOOLS
-# ═══════════════════════════════════════════════════════════════
 
 @mcp.tool
 async def get_available_countries() -> str:
     """Get all countries with program counts. Use if unsure about country names."""
+    # API key validation
+    tier, allowed_tools = validate_api_key_and_tool("get_available_countries")
+
     countries = _get_available_countries()
     return "\n".join([f"{c['country']} ({c['count']} programs)" for c in countries])
 
@@ -2349,6 +1467,9 @@ async def get_available_countries() -> str:
 @mcp.tool
 async def get_database_statistics() -> dict:
     """Get database statistics for understanding data coverage."""
+    # API key validation
+    tier, allowed_tools = validate_api_key_and_tool("get_database_statistics")
+
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -2388,7 +1509,7 @@ async def _internal_track_usage() -> str:
     """Internal usage tracking. Returns empty string."""
     import psycopg2
     from fastmcp.server.dependencies import get_http_headers
-    
+
     api_key = ""
     try:
         headers = get_http_headers()
@@ -2397,10 +1518,10 @@ async def _internal_track_usage() -> str:
             api_key = auth_header[7:]
     except:
         api_key = os.getenv("SSE_API_KEY", "")
-    
+
     if not api_key or not api_key.startswith("sk_"):
         return ""
-    
+
     try:
         conn = psycopg2.connect(
             host=os.getenv("POSTGRES_HOST", "localhost"),
@@ -2411,23 +1532,20 @@ async def _internal_track_usage() -> str:
         )
         cursor = conn.cursor()
         now = datetime.utcnow()
-        
+
+        # Get user_id from API key (skip tracking for shared keys where user_id is NULL)
         cursor.execute("""
-            SELECT user_id, is_super_key
+            SELECT user_id
             FROM api_keys
             WHERE id = %s AND is_active = true
         """, (api_key,))
         result = cursor.fetchone()
-        
-        if not result:
+
+        if not result or not result[0]:  # Skip if no result or user_id is NULL (shared key)
             conn.close()
             return ""
-        
-        user_id, is_super_key = result
-        
-        if is_super_key:
-            conn.close()
-            return ""
+
+        user_id = result[0]
         
         # Use correct id format for ON CONFLICT to work
         usage_id = f"{user_id}_{now.year}_{now.month}"

@@ -200,7 +200,7 @@
         "features": {
           "analysis": "AI 맞춤형 배경 분석",
           "searches": "3-5회 정밀 웹 검색",
-          "recommendations": "10-15개 프로그램 추천",
+          "recommendations": "10+ 프로그램 추천 (≤7개 대학은 10-20개, >7개는 20+개)",
           "pdf": "전문 PDF 보고서 다운로드",
           "retry": "생성 실패 시 무료 재시도"
         }
@@ -212,7 +212,7 @@
         "description": "Exa AI 심층 연구를 통한 전면적 분석",
         "features": {
           "basicIncluded": "기본 버전의 모든 기능 포함",
-          "exaResearch": "20-30개 프로그램에 대한 Exa 심층 연구 (40회 이상 검색)",
+          "exaResearch": "프로그램당 2회 Exa 심층 연구 (커리큘럼 + 커리어)",
           "programDetails": "상세한 프로그램 특징 및 학생 경험 분석",
           "suitability": "각 추천 프로그램의 적합도 분석",
           "careers": "취업 데이터 및 경력 개발 분석"
@@ -225,7 +225,7 @@
         "description": "기본 보고서를 고급 버전으로 업그레이드",
         "features": {
           "basicIncluded": "기본 버전의 모든 기능 포함",
-          "exaResearch": "20-30개 프로그램에 대한 Exa 심층 연구 (40회 이상 검색)",
+          "exaResearch": "프로그램당 2회 Exa 심층 연구 (커리큘럼 + 커리어)",
           "programDetails": "상세한 프로그램 특징 및 학생 경험 분석",
           "suitability": "각 추천 프로그램의 적합도 분석",
           "careers": "취업 데이터 및 경력 개발 분석"

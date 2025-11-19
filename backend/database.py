@@ -6,7 +6,7 @@ Manages:
 """
 import os
 from datetime import datetime
-from sqlalchemy import create_engine, Column, String, Float, DateTime, Enum, Integer, Boolean
+from sqlalchemy import create_engine, Column, String, Float, DateTime, Enum, Integer, Boolean, ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import enum
@@ -44,17 +44,27 @@ class Payment(Base):
 
 
 class APIKey(Base):
-    """API keys for MCP API access
+    """API keys for MCP API access with tier-based access control
 
-    Regular keys: 10 free consultations/month
-    Super keys: Unlimited consultations (for testing/B2B)
+    Three key types:
+    - Basic: Tools 1-5 (basic consultation workflow)
+    - Advanced: Tools 1-7 (full workflow with deep research)
+    - Upgrade: Tool upgrade_to_advanced only (internal use)
+
+    Global shared keys for website users:
+    - sk_live_basic_shared (all basic tier web users)
+    - sk_live_advanced_shared (all advanced tier web users)
+    - sk_live_upgrade_shared (all upgrade tier web users)
+
+    Individual keys for institutional buyers (custom generation)
     """
     __tablename__ = "api_keys"
 
     id = Column(String, primary_key=True, index=True)  # API key (e.g., "sk_live_...")
-    user_id = Column(String, index=True, nullable=False)  # Clerk user ID
-    name = Column(String, nullable=True)  # User-given name (e.g., "Production Key")
-    is_super_key = Column(Boolean, default=False, nullable=False)  # True = unlimited access
+    user_id = Column(String, index=True, nullable=True)  # Clerk user ID (NULL for shared keys)
+    name = Column(String, nullable=True)  # Key description (e.g., "Production Key", "Basic Shared")
+    tier = Column(String, nullable=False)  # 'basic', 'advanced', 'upgrade'
+    allowed_tools = Column(ARRAY(String), nullable=False)  # List of tool names this key can call
     is_active = Column(Boolean, default=True, nullable=False)  # False = revoked
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_used_at = Column(DateTime, nullable=True)  # Last API call timestamp
@@ -88,6 +98,69 @@ def get_db():
 def init_db():
     """Initialize database tables"""
     Base.metadata.create_all(bind=engine)
+
+
+def create_shared_api_keys(db):
+    """Create three global shared API keys for website users
+
+    Only creates keys if they don't exist (idempotent operation)
+    """
+    shared_keys = [
+        {
+            'id': 'sk_live_basic_shared',
+            'name': 'Basic Tier Shared Key (Website Users) - v1.2.0',
+            'tier': 'basic',
+            'allowed_tools': [
+                # Workflow tools v1.2.0 (6 tools)
+                'start_and_select_universities',
+                'select_classifications',
+                'process_university_programs',
+                'analyze_and_shortlist',
+                'select_final_programs',
+                'generate_final_report',
+                # Utility tools (2 tools)
+                'get_available_countries',
+                'get_database_statistics'
+            ]
+        },
+        {
+            'id': 'sk_live_advanced_shared',
+            'name': 'Advanced Tier Shared Key (Website Users) - v1.2.0',
+            'tier': 'advanced',
+            'allowed_tools': [
+                # All basic tools (8 tools)
+                'start_and_select_universities',
+                'select_classifications',
+                'process_university_programs',
+                'analyze_and_shortlist',
+                'select_final_programs',
+                'generate_final_report',
+                'get_available_countries',
+                'get_database_statistics',
+                # Advanced-only tool (1 tool)
+                'generate_final_report_advanced'
+            ]
+        },
+        {
+            'id': 'sk_live_upgrade_shared',
+            'name': 'Upgrade Tier Shared Key (Website Users)',
+            'tier': 'upgrade',
+            'allowed_tools': [
+                'upgrade_to_advanced',  # Only upgrade tool
+                'get_available_countries',
+                'get_database_statistics'
+            ]
+        }
+    ]
+
+    for key_data in shared_keys:
+        existing = db.query(APIKey).filter(APIKey.id == key_data['id']).first()
+        if not existing:
+            key = APIKey(**key_data, user_id=None, is_active=True)
+            db.add(key)
+
+    db.commit()
+    return shared_keys
 
 
 def generate_api_key(prefix="sk_live"):
